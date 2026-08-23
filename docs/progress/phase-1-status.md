@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane. The Core API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
+Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
 
 ## Authorization boundary
 
@@ -17,7 +17,7 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 |---|---|---|---|
 | M0 Durable plan and baselines | Complete | Plan/status commit `e32af8c`; draft PR #1; three independent planning reviews | None |
 | M1 Reduced complete Phase 1 ERD | Complete | Reproducible 48-table/95-relationship/9-view model; DrawDB, DDB, and DBML validation; independent review passed | None |
-| M2 Canon Pack contract 0.2.x | In progress | Declarative Watchable Types slice merged in Template PR #6 at `2df3818`; 26 tests and pre/post-merge CI passed | Remaining accepted Pack structures, contract ERD, lint/gate completion |
+| M2 Canon Pack contract 0.2.x | In progress | Declarative Watchable Types slice merged in Template PR #6 at `2df3818`; hostile-input foundation merged in PRs #7/#9 at `99a885e`/`f3212a8`; 61 tests and final CI passed | Accepted `0.2.1` structures, normalized 26-table release projection, independent verifier, full Lantern Vale fixture, and contract ERD/docs/gates |
 | M3 Core/PostgreSQL/Docker foundation | Complete | Core PR #1 merged as `c4a6a07`; PR CI `32658514890` and post-merge CI `32658626306` passed; 25/25 tests; deterministic build; hardened Compose; zero high/critical final-image findings; SBOM; persistence | None |
 | M4 Setup/auth/import/activation | Pending | Design requirements only | M2 Canon contract completion |
 | M5 MVP UX and viewing loop | Pending | Design requirements only | M4 |
@@ -119,3 +119,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 - Core PR #1 CI run `32658514890` passed every required step, including locked install, lockfile drift, both audits, formatting, strict typechecks, lint, 25 tests with PostgreSQL, deterministic build, Dockerfile/Compose checks, image builds and scans, SBOM generation, and Compose smoke.
 - Core PR #1 merged as `c4a6a0751a52f9c2289bec46fa5b4590b74e58be`. Post-merge `main` CI run `32658626306` passed the same complete gate.
 - Core `main` and Template `main` were clean after the merge. No remote deployment or GitHub release was performed. M2 remains the next dependency-ready milestone lane.
+
+### 2026-08-23 — M2 Canon Pack hostile-input foundation completed
+
+- Template PR #7, `feat: harden Canon Pack input boundaries`, merged as `99a885ec5c7c04f9559115bf7530cbeb42a4574c`; post-review correction PR #9 merged as `f3212a85f8cbb1dd79fb5332cec82e6ddc5fcc78`. PR #8 was closed and superseded because its branch contained an unsigned merge commit.
+- Added strict duplicate-key JSON and malformed UTF-8 rejection; fixed file, byte, member, record, string, nesting, and graph budgets; and symlink, hardlink, FIFO, and socket rejection.
+- Added descriptor-anchored bounded reads with mutation detection, locale-independent UTF-16 ordering (including numeric and reserved JSON keys), and iterative graph traversal. Documentation now accurately states that the directory verifier does not provide archive-extraction safety.
+- Final local gates passed: strict typecheck, 61/61 tests, source validation, independent release verification, deterministic build comparison, production and complete npm audits with zero vulnerabilities, Git diff checks, and the historical `0.1.0` identity gate. Final independent specification and quality/security reviews passed.
+- Exact-head PR #9 CI run `32670805634` passed, followed by passing post-merge `main` CI run `32670841686`.
+- M2 remains in progress. Next are the accepted `0.2.1` structures, normalized 26-table release projection, independent verifier, full Lantern Vale fixture, and contract ERD/docs/gates. Historical `0.1.0` and `0.2.0` artifacts remain preserved; setup, authentication, Pack import, catalog behavior, and viewing workflows remain unimplemented.
