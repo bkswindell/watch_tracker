@@ -231,6 +231,21 @@ Implement in dependency order:
 - Local unattended logs/state: ignored under `reports/autonomous/`
 - ERD and dictionary: `docs/data-model/`
 
+## Non-negotiable release security baseline
+
+These checks block an MVP or Phase 1 release; they are not deferred hardening:
+
+1. **Access:** Argon2id uses 65,536 KiB memory, time cost 3, and parallelism 1. Session tokens are opaque and random, only hashes are persisted, idle lifetime is 30 days, and absolute lifetime is 90 days. Unsafe requests require a session-bound CSRF value and exact configured-origin validation. Ten failed logins per remote address in 15 minutes impose a 15-minute cooldown.
+2. **Recovery:** host-generated recovery material has at least 128 random bits, expires after 15 minutes, is single-use, is consumed after five failures, and successful recovery atomically invalidates every session. Secrets never enter arguments, logs, artifacts, exports, or committed configuration.
+3. **Pack input:** accept compiled declarative release data only. Reject duplicate JSON keys, absolute/traversal/backslash paths, unexpected or duplicate members, links, devices, sockets, FIFOs, noncanonical JSON, invalid inventory/checksums, incompatible contracts, unresolved IDs, and graph violations. Enforce explicit byte, member, record, graph, nesting, and time budgets before activation.
+4. **Atomicity:** verify one immutable byte snapshot; stage the full normalized projection; activate in one transaction. Any parse, validation, budget, database, or injected failure must leave the active Pack and personal records unchanged.
+5. **Compose:** PostgreSQL has no host-published port by default. The app binds to loopback by default, runs non-root with no Docker socket, drops capabilities, enables `no-new-privileges`, and uses a read-only root filesystem where practical. Secrets are injected, data and migration backups use separate persistent locations, and readiness remains false until database, migration, and integrity gates pass.
+6. **Migrations:** acquire an advisory lock; verify migration identities/checksums; reject newer or mismatched schemas; create and verify a logical backup outside the database volume before pending migrations; run post-migration integrity checks; never downgrade automatically.
+7. **CI:** lock Node and dependencies; run format/lint, strict typecheck, unit/property/PostgreSQL/migration/adversarial-import tests, deterministic builds, independent artifact verification, image/Compose smoke, secret/dependency/static/license scans, SBOM generation, and container vulnerability scanning. Unresolved high direct dependency advisories or fixable high/critical runtime image findings block release.
+8. **Browsers:** record exact versions and run the product journey in Chromium, Firefox, Playwright WebKit, and the installed Microsoft Edge binary. WebKit is reported as a Safari proxy, never as native Safari. No required engine may be skipped, cancelled, stale, flaky, or replaced by a different engine.
+9. **Persistence:** after representative setup/import/viewing/Focus state is created, verify it after Compose restart, container recreation without volume deletion, stopped-stack restart, logical dump, and restore into a fresh Watch Tracker stack.
+10. **Governance:** independent review applies to the exact final diff; later edits invalidate the verdict. Required checks, DCO, resolved review findings, and post-merge CI must pass before release.
+
 ## Abort and escalation conditions
 
 Stop autonomous execution and leave a durable blocker when any of these occurs:
