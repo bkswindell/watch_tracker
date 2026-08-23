@@ -61,7 +61,9 @@ This deployment path is for local development and verification only. It does not
 
 4. Open <http://127.0.0.1:3100/>. API liveness and readiness are available at `/health` and `/ready`.
 
-PostgreSQL is not published to the host. The application is loopback-only by default. Compose builds a digest-pinned PostgreSQL derivative that runs directly as `postgres`, while the application and migrator run as non-root with read-only filesystems, dropped capabilities, and `no-new-privileges`. To validate the source independently, run:
+PostgreSQL is not published to the host. The application is loopback-only by default. To make an explicitly approved local deployment available on a trusted LAN, set `APP_BIND_ADDRESS` to the host's LAN address and use that address in the URL; do not use `0.0.0.0` unless exposure on every host interface is intentional. This changes the deployment's access boundary, so use authentication before treating LAN exposure as an MVP deployment.
+
+Compose builds a digest-pinned PostgreSQL derivative that runs directly as `postgres`, while the application and migrator run as non-root with read-only filesystems, dropped capabilities, and `no-new-privileges`. To validate the source independently, run:
 
 ```bash
 npm ci
