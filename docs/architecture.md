@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted direction; implementation has not started.
+Accepted direction; the first runnable Core foundation slice is implemented and undergoing final review. It includes a Fastify API, schema-aware health/readiness, strict one-shot migration `0.01`, hardened local Compose deployment, image scanning/SBOM gates, and a responsive React shell. Authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
 
 ## Core and Canon Pack seam
 
@@ -27,7 +27,7 @@ Versioned Canon Pack release artifact
   -> normalized immutable Pack projection in PostgreSQL
 ```
 
-Docker Compose is the canonical deployment and runs the application and PostgreSQL as separate containers. PostgreSQL is the only supported database in every environment.
+Docker Compose is the canonical deployment and runs the application, one-shot migrator, and PostgreSQL as separate containers. The application starts only after the migrator verifies the expected migration inventory and checksum. PostgreSQL is the only supported database in every environment.
 
 ## Trust boundaries
 
@@ -49,6 +49,6 @@ The planned Core preserves:
 - Movies, Episodes, Specials, and Shorts; and
 - accessible dependency lists alongside graph presentation.
 
-## First implementation seam
+## Next implementation seam
 
-The first vertical slice will define Canon Pack contract `0.1`, compile a small fake Pack deterministically, import it into PostgreSQL, and exercise it through the Core. Executable needs will deepen the contract without requiring the full future authoring system before the MVP.
+The next vertical slice consumes the pre-production Canon Pack `0.2.x` contract, transactionally imports the fictional Lantern Vale release into PostgreSQL, activates it only after complete validation, and adds deployment setup/authentication without weakening the Core/Pack trust boundary.

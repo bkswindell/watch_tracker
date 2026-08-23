@@ -1,0 +1,92 @@
+x-watch-tracker-image: &watch-tracker-image
+  image: ${WATCH_TRACKER_IMAGE:-watch-tracker:local}
+  build:
+    context: .
+    dockerfile: Dockerfile
+
+x-watch-tracker-environment: &watch-tracker-environment
+  DATABASE_URL: postgresql://watch_tracker:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@database:5432/watch_tracker
+
+x-watch-tracker-security: &watch-tracker-security
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  database:
+    image: ${WATCH_TRACKER_DATABASE_IMAGE:-watch-tracker-postgres:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: database
+    user: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: watch_tracker
+      POSTGRES_USER: watch_tracker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+  migrator:
+    <<: [*watch-tracker-image, *watch-tracker-security]
+    restart: "no"
+    command: ["node", "dist/scripts/migrate.js"]
+    depends_on:
+      database:
+        condition: service_healthy
+    environment: *watch-tracker-environment
+    healthcheck:
+      disable: true
+    networks:
+      - backend
+
+  app:
+    <<: [*watch-tracker-image, *watch-tracker-security]
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    environment:
+      <<: *watch-tracker-environment
+      HOST: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "127.0.0.1:${APP_PORT:-3100}:3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - backend
+      - edge
+
+networks:
+  backend:
+    internal: true
+  edge:
+
+volumes:
+  postgres_data:
