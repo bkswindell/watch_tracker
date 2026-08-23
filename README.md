@@ -39,6 +39,10 @@ See the [proposed Phase 1 MVP scope](docs/phase-1-mvp-scope.md) for the current 
 
 Tracker instances consume validated, versioned release artifacts. They do not execute Canon Pack code or import an arbitrary repository branch. See the [architecture overview](docs/architecture.md).
 
+### Phase 1 data model
+
+The accepted lean logical model defines 48 persisted tables, 95 relationships, and nine derived views across immutable Canon data, mutable Core state, one rebuildable Focus projection, and operational records. See the [editable Phase 1 data model](docs/data-model/README.md), generated data dictionary, and Canon Pack/PostgreSQL crosswalk.
+
 ## Canon Packs
 
 A Canon Pack defines one franchise or canon without changing the Core Tracker. Each Pack has its own owner, repository, release history, license, provenance policy, and copyright contact.
@@ -49,7 +53,7 @@ Watch Tracker does not endorse or certify the legality or accuracy of an indepen
 
 ## Project status
 
-Watch Tracker is in repository-foundation and contract-design work. No application release is available yet. The next planned milestone is a minimal Canon Pack contract and fake fixture artifact, followed by the Docker Compose application foundation.
+Watch Tracker is in Phase 1 data-model and contract work. Historical Canon Pack contract `0.1.0` is executable and validated; contract `0.2.0` and the Core application are under development. No Core application release or deployment is available yet.
 
 ## Contributing
 

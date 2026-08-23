@@ -1,0 +1,4744 @@
+{
+  "databaseMode": "Generic",
+  "derivedViewBudget": 9,
+  "derivedViews": [
+    {
+      "name": "effective_canon_entity",
+      "responsibility": "Active release entity rows with Local Overrides layered separately."
+    },
+    {
+      "name": "effective_container",
+      "responsibility": "Effective structural Containers for the active Pack."
+    },
+    {
+      "name": "effective_watchable",
+      "responsibility": "Effective Watchables with declarative Type and release fact."
+    },
+    {
+      "name": "catalog_watchable",
+      "responsibility": "Catalog projection with placement, media, state, and prerequisite summaries."
+    },
+    {
+      "name": "viewing_state",
+      "responsibility": "Derived Not Started, In Progress, or Watched state."
+    },
+    {
+      "name": "active_watch_focus_queue",
+      "responsibility": "Ordered queue rows expanded from the active Focus projection."
+    },
+    {
+      "name": "next_up",
+      "responsibility": "First eligible queue entry with deterministic explanation."
+    },
+    {
+      "name": "guide_stage_satisfaction",
+      "responsibility": "Derived Guide Stage satisfaction from Entry inclusion and viewing state."
+    },
+    {
+      "name": "watch_focus_progress",
+      "responsibility": "Derived Focus completion and progress aggregates."
+    }
+  ],
+  "modelVersion": "0.1.0",
+  "relationships": [
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_id",
+      "fromTable": "canon_pack_release",
+      "toColumn": "canon_pack_id",
+      "toTable": "canon_pack"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_id",
+      "fromTable": "canon_entity",
+      "toColumn": "canon_pack_id",
+      "toTable": "canon_pack"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "canon_entity_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "canon_entity_revision",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "canon_entity_identity_link",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "subject_canon_entity_id",
+      "fromTable": "canon_entity_identity_link",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "target_canon_entity_id",
+      "fromTable": "canon_entity_identity_link",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "canon_entity_identity_link",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "canon_term_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "canon_term_revision",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "source_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "source_revision",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "source_relation",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "subject_source_revision_id",
+      "fromTable": "source_relation",
+      "toColumn": "source_revision_id",
+      "toTable": "source_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "target_source_revision_id",
+      "fromTable": "source_relation",
+      "toColumn": "source_revision_id",
+      "toTable": "source_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "provenance_claim",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "provenance_claim",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "provenance_claim_source",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "source_revision_id",
+      "fromTable": "provenance_claim_source",
+      "toColumn": "source_revision_id",
+      "toTable": "source_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "decision_record",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "one_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "container_revision",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "container_kind_canon_term_revision_id",
+      "fromTable": "container_revision",
+      "toColumn": "canon_term_revision_id",
+      "toTable": "canon_term_revision"
+    },
+    {
+      "cardinality": "one_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "watchable_revision",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watchable_type_canon_term_revision_id",
+      "fromTable": "watchable_revision",
+      "toColumn": "canon_term_revision_id",
+      "toTable": "canon_term_revision"
+    },
+    {
+      "cardinality": "one_to_one",
+      "fromColumn": "watchable_revision_id",
+      "fromTable": "first_public_release",
+      "toColumn": "watchable_revision_id",
+      "toTable": "watchable_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "first_public_release",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "external_identifier",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "external_identifier",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "media_reference",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "media_reference",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "entity_organization",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "organization_canon_entity_revision_id",
+      "fromTable": "entity_organization",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "role_canon_term_revision_id",
+      "fromTable": "entity_organization",
+      "toColumn": "canon_term_revision_id",
+      "toTable": "canon_term_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "entity_organization",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "classification_value_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "classification_value_revision",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "dimension_canon_term_revision_id",
+      "fromTable": "classification_value_revision",
+      "toColumn": "canon_term_revision_id",
+      "toTable": "canon_term_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "child_classification_value_revision_id",
+      "fromTable": "classification_value_parent",
+      "toColumn": "classification_value_revision_id",
+      "toTable": "classification_value_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "parent_classification_value_revision_id",
+      "fromTable": "classification_value_parent",
+      "toColumn": "classification_value_revision_id",
+      "toTable": "classification_value_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "entity_classification",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "classification_value_revision_id",
+      "fromTable": "entity_classification",
+      "toColumn": "classification_value_revision_id",
+      "toTable": "classification_value_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "entity_classification",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "container_membership_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "container_canon_entity_revision_id",
+      "fromTable": "container_membership_revision",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "member_canon_entity_revision_id",
+      "fromTable": "container_membership_revision",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "role_canon_term_revision_id",
+      "fromTable": "container_membership_revision",
+      "toColumn": "canon_term_revision_id",
+      "toTable": "canon_term_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "container_membership_revision",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "watch_relationship_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "prerequisite_watchable_revision_id",
+      "fromTable": "watch_relationship_revision",
+      "toColumn": "watchable_revision_id",
+      "toTable": "watchable_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watchable_revision_id",
+      "fromTable": "watch_relationship_revision",
+      "toColumn": "watchable_revision_id",
+      "toTable": "watchable_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "relationship_type_canon_term_revision_id",
+      "fromTable": "watch_relationship_revision",
+      "toColumn": "canon_term_revision_id",
+      "toTable": "canon_term_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "provenance_claim_id",
+      "fromTable": "watch_relationship_revision",
+      "toColumn": "provenance_claim_id",
+      "toTable": "provenance_claim"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "watch_guide_revision",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "watch_guide_revision",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watch_guide_revision_id",
+      "fromTable": "guide_stage_revision",
+      "toColumn": "watch_guide_revision_id",
+      "toTable": "watch_guide_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "guide_stage_revision_id",
+      "fromTable": "guide_entry_revision",
+      "toColumn": "guide_stage_revision_id",
+      "toTable": "guide_stage_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_revision_id",
+      "fromTable": "guide_entry_revision",
+      "toColumn": "canon_entity_revision_id",
+      "toTable": "canon_entity_revision"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "extension_schema_version",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "viewing_attempt",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "viewing_attempt",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watch_focus_id",
+      "fromTable": "viewing_attempt",
+      "toColumn": "watch_focus_id",
+      "toTable": "watch_focus"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "viewing_session",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "viewing_session",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watch_focus_id",
+      "fromTable": "viewing_session",
+      "toColumn": "watch_focus_id",
+      "toTable": "watch_focus"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "watchable_feedback",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "watchable_feedback",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "viewing_session_id",
+      "fromTable": "watchable_feedback",
+      "toColumn": "viewing_session_id",
+      "toTable": "viewing_session"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "tracker_preference",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "spoiler_reveal",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "spoiler_reveal",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "local_override",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_entity_id",
+      "fromTable": "local_override",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "personal_watch_relationship",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "prerequisite_canon_entity_id",
+      "fromTable": "personal_watch_relationship",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watchable_canon_entity_id",
+      "fromTable": "personal_watch_relationship",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "watch_focus",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "target_canon_entity_id",
+      "fromTable": "watch_focus",
+      "toColumn": "canon_entity_id",
+      "toTable": "canon_entity"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watch_focus_id",
+      "fromTable": "watch_focus_rule",
+      "toColumn": "watch_focus_id",
+      "toTable": "watch_focus"
+    },
+    {
+      "cardinality": "one_to_one",
+      "fromColumn": "watch_focus_id",
+      "fromTable": "watch_focus_completion",
+      "toColumn": "watch_focus_id",
+      "toTable": "watch_focus"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "watch_focus_completion",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "watch_focus_id",
+      "fromTable": "focus_change_set",
+      "toColumn": "watch_focus_id",
+      "toTable": "watch_focus"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "from_canon_pack_release_id",
+      "fromTable": "focus_change_set",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "to_canon_pack_release_id",
+      "fromTable": "focus_change_set",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "one_to_one",
+      "fromColumn": "watch_focus_id",
+      "fromTable": "watch_focus_projection",
+      "toColumn": "watch_focus_id",
+      "toTable": "watch_focus"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "watch_focus_projection",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "deployment_session",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "password_recovery_credential",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "canon_pack_repository",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_repository_id",
+      "fromTable": "canon_pack_import",
+      "toColumn": "canon_pack_repository_id",
+      "toTable": "canon_pack_repository"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "canon_pack_import",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_release_id",
+      "fromTable": "canon_pack_activation",
+      "toColumn": "canon_pack_release_id",
+      "toTable": "canon_pack_release"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_import_id",
+      "fromTable": "canon_pack_activation",
+      "toColumn": "canon_pack_import_id",
+      "toTable": "canon_pack_import"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "canon_pack_repository_id",
+      "fromTable": "canon_pack_update_check",
+      "toColumn": "canon_pack_repository_id",
+      "toTable": "canon_pack_repository"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "schema_migration_run_id",
+      "fromTable": "schema_migration",
+      "toColumn": "schema_migration_run_id",
+      "toTable": "schema_migration_run"
+    },
+    {
+      "cardinality": "many_to_one",
+      "fromColumn": "tracker_instance_id",
+      "fromTable": "portable_transfer",
+      "toColumn": "tracker_instance_id",
+      "toTable": "tracker_instance"
+    }
+  ],
+  "tableBudget": 48,
+  "tables": [
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack identity",
+          "name": "canon_pack_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "slug",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "title",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "canon_pack",
+      "responsibility": "Identifies the logical Canon Pack across releases.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_release identity",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "contract_version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "core_schema_range",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "artifact_sha256",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "release_metadata",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "published_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "canon_pack_release",
+      "responsibility": "Stores immutable release metadata and verified artifact details.",
+      "uniques": [
+        [
+          "canon_pack_id",
+          "version"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_entity identity",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canonical_urn",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "entity_class IN ('container','watchable','term','source','organization','guide')",
+          "comment": "",
+          "name": "entity_class",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "name": "canon_entity",
+      "responsibility": "Provides stable canonical identity across all releases and types.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_entity_revision identity",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "slug",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 160,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "title",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "aliases",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "summary",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "extension_document",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "name": "canon_entity_revision",
+      "responsibility": "Stores release-scoped common entity labels and metadata.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "canon_entity_id"
+        ],
+        [
+          "canon_pack_release_id",
+          "slug"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_entity_identity_link identity",
+          "name": "canon_entity_identity_link_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "subject_canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "target_canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "link_kind",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "canon_entity_identity_link",
+      "responsibility": "Records governed equivalence or replacement links between identities.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_term_revision identity",
+          "name": "canon_term_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "term_kind",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "code",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "label",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "display_weight",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "capabilities",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "presentation",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "name": "canon_term_revision",
+      "responsibility": "Defines release-scoped declarative types, roles, and vocabularies.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "term_kind",
+          "code"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable source_revision identity",
+          "name": "source_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "source_type",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "citation",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "url",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "retrieved_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "license",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "name": "source_revision",
+      "responsibility": "Stores immutable release-scoped provenance-source details.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "canon_entity_id"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable source_relation identity",
+          "name": "source_relation_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "subject_source_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "source_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "target_source_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "source_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "relation_kind",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "note",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "name": "source_relation",
+      "responsibility": "Relates sources through governed citation or derivation semantics.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable provenance_claim identity",
+          "name": "provenance_claim_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "record_kind",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "record_id",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "field_path",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "method",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "note",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "name": "provenance_claim",
+      "responsibility": "Identifies a record- or field-level canonical claim.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable provenance_claim_source identity",
+          "name": "provenance_claim_source_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "source_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "source_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "locator",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "note",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "name": "provenance_claim_source",
+      "responsibility": "Connects each provenance claim to supporting sources.",
+      "uniques": [
+        [
+          "provenance_claim_id",
+          "source_revision_id"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable decision_record identity",
+          "name": "decision_record_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "decision_code",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "title",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "rationale",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "effective_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "decision_record",
+      "responsibility": "Captures governed canonical modeling decisions and rationale.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "decision_code"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable container_revision identity",
+          "name": "container_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "container_kind_canon_term_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_term_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "presentation",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "name": "container_revision",
+      "responsibility": "Stores release-scoped structural Container records.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watchable_revision identity",
+          "name": "watchable_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watchable_type_canon_term_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_term_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "runtime_minutes",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "spoiler_metadata",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "extension_document",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "name": "watchable_revision",
+      "responsibility": "Stores release-scoped Watchable metadata and type assignment.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable first_public_release identity",
+          "name": "first_public_release_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watchable_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watchable_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "release_date",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "DATE",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "precision",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 16,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "region_code",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "contributor_note",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "first_public_release",
+      "responsibility": "Stores the Phase 1 first-public-release fact per Watchable revision.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable external_identifier identity",
+          "name": "external_identifier_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "namespace",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "value",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "external_identifier",
+      "responsibility": "Associates canonical entities with external namespace/value identifiers.",
+      "uniques": [
+        [
+          "canon_entity_revision_id",
+          "namespace",
+          "value"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable media_reference identity",
+          "name": "media_reference_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "media_kind",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "url",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "title",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "language",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "duration_seconds",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "media_reference",
+      "responsibility": "Stores governed poster, artwork, and trailer references.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable entity_organization identity",
+          "name": "entity_organization_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "organization_canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "role_canon_term_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_term_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "entity_organization",
+      "responsibility": "Assigns reusable organizations to entities in defined roles.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable classification_value_revision identity",
+          "name": "classification_value_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "dimension_canon_term_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_term_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "slug",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "label",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "name": "classification_value_revision",
+      "responsibility": "Defines release-scoped reusable classification values.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "dimension_canon_term_revision_id",
+          "slug"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable classification_value_parent identity",
+          "name": "classification_value_parent_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "child_classification_value_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "classification_value_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "parent_classification_value_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "classification_value_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "position",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        }
+      ],
+      "name": "classification_value_parent",
+      "responsibility": "Represents classification hierarchy edges.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable entity_classification identity",
+          "name": "entity_classification_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "classification_value_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "classification_value_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "entity_classification",
+      "responsibility": "Assigns classification values to canonical entities.",
+      "uniques": [
+        [
+          "canon_entity_revision_id",
+          "classification_value_revision_id"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable container_membership_revision identity",
+          "name": "container_membership_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "container_canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "member_canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "role_canon_term_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_term_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "position",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "container_membership_revision",
+      "responsibility": "Stores immutable release-scoped structural memberships and ordering.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watch_relationship_revision identity",
+          "name": "watch_relationship_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "prerequisite_watchable_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watchable_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watchable_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watchable_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "relationship_type_canon_term_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_term_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "summary",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "provenance_claim_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "provenance_claim",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "name": "watch_relationship_revision",
+      "responsibility": "Stores immutable directed Watchable relationships and prerequisites.",
+      "uniques": []
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watch_guide_revision identity",
+          "name": "watch_guide_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "slug",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 160,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "title",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "description",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "name": "watch_guide_revision",
+      "responsibility": "Defines immutable release-scoped Watch Guides.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "canon_entity_id"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable guide_stage_revision identity",
+          "name": "guide_stage_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_guide_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watch_guide_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "position",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "stage_mode",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "title",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "description",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "name": "guide_stage_revision",
+      "responsibility": "Defines ordered stages within a Watch Guide revision.",
+      "uniques": [
+        [
+          "watch_guide_revision_id",
+          "position"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable guide_entry_revision identity",
+          "name": "guide_entry_revision_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "guide_stage_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "guide_stage_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_revision_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity_revision",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "position",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "inclusion_class",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "choice_group",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "name": "guide_entry_revision",
+      "responsibility": "Places canonical entities within Guide stages.",
+      "uniques": [
+        [
+          "guide_stage_revision_id",
+          "position"
+        ]
+      ]
+    },
+    {
+      "area": "canon",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable extension_schema_version identity",
+          "name": "extension_schema_version_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "namespace",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 255,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "schema_uri",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "schema_sha256",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "name": "extension_schema_version",
+      "responsibility": "Governs namespaced Canon extension-document schemas.",
+      "uniques": [
+        [
+          "canon_pack_release_id",
+          "namespace",
+          "version"
+        ]
+      ]
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable tracker_instance identity",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "display_name",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "credential_hash",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "setup_completed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "updated_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "tracker_instance",
+      "responsibility": "Stores deployment-wide setup and authentication state.",
+      "uniques": []
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable viewing_attempt identity",
+          "name": "viewing_attempt_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_focus_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "watch_focus",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "is_rewatch",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "idempotency_key",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "started_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "viewing_attempt",
+      "responsibility": "Stores the single active incomplete attempt for a Watchable.",
+      "uniques": [
+        [
+          "tracker_instance_id",
+          "canon_entity_id"
+        ]
+      ]
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable viewing_session identity",
+          "name": "viewing_session_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_focus_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "watch_focus",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "started_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "rewatch_sequence",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completion_provenance",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "idempotency_key",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        }
+      ],
+      "name": "viewing_session",
+      "responsibility": "Retains one immutable completed viewing event for a Watchable.",
+      "uniques": []
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watchable_feedback identity",
+          "name": "watchable_feedback_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "viewing_session_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "viewing_session",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "feedback_scope IN ('overall','session') AND ((feedback_scope = 'overall' AND viewing_session_id IS NULL) OR (feedback_scope = 'session' AND viewing_session_id IS NOT NULL))",
+          "comment": "",
+          "name": "feedback_scope",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 16,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "rating IS NULL OR (rating >= 0.5 AND rating <= 5.0)",
+          "comment": "",
+          "name": "rating",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "DECIMAL",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "favorite",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "would_rewatch",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "note",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "review",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "note_has_spoilers",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "review_has_spoilers",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "updated_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "watchable_feedback",
+      "responsibility": "Stores overall and optional per-session feedback without altering viewing history.",
+      "uniques": []
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable tracker_preference identity",
+          "name": "tracker_preference_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "preference_key",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "preference_value",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "updated_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "tracker_preference",
+      "responsibility": "Stores mutable display, ordering, and spoiler preferences.",
+      "uniques": [
+        [
+          "tracker_instance_id",
+          "preference_key"
+        ]
+      ]
+    },
+    {
+      "area": "core",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable spoiler_reveal identity",
+          "name": "spoiler_reveal_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "revealed_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "spoiler_reveal",
+      "responsibility": "Records explicit per-Watchable spoiler-reveal choices.",
+      "uniques": [
+        [
+          "tracker_instance_id",
+          "canon_entity_id"
+        ]
+      ]
+    },
+    {
+      "area": "core",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable local_override identity",
+          "name": "local_override_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "field_path",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "override_value",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "reason",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "updated_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "local_override",
+      "responsibility": "Stores governed user-owned overlays on immutable Canon content.",
+      "uniques": [
+        [
+          "tracker_instance_id",
+          "canon_entity_id",
+          "field_path"
+        ]
+      ]
+    },
+    {
+      "area": "core",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable personal_watch_relationship identity",
+          "name": "personal_watch_relationship_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "prerequisite_canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watchable_canon_entity_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "note",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "personal_watch_relationship",
+      "responsibility": "Stores user-defined prerequisite relationships.",
+      "uniques": []
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus identity",
+          "name": "watch_focus_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "target_canon_entity_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "canon_entity",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "name",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "route_strategy",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "is_active",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "configuration",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "watch_focus",
+      "responsibility": "Stores saved Focus identity, target, lifecycle, and active status.",
+      "uniques": []
+    },
+    {
+      "area": "core",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus_rule identity",
+          "name": "watch_focus_rule_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_focus_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watch_focus",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "rule_kind",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "position",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "rule_document",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "name": "watch_focus_rule",
+      "responsibility": "Stores validated filters, policies, weights, pins, and decisions.",
+      "uniques": [
+        [
+          "watch_focus_id",
+          "rule_kind",
+          "position"
+        ]
+      ]
+    },
+    {
+      "area": "core",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus_completion identity",
+          "name": "watch_focus_completion_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_focus_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watch_focus",
+          "size": null,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completion_snapshot",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "snapshot_sha256",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "name": "watch_focus_completion",
+      "responsibility": "Preserves immutable completion snapshots for finished Focuses.",
+      "uniques": []
+    },
+    {
+      "area": "core",
+      "classification": "Optional",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable focus_change_set identity",
+          "name": "focus_change_set_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_focus_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watch_focus",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "from_canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "to_canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "change_document",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "resolved_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "focus_change_set",
+      "responsibility": "Records reconciliation outcomes after Canon graph changes.",
+      "uniques": []
+    },
+    {
+      "area": "projection",
+      "classification": "MVP-required",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus_projection identity",
+          "name": "watch_focus_projection_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "watch_focus_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "watch_focus",
+          "size": null,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "algorithm_version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "queue_document",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "explanation_document",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "baseline_sha256",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "generated_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "watch_focus_projection",
+      "responsibility": "Caches the generated Focus queue, explanations, and reconciliation baseline.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable deployment_session identity",
+          "name": "deployment_session_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "token_hash",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "csrf_hash",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "last_seen_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "idle_expires_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "absolute_expires_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "revoked_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "deployment_session",
+      "responsibility": "Stores hashed deployment authentication sessions and expiration state.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable password_recovery_credential identity",
+          "name": "password_recovery_credential_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "code_hash",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "expires_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "failed_attempt_count",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "consumed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "password_recovery_credential",
+      "responsibility": "Stores short-lived host-generated recovery credentials.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_repository identity",
+          "name": "canon_pack_repository_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "repository_url",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "release_channel",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "trust_policy",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "canon_pack_repository",
+      "responsibility": "Configures the Phase 1 Canon Pack release source.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_import identity",
+          "name": "canon_pack_import_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_repository_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "canon_pack_repository",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": false,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "artifact_sha256",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "validation_report",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "started_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "canon_pack_import",
+      "responsibility": "Records validation and transactional import attempts.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_activation identity",
+          "name": "canon_pack_activation_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_release_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_release",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_import_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_import",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "activated_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "deactivated_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "canon_pack_activation",
+      "responsibility": "Records which verified release was active during each interval.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_update_check identity",
+          "name": "canon_pack_update_check_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "canon_pack_repository_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "canon_pack_repository",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "candidate_version",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "result_document",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "started_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "canon_pack_update_check",
+      "responsibility": "Records update checks and discovered candidate releases.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable schema_migration_run identity",
+          "name": "schema_migration_run_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "application_version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "database_version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "backup_reference",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "error_code",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "started_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "schema_migration_run",
+      "responsibility": "Records guarded startup migration executions and outcomes.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "",
+          "name": "schema_migration_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "schema_migration_run_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "schema_migration_run",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "checksum_sha256",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "applied_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "schema_migration",
+      "responsibility": "Tracks individual migration versions and checksums.",
+      "uniques": []
+    },
+    {
+      "area": "operations",
+      "classification": "Infrastructure",
+      "columns": [
+        {
+          "check": "",
+          "comment": "Stable portable_transfer identity",
+          "name": "portable_transfer_id",
+          "not_null": true,
+          "primary": true,
+          "ref": null,
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "tracker_instance_id",
+          "not_null": true,
+          "primary": false,
+          "ref": "tracker_instance",
+          "size": null,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "direction",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 16,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "format_version",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "artifact_sha256",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "status",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "result_document",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "started_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "name": "completed_at",
+          "not_null": false,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "name": "portable_transfer",
+      "responsibility": "Records portable export, restore, and validation operations.",
+      "uniques": []
+    }
+  ],
+  "title": "Watch Tracker Phase 1 logical model"
+}

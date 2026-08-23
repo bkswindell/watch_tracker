@@ -1,0 +1,5713 @@
+{
+  "database": "generic",
+  "enums": [],
+  "notes": [
+    {
+      "color": "#64748B",
+      "content": "Blue is immutable Pack data; green is mutable authoritative Core data; amber is a rebuildable cache; purple is operational state. Nine named SQL views remain derived and are not tables.",
+      "height": 180,
+      "id": 1,
+      "title": "Persistence boundary",
+      "width": 680,
+      "x": 60,
+      "y": 3550
+    },
+    {
+      "color": "#64748B",
+      "content": "Every primary key repeats its table name. Foreign keys preserve the referenced key; role prefixes are used only when one table references the same target in multiple semantic roles.",
+      "height": 180,
+      "id": 2,
+      "title": "Identity and naming",
+      "width": 680,
+      "x": 780,
+      "y": 3550
+    },
+    {
+      "color": "#64748B",
+      "content": "Verified artifacts and release-scoped immutable rows retain history. The model does not duplicate a stable/revision pair for every record family and does not persist derived recommendations as authority.",
+      "height": 180,
+      "id": 3,
+      "title": "Historical releases",
+      "width": 680,
+      "x": 1500,
+      "y": 3550
+    }
+  ],
+  "relationships": [
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f1_1",
+      "endTableId": "canon_pack",
+      "id": "r1",
+      "name": "fk_canon_pack_release_canon_pack_id",
+      "startFieldId": "f2_2",
+      "startTableId": "canon_pack_release",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f1_1",
+      "endTableId": "canon_pack",
+      "id": "r2",
+      "name": "fk_canon_entity_canon_pack_id",
+      "startFieldId": "f3_2",
+      "startTableId": "canon_entity",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r3",
+      "name": "fk_canon_entity_revision_canon_pack_release_id",
+      "startFieldId": "f4_2",
+      "startTableId": "canon_entity_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r4",
+      "name": "fk_canon_entity_revision_canon_entity_id",
+      "startFieldId": "f4_3",
+      "startTableId": "canon_entity_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r5",
+      "name": "fk_canon_entity_identity_link_canon_pack_release_id",
+      "startFieldId": "f5_2",
+      "startTableId": "canon_entity_identity_link",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r6",
+      "name": "fk_canon_entity_identity_link_subject_canon_entity_id",
+      "startFieldId": "f5_3",
+      "startTableId": "canon_entity_identity_link",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r7",
+      "name": "fk_canon_entity_identity_link_target_canon_entity_id",
+      "startFieldId": "f5_4",
+      "startTableId": "canon_entity_identity_link",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r8",
+      "name": "fk_canon_entity_identity_link_provenance_claim_id",
+      "startFieldId": "f5_6",
+      "startTableId": "canon_entity_identity_link",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r9",
+      "name": "fk_canon_term_revision_canon_pack_release_id",
+      "startFieldId": "f6_2",
+      "startTableId": "canon_term_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r10",
+      "name": "fk_canon_term_revision_canon_entity_id",
+      "startFieldId": "f6_3",
+      "startTableId": "canon_term_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r11",
+      "name": "fk_source_revision_canon_pack_release_id",
+      "startFieldId": "f7_2",
+      "startTableId": "source_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r12",
+      "name": "fk_source_revision_canon_entity_id",
+      "startFieldId": "f7_3",
+      "startTableId": "source_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r13",
+      "name": "fk_source_relation_canon_pack_release_id",
+      "startFieldId": "f8_2",
+      "startTableId": "source_relation",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f7_1",
+      "endTableId": "source_revision",
+      "id": "r14",
+      "name": "fk_source_relation_subject_source_revision_id",
+      "startFieldId": "f8_3",
+      "startTableId": "source_relation",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f7_1",
+      "endTableId": "source_revision",
+      "id": "r15",
+      "name": "fk_source_relation_target_source_revision_id",
+      "startFieldId": "f8_4",
+      "startTableId": "source_relation",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r16",
+      "name": "fk_provenance_claim_canon_pack_release_id",
+      "startFieldId": "f9_2",
+      "startTableId": "provenance_claim",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r17",
+      "name": "fk_provenance_claim_canon_entity_revision_id",
+      "startFieldId": "f9_3",
+      "startTableId": "provenance_claim",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r18",
+      "name": "fk_provenance_claim_source_provenance_claim_id",
+      "startFieldId": "f10_2",
+      "startTableId": "provenance_claim_source",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f7_1",
+      "endTableId": "source_revision",
+      "id": "r19",
+      "name": "fk_provenance_claim_source_source_revision_id",
+      "startFieldId": "f10_3",
+      "startTableId": "provenance_claim_source",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r20",
+      "name": "fk_decision_record_canon_pack_release_id",
+      "startFieldId": "f11_2",
+      "startTableId": "decision_record",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "one_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r21",
+      "name": "fk_container_revision_canon_entity_revision_id",
+      "startFieldId": "f12_2",
+      "startTableId": "container_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f6_1",
+      "endTableId": "canon_term_revision",
+      "id": "r22",
+      "name": "fk_container_revision_container_kind_canon_term_revision_id",
+      "startFieldId": "f12_3",
+      "startTableId": "container_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "one_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r23",
+      "name": "fk_watchable_revision_canon_entity_revision_id",
+      "startFieldId": "f13_2",
+      "startTableId": "watchable_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f6_1",
+      "endTableId": "canon_term_revision",
+      "id": "r24",
+      "name": "fk_watchable_revision_watchable_type_canon_term_revision_id",
+      "startFieldId": "f13_3",
+      "startTableId": "watchable_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "one_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f13_1",
+      "endTableId": "watchable_revision",
+      "id": "r25",
+      "name": "fk_first_public_release_watchable_revision_id",
+      "startFieldId": "f14_2",
+      "startTableId": "first_public_release",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r26",
+      "name": "fk_first_public_release_provenance_claim_id",
+      "startFieldId": "f14_8",
+      "startTableId": "first_public_release",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r27",
+      "name": "fk_external_identifier_canon_entity_revision_id",
+      "startFieldId": "f15_2",
+      "startTableId": "external_identifier",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r28",
+      "name": "fk_external_identifier_provenance_claim_id",
+      "startFieldId": "f15_5",
+      "startTableId": "external_identifier",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r29",
+      "name": "fk_media_reference_canon_entity_revision_id",
+      "startFieldId": "f16_2",
+      "startTableId": "media_reference",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r30",
+      "name": "fk_media_reference_provenance_claim_id",
+      "startFieldId": "f16_8",
+      "startTableId": "media_reference",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r31",
+      "name": "fk_entity_organization_canon_entity_revision_id",
+      "startFieldId": "f17_2",
+      "startTableId": "entity_organization",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r32",
+      "name": "fk_entity_organization_organization_canon_entity_revision_id",
+      "startFieldId": "f17_3",
+      "startTableId": "entity_organization",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f6_1",
+      "endTableId": "canon_term_revision",
+      "id": "r33",
+      "name": "fk_entity_organization_role_canon_term_revision_id",
+      "startFieldId": "f17_4",
+      "startTableId": "entity_organization",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r34",
+      "name": "fk_entity_organization_provenance_claim_id",
+      "startFieldId": "f17_5",
+      "startTableId": "entity_organization",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r35",
+      "name": "fk_classification_value_revision_canon_pack_release_id",
+      "startFieldId": "f18_2",
+      "startTableId": "classification_value_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r36",
+      "name": "fk_classification_value_revision_canon_entity_id",
+      "startFieldId": "f18_3",
+      "startTableId": "classification_value_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f6_1",
+      "endTableId": "canon_term_revision",
+      "id": "r37",
+      "name": "fk_classification_value_revision_dimension_canon_term_revision_id",
+      "startFieldId": "f18_4",
+      "startTableId": "classification_value_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f18_1",
+      "endTableId": "classification_value_revision",
+      "id": "r38",
+      "name": "fk_classification_value_parent_child_classification_value_revision_id",
+      "startFieldId": "f19_2",
+      "startTableId": "classification_value_parent",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f18_1",
+      "endTableId": "classification_value_revision",
+      "id": "r39",
+      "name": "fk_classification_value_parent_parent_classification_value_revision_id",
+      "startFieldId": "f19_3",
+      "startTableId": "classification_value_parent",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r40",
+      "name": "fk_entity_classification_canon_entity_revision_id",
+      "startFieldId": "f20_2",
+      "startTableId": "entity_classification",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f18_1",
+      "endTableId": "classification_value_revision",
+      "id": "r41",
+      "name": "fk_entity_classification_classification_value_revision_id",
+      "startFieldId": "f20_3",
+      "startTableId": "entity_classification",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r42",
+      "name": "fk_entity_classification_provenance_claim_id",
+      "startFieldId": "f20_4",
+      "startTableId": "entity_classification",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r43",
+      "name": "fk_container_membership_revision_canon_pack_release_id",
+      "startFieldId": "f21_2",
+      "startTableId": "container_membership_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r44",
+      "name": "fk_container_membership_revision_container_canon_entity_revision_id",
+      "startFieldId": "f21_3",
+      "startTableId": "container_membership_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r45",
+      "name": "fk_container_membership_revision_member_canon_entity_revision_id",
+      "startFieldId": "f21_4",
+      "startTableId": "container_membership_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f6_1",
+      "endTableId": "canon_term_revision",
+      "id": "r46",
+      "name": "fk_container_membership_revision_role_canon_term_revision_id",
+      "startFieldId": "f21_5",
+      "startTableId": "container_membership_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r47",
+      "name": "fk_container_membership_revision_provenance_claim_id",
+      "startFieldId": "f21_7",
+      "startTableId": "container_membership_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r48",
+      "name": "fk_watch_relationship_revision_canon_pack_release_id",
+      "startFieldId": "f22_2",
+      "startTableId": "watch_relationship_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f13_1",
+      "endTableId": "watchable_revision",
+      "id": "r49",
+      "name": "fk_watch_relationship_revision_prerequisite_watchable_revision_id",
+      "startFieldId": "f22_3",
+      "startTableId": "watch_relationship_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f13_1",
+      "endTableId": "watchable_revision",
+      "id": "r50",
+      "name": "fk_watch_relationship_revision_watchable_revision_id",
+      "startFieldId": "f22_4",
+      "startTableId": "watch_relationship_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f6_1",
+      "endTableId": "canon_term_revision",
+      "id": "r51",
+      "name": "fk_watch_relationship_revision_relationship_type_canon_term_revision_id",
+      "startFieldId": "f22_5",
+      "startTableId": "watch_relationship_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f9_1",
+      "endTableId": "provenance_claim",
+      "id": "r52",
+      "name": "fk_watch_relationship_revision_provenance_claim_id",
+      "startFieldId": "f22_7",
+      "startTableId": "watch_relationship_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r53",
+      "name": "fk_watch_guide_revision_canon_pack_release_id",
+      "startFieldId": "f23_2",
+      "startTableId": "watch_guide_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r54",
+      "name": "fk_watch_guide_revision_canon_entity_id",
+      "startFieldId": "f23_3",
+      "startTableId": "watch_guide_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f23_1",
+      "endTableId": "watch_guide_revision",
+      "id": "r55",
+      "name": "fk_guide_stage_revision_watch_guide_revision_id",
+      "startFieldId": "f24_2",
+      "startTableId": "guide_stage_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f24_1",
+      "endTableId": "guide_stage_revision",
+      "id": "r56",
+      "name": "fk_guide_entry_revision_guide_stage_revision_id",
+      "startFieldId": "f25_2",
+      "startTableId": "guide_entry_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f4_1",
+      "endTableId": "canon_entity_revision",
+      "id": "r57",
+      "name": "fk_guide_entry_revision_canon_entity_revision_id",
+      "startFieldId": "f25_3",
+      "startTableId": "guide_entry_revision",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r58",
+      "name": "fk_extension_schema_version_canon_pack_release_id",
+      "startFieldId": "f26_2",
+      "startTableId": "extension_schema_version",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r59",
+      "name": "fk_viewing_attempt_tracker_instance_id",
+      "startFieldId": "f28_2",
+      "startTableId": "viewing_attempt",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r60",
+      "name": "fk_viewing_attempt_canon_entity_id",
+      "startFieldId": "f28_3",
+      "startTableId": "viewing_attempt",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f35_1",
+      "endTableId": "watch_focus",
+      "id": "r61",
+      "name": "fk_viewing_attempt_watch_focus_id",
+      "startFieldId": "f28_4",
+      "startTableId": "viewing_attempt",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r62",
+      "name": "fk_viewing_session_tracker_instance_id",
+      "startFieldId": "f29_2",
+      "startTableId": "viewing_session",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r63",
+      "name": "fk_viewing_session_canon_entity_id",
+      "startFieldId": "f29_3",
+      "startTableId": "viewing_session",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f35_1",
+      "endTableId": "watch_focus",
+      "id": "r64",
+      "name": "fk_viewing_session_watch_focus_id",
+      "startFieldId": "f29_4",
+      "startTableId": "viewing_session",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r65",
+      "name": "fk_watchable_feedback_tracker_instance_id",
+      "startFieldId": "f30_2",
+      "startTableId": "watchable_feedback",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r66",
+      "name": "fk_watchable_feedback_canon_entity_id",
+      "startFieldId": "f30_3",
+      "startTableId": "watchable_feedback",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f29_1",
+      "endTableId": "viewing_session",
+      "id": "r67",
+      "name": "fk_watchable_feedback_viewing_session_id",
+      "startFieldId": "f30_4",
+      "startTableId": "watchable_feedback",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r68",
+      "name": "fk_tracker_preference_tracker_instance_id",
+      "startFieldId": "f31_2",
+      "startTableId": "tracker_preference",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r69",
+      "name": "fk_spoiler_reveal_tracker_instance_id",
+      "startFieldId": "f32_2",
+      "startTableId": "spoiler_reveal",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r70",
+      "name": "fk_spoiler_reveal_canon_entity_id",
+      "startFieldId": "f32_3",
+      "startTableId": "spoiler_reveal",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r71",
+      "name": "fk_local_override_tracker_instance_id",
+      "startFieldId": "f33_2",
+      "startTableId": "local_override",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r72",
+      "name": "fk_local_override_canon_entity_id",
+      "startFieldId": "f33_3",
+      "startTableId": "local_override",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r73",
+      "name": "fk_personal_watch_relationship_tracker_instance_id",
+      "startFieldId": "f34_2",
+      "startTableId": "personal_watch_relationship",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r74",
+      "name": "fk_personal_watch_relationship_prerequisite_canon_entity_id",
+      "startFieldId": "f34_3",
+      "startTableId": "personal_watch_relationship",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r75",
+      "name": "fk_personal_watch_relationship_watchable_canon_entity_id",
+      "startFieldId": "f34_4",
+      "startTableId": "personal_watch_relationship",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r76",
+      "name": "fk_watch_focus_tracker_instance_id",
+      "startFieldId": "f35_2",
+      "startTableId": "watch_focus",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f3_1",
+      "endTableId": "canon_entity",
+      "id": "r77",
+      "name": "fk_watch_focus_target_canon_entity_id",
+      "startFieldId": "f35_3",
+      "startTableId": "watch_focus",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f35_1",
+      "endTableId": "watch_focus",
+      "id": "r78",
+      "name": "fk_watch_focus_rule_watch_focus_id",
+      "startFieldId": "f36_2",
+      "startTableId": "watch_focus_rule",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "one_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f35_1",
+      "endTableId": "watch_focus",
+      "id": "r79",
+      "name": "fk_watch_focus_completion_watch_focus_id",
+      "startFieldId": "f37_2",
+      "startTableId": "watch_focus_completion",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r80",
+      "name": "fk_watch_focus_completion_canon_pack_release_id",
+      "startFieldId": "f37_3",
+      "startTableId": "watch_focus_completion",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f35_1",
+      "endTableId": "watch_focus",
+      "id": "r81",
+      "name": "fk_focus_change_set_watch_focus_id",
+      "startFieldId": "f38_2",
+      "startTableId": "focus_change_set",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r82",
+      "name": "fk_focus_change_set_from_canon_pack_release_id",
+      "startFieldId": "f38_3",
+      "startTableId": "focus_change_set",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r83",
+      "name": "fk_focus_change_set_to_canon_pack_release_id",
+      "startFieldId": "f38_4",
+      "startTableId": "focus_change_set",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "one_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f35_1",
+      "endTableId": "watch_focus",
+      "id": "r84",
+      "name": "fk_watch_focus_projection_watch_focus_id",
+      "startFieldId": "f39_2",
+      "startTableId": "watch_focus_projection",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r85",
+      "name": "fk_watch_focus_projection_canon_pack_release_id",
+      "startFieldId": "f39_3",
+      "startTableId": "watch_focus_projection",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r86",
+      "name": "fk_deployment_session_tracker_instance_id",
+      "startFieldId": "f40_2",
+      "startTableId": "deployment_session",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r87",
+      "name": "fk_password_recovery_credential_tracker_instance_id",
+      "startFieldId": "f41_2",
+      "startTableId": "password_recovery_credential",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r88",
+      "name": "fk_canon_pack_repository_tracker_instance_id",
+      "startFieldId": "f42_2",
+      "startTableId": "canon_pack_repository",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f42_1",
+      "endTableId": "canon_pack_repository",
+      "id": "r89",
+      "name": "fk_canon_pack_import_canon_pack_repository_id",
+      "startFieldId": "f43_2",
+      "startTableId": "canon_pack_import",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r90",
+      "name": "fk_canon_pack_import_canon_pack_release_id",
+      "startFieldId": "f43_3",
+      "startTableId": "canon_pack_import",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f2_1",
+      "endTableId": "canon_pack_release",
+      "id": "r91",
+      "name": "fk_canon_pack_activation_canon_pack_release_id",
+      "startFieldId": "f44_2",
+      "startTableId": "canon_pack_activation",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f43_1",
+      "endTableId": "canon_pack_import",
+      "id": "r92",
+      "name": "fk_canon_pack_activation_canon_pack_import_id",
+      "startFieldId": "f44_3",
+      "startTableId": "canon_pack_activation",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f42_1",
+      "endTableId": "canon_pack_repository",
+      "id": "r93",
+      "name": "fk_canon_pack_update_check_canon_pack_repository_id",
+      "startFieldId": "f45_2",
+      "startTableId": "canon_pack_update_check",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f46_1",
+      "endTableId": "schema_migration_run",
+      "id": "r94",
+      "name": "fk_schema_migration_schema_migration_run_id",
+      "startFieldId": "f47_2",
+      "startTableId": "schema_migration",
+      "updateConstraint": "No action"
+    },
+    {
+      "cardinality": "many_to_one",
+      "deleteConstraint": "Restrict",
+      "endFieldId": "f27_1",
+      "endTableId": "tracker_instance",
+      "id": "r95",
+      "name": "fk_portable_transfer_tracker_instance_id",
+      "startFieldId": "f48_2",
+      "startTableId": "portable_transfer",
+      "updateConstraint": "No action"
+    }
+  ],
+  "subjectAreas": [
+    {
+      "color": "#3B82F6",
+      "height": 3460,
+      "id": 1,
+      "name": "Immutable Canon Pack domain",
+      "width": 1800,
+      "x": 30,
+      "y": 50
+    },
+    {
+      "color": "#10B981",
+      "height": 2980,
+      "id": 2,
+      "name": "Mutable authoritative Core domain",
+      "width": 900,
+      "x": 1920,
+      "y": 50
+    },
+    {
+      "color": "#F59E0B",
+      "height": 600,
+      "id": 3,
+      "name": "Persisted rebuildable projection",
+      "width": 380,
+      "x": 2870,
+      "y": 50
+    },
+    {
+      "color": "#8B5CF6",
+      "height": 2500,
+      "id": 4,
+      "name": "Operational and infrastructure",
+      "width": 900,
+      "x": 3320,
+      "y": 50
+    }
+  ],
+  "tables": [
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Identifies the logical Canon Pack across releases.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack identity",
+          "default": "",
+          "id": "f1_1",
+          "increment": false,
+          "name": "canon_pack_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f1_2",
+          "increment": false,
+          "name": "slug",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f1_3",
+          "increment": false,
+          "name": "title",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f1_4",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "canon_pack",
+      "indices": [],
+      "name": "CANON_PACK",
+      "x": 60,
+      "y": 100
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores immutable release metadata and verified artifact details.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_release identity",
+          "default": "",
+          "id": "f2_1",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_2",
+          "increment": false,
+          "name": "canon_pack_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_3",
+          "increment": false,
+          "name": "version",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_4",
+          "increment": false,
+          "name": "contract_version",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_5",
+          "increment": false,
+          "name": "core_schema_range",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_6",
+          "increment": false,
+          "name": "artifact_sha256",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_7",
+          "increment": false,
+          "name": "release_metadata",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f2_8",
+          "increment": false,
+          "name": "published_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "canon_pack_release",
+      "indices": [
+        {
+          "fields": [
+            "f2_2",
+            "f2_3"
+          ],
+          "name": "uq_canon_pack_release_1",
+          "unique": true
+        }
+      ],
+      "name": "CANON_PACK_RELEASE",
+      "x": 490,
+      "y": 100
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Provides stable canonical identity across all releases and types.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_entity identity",
+          "default": "",
+          "id": "f3_1",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f3_2",
+          "increment": false,
+          "name": "canon_pack_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f3_3",
+          "increment": false,
+          "name": "canonical_urn",
+          "notNull": true,
+          "primary": false,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "entity_class IN ('container','watchable','term','source','organization','guide')",
+          "comment": "",
+          "default": "",
+          "id": "f3_4",
+          "increment": false,
+          "name": "entity_class",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "id": "canon_entity",
+      "indices": [],
+      "name": "CANON_ENTITY",
+      "x": 920,
+      "y": 100
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores release-scoped common entity labels and metadata.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_entity_revision identity",
+          "default": "",
+          "id": "f4_1",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_4",
+          "increment": false,
+          "name": "slug",
+          "notNull": true,
+          "primary": false,
+          "size": 160,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_5",
+          "increment": false,
+          "name": "title",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_6",
+          "increment": false,
+          "name": "aliases",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_7",
+          "increment": false,
+          "name": "summary",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f4_8",
+          "increment": false,
+          "name": "extension_document",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "id": "canon_entity_revision",
+      "indices": [
+        {
+          "fields": [
+            "f4_2",
+            "f4_3"
+          ],
+          "name": "uq_canon_entity_revision_1",
+          "unique": true
+        },
+        {
+          "fields": [
+            "f4_2",
+            "f4_4"
+          ],
+          "name": "uq_canon_entity_revision_2",
+          "unique": true
+        }
+      ],
+      "name": "CANON_ENTITY_REVISION",
+      "x": 1350,
+      "y": 100
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Records governed equivalence or replacement links between identities.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_entity_identity_link identity",
+          "default": "",
+          "id": "f5_1",
+          "increment": false,
+          "name": "canon_entity_identity_link_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f5_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f5_3",
+          "increment": false,
+          "name": "subject_canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f5_4",
+          "increment": false,
+          "name": "target_canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f5_5",
+          "increment": false,
+          "name": "link_kind",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f5_6",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "canon_entity_identity_link",
+      "indices": [],
+      "name": "CANON_ENTITY_IDENTITY_LINK",
+      "x": 60,
+      "y": 580
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Defines release-scoped declarative types, roles, and vocabularies.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_term_revision identity",
+          "default": "",
+          "id": "f6_1",
+          "increment": false,
+          "name": "canon_term_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_4",
+          "increment": false,
+          "name": "term_kind",
+          "notNull": true,
+          "primary": false,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_5",
+          "increment": false,
+          "name": "code",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_6",
+          "increment": false,
+          "name": "label",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_7",
+          "increment": false,
+          "name": "display_weight",
+          "notNull": false,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_8",
+          "increment": false,
+          "name": "capabilities",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f6_9",
+          "increment": false,
+          "name": "presentation",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "id": "canon_term_revision",
+      "indices": [
+        {
+          "fields": [
+            "f6_2",
+            "f6_4",
+            "f6_5"
+          ],
+          "name": "uq_canon_term_revision_1",
+          "unique": true
+        }
+      ],
+      "name": "CANON_TERM_REVISION",
+      "x": 490,
+      "y": 580
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores immutable release-scoped provenance-source details.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable source_revision identity",
+          "default": "",
+          "id": "f7_1",
+          "increment": false,
+          "name": "source_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_4",
+          "increment": false,
+          "name": "source_type",
+          "notNull": true,
+          "primary": false,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_5",
+          "increment": false,
+          "name": "citation",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_6",
+          "increment": false,
+          "name": "url",
+          "notNull": false,
+          "primary": false,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_7",
+          "increment": false,
+          "name": "retrieved_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f7_8",
+          "increment": false,
+          "name": "license",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "id": "source_revision",
+      "indices": [
+        {
+          "fields": [
+            "f7_2",
+            "f7_3"
+          ],
+          "name": "uq_source_revision_1",
+          "unique": true
+        }
+      ],
+      "name": "SOURCE_REVISION",
+      "x": 920,
+      "y": 580
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Relates sources through governed citation or derivation semantics.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable source_relation identity",
+          "default": "",
+          "id": "f8_1",
+          "increment": false,
+          "name": "source_relation_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f8_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f8_3",
+          "increment": false,
+          "name": "subject_source_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f8_4",
+          "increment": false,
+          "name": "target_source_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f8_5",
+          "increment": false,
+          "name": "relation_kind",
+          "notNull": true,
+          "primary": false,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f8_6",
+          "increment": false,
+          "name": "note",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "id": "source_relation",
+      "indices": [],
+      "name": "SOURCE_RELATION",
+      "x": 1350,
+      "y": 580
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Identifies a record- or field-level canonical claim.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable provenance_claim identity",
+          "default": "",
+          "id": "f9_1",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_3",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_4",
+          "increment": false,
+          "name": "record_kind",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_5",
+          "increment": false,
+          "name": "record_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_6",
+          "increment": false,
+          "name": "field_path",
+          "notNull": false,
+          "primary": false,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_7",
+          "increment": false,
+          "name": "method",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f9_8",
+          "increment": false,
+          "name": "note",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "id": "provenance_claim",
+      "indices": [],
+      "name": "PROVENANCE_CLAIM",
+      "x": 60,
+      "y": 1060
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Connects each provenance claim to supporting sources.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable provenance_claim_source identity",
+          "default": "",
+          "id": "f10_1",
+          "increment": false,
+          "name": "provenance_claim_source_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f10_2",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f10_3",
+          "increment": false,
+          "name": "source_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f10_4",
+          "increment": false,
+          "name": "locator",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f10_5",
+          "increment": false,
+          "name": "note",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "id": "provenance_claim_source",
+      "indices": [
+        {
+          "fields": [
+            "f10_2",
+            "f10_3"
+          ],
+          "name": "uq_provenance_claim_source_1",
+          "unique": true
+        }
+      ],
+      "name": "PROVENANCE_CLAIM_SOURCE",
+      "x": 490,
+      "y": 1060
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Captures governed canonical modeling decisions and rationale.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable decision_record identity",
+          "default": "",
+          "id": "f11_1",
+          "increment": false,
+          "name": "decision_record_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f11_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f11_3",
+          "increment": false,
+          "name": "decision_code",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f11_4",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f11_5",
+          "increment": false,
+          "name": "title",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f11_6",
+          "increment": false,
+          "name": "rationale",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f11_7",
+          "increment": false,
+          "name": "effective_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "decision_record",
+      "indices": [
+        {
+          "fields": [
+            "f11_2",
+            "f11_3"
+          ],
+          "name": "uq_decision_record_1",
+          "unique": true
+        }
+      ],
+      "name": "DECISION_RECORD",
+      "x": 920,
+      "y": 1060
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores release-scoped structural Container records.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable container_revision identity",
+          "default": "",
+          "id": "f12_1",
+          "increment": false,
+          "name": "container_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f12_2",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f12_3",
+          "increment": false,
+          "name": "container_kind_canon_term_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f12_4",
+          "increment": false,
+          "name": "presentation",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "id": "container_revision",
+      "indices": [],
+      "name": "CONTAINER_REVISION",
+      "x": 1350,
+      "y": 1060
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores release-scoped Watchable metadata and type assignment.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watchable_revision identity",
+          "default": "",
+          "id": "f13_1",
+          "increment": false,
+          "name": "watchable_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f13_2",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f13_3",
+          "increment": false,
+          "name": "watchable_type_canon_term_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f13_4",
+          "increment": false,
+          "name": "runtime_minutes",
+          "notNull": false,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f13_5",
+          "increment": false,
+          "name": "spoiler_metadata",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f13_6",
+          "increment": false,
+          "name": "extension_document",
+          "notNull": false,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "id": "watchable_revision",
+      "indices": [],
+      "name": "WATCHABLE_REVISION",
+      "x": 60,
+      "y": 1540
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores the Phase 1 first-public-release fact per Watchable revision.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable first_public_release identity",
+          "default": "",
+          "id": "f14_1",
+          "increment": false,
+          "name": "first_public_release_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_2",
+          "increment": false,
+          "name": "watchable_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_3",
+          "increment": false,
+          "name": "release_date",
+          "notNull": true,
+          "primary": false,
+          "type": "DATE",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_4",
+          "increment": false,
+          "name": "precision",
+          "notNull": true,
+          "primary": false,
+          "size": 16,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_5",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_6",
+          "increment": false,
+          "name": "region_code",
+          "notNull": false,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_7",
+          "increment": false,
+          "name": "contributor_note",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f14_8",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "first_public_release",
+      "indices": [],
+      "name": "FIRST_PUBLIC_RELEASE",
+      "x": 490,
+      "y": 1540
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Associates canonical entities with external namespace/value identifiers.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable external_identifier identity",
+          "default": "",
+          "id": "f15_1",
+          "increment": false,
+          "name": "external_identifier_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f15_2",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f15_3",
+          "increment": false,
+          "name": "namespace",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f15_4",
+          "increment": false,
+          "name": "value",
+          "notNull": true,
+          "primary": false,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f15_5",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "external_identifier",
+      "indices": [
+        {
+          "fields": [
+            "f15_2",
+            "f15_3",
+            "f15_4"
+          ],
+          "name": "uq_external_identifier_1",
+          "unique": true
+        }
+      ],
+      "name": "EXTERNAL_IDENTIFIER",
+      "x": 920,
+      "y": 1540
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores governed poster, artwork, and trailer references.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable media_reference identity",
+          "default": "",
+          "id": "f16_1",
+          "increment": false,
+          "name": "media_reference_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_2",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_3",
+          "increment": false,
+          "name": "media_kind",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_4",
+          "increment": false,
+          "name": "url",
+          "notNull": true,
+          "primary": false,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_5",
+          "increment": false,
+          "name": "title",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_6",
+          "increment": false,
+          "name": "language",
+          "notNull": false,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_7",
+          "increment": false,
+          "name": "duration_seconds",
+          "notNull": false,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f16_8",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "media_reference",
+      "indices": [],
+      "name": "MEDIA_REFERENCE",
+      "x": 1350,
+      "y": 1540
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Assigns reusable organizations to entities in defined roles.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable entity_organization identity",
+          "default": "",
+          "id": "f17_1",
+          "increment": false,
+          "name": "entity_organization_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f17_2",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f17_3",
+          "increment": false,
+          "name": "organization_canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f17_4",
+          "increment": false,
+          "name": "role_canon_term_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f17_5",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "entity_organization",
+      "indices": [],
+      "name": "ENTITY_ORGANIZATION",
+      "x": 60,
+      "y": 2020
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Defines release-scoped reusable classification values.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable classification_value_revision identity",
+          "default": "",
+          "id": "f18_1",
+          "increment": false,
+          "name": "classification_value_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f18_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f18_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f18_4",
+          "increment": false,
+          "name": "dimension_canon_term_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f18_5",
+          "increment": false,
+          "name": "slug",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f18_6",
+          "increment": false,
+          "name": "label",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "id": "classification_value_revision",
+      "indices": [
+        {
+          "fields": [
+            "f18_2",
+            "f18_4",
+            "f18_5"
+          ],
+          "name": "uq_classification_value_revision_1",
+          "unique": true
+        }
+      ],
+      "name": "CLASSIFICATION_VALUE_REVISION",
+      "x": 490,
+      "y": 2020
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Represents classification hierarchy edges.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable classification_value_parent identity",
+          "default": "",
+          "id": "f19_1",
+          "increment": false,
+          "name": "classification_value_parent_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f19_2",
+          "increment": false,
+          "name": "child_classification_value_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f19_3",
+          "increment": false,
+          "name": "parent_classification_value_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f19_4",
+          "increment": false,
+          "name": "position",
+          "notNull": false,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        }
+      ],
+      "id": "classification_value_parent",
+      "indices": [],
+      "name": "CLASSIFICATION_VALUE_PARENT",
+      "x": 920,
+      "y": 2020
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Assigns classification values to canonical entities.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable entity_classification identity",
+          "default": "",
+          "id": "f20_1",
+          "increment": false,
+          "name": "entity_classification_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f20_2",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f20_3",
+          "increment": false,
+          "name": "classification_value_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f20_4",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "entity_classification",
+      "indices": [
+        {
+          "fields": [
+            "f20_2",
+            "f20_3"
+          ],
+          "name": "uq_entity_classification_1",
+          "unique": true
+        }
+      ],
+      "name": "ENTITY_CLASSIFICATION",
+      "x": 1350,
+      "y": 2020
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores immutable release-scoped structural memberships and ordering.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable container_membership_revision identity",
+          "default": "",
+          "id": "f21_1",
+          "increment": false,
+          "name": "container_membership_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f21_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f21_3",
+          "increment": false,
+          "name": "container_canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f21_4",
+          "increment": false,
+          "name": "member_canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f21_5",
+          "increment": false,
+          "name": "role_canon_term_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f21_6",
+          "increment": false,
+          "name": "position",
+          "notNull": false,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f21_7",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "container_membership_revision",
+      "indices": [],
+      "name": "CONTAINER_MEMBERSHIP_REVISION",
+      "x": 60,
+      "y": 2500
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "MVP-required: Stores immutable directed Watchable relationships and prerequisites.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watch_relationship_revision identity",
+          "default": "",
+          "id": "f22_1",
+          "increment": false,
+          "name": "watch_relationship_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f22_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f22_3",
+          "increment": false,
+          "name": "prerequisite_watchable_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f22_4",
+          "increment": false,
+          "name": "watchable_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f22_5",
+          "increment": false,
+          "name": "relationship_type_canon_term_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f22_6",
+          "increment": false,
+          "name": "summary",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f22_7",
+          "increment": false,
+          "name": "provenance_claim_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        }
+      ],
+      "id": "watch_relationship_revision",
+      "indices": [],
+      "name": "WATCH_RELATIONSHIP_REVISION",
+      "x": 490,
+      "y": 2500
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Defines immutable release-scoped Watch Guides.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watch_guide_revision identity",
+          "default": "",
+          "id": "f23_1",
+          "increment": false,
+          "name": "watch_guide_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f23_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f23_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f23_4",
+          "increment": false,
+          "name": "slug",
+          "notNull": true,
+          "primary": false,
+          "size": 160,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f23_5",
+          "increment": false,
+          "name": "title",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f23_6",
+          "increment": false,
+          "name": "description",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "id": "watch_guide_revision",
+      "indices": [
+        {
+          "fields": [
+            "f23_2",
+            "f23_3"
+          ],
+          "name": "uq_watch_guide_revision_1",
+          "unique": true
+        }
+      ],
+      "name": "WATCH_GUIDE_REVISION",
+      "x": 920,
+      "y": 2500
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Defines ordered stages within a Watch Guide revision.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable guide_stage_revision identity",
+          "default": "",
+          "id": "f24_1",
+          "increment": false,
+          "name": "guide_stage_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f24_2",
+          "increment": false,
+          "name": "watch_guide_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f24_3",
+          "increment": false,
+          "name": "position",
+          "notNull": true,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f24_4",
+          "increment": false,
+          "name": "stage_mode",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f24_5",
+          "increment": false,
+          "name": "title",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f24_6",
+          "increment": false,
+          "name": "description",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        }
+      ],
+      "id": "guide_stage_revision",
+      "indices": [
+        {
+          "fields": [
+            "f24_2",
+            "f24_3"
+          ],
+          "name": "uq_guide_stage_revision_1",
+          "unique": true
+        }
+      ],
+      "name": "GUIDE_STAGE_REVISION",
+      "x": 1350,
+      "y": 2500
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Places canonical entities within Guide stages.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable guide_entry_revision identity",
+          "default": "",
+          "id": "f25_1",
+          "increment": false,
+          "name": "guide_entry_revision_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f25_2",
+          "increment": false,
+          "name": "guide_stage_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f25_3",
+          "increment": false,
+          "name": "canon_entity_revision_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f25_4",
+          "increment": false,
+          "name": "position",
+          "notNull": true,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f25_5",
+          "increment": false,
+          "name": "inclusion_class",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f25_6",
+          "increment": false,
+          "name": "choice_group",
+          "notNull": false,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "id": "guide_entry_revision",
+      "indices": [
+        {
+          "fields": [
+            "f25_2",
+            "f25_4"
+          ],
+          "name": "uq_guide_entry_revision_1",
+          "unique": true
+        }
+      ],
+      "name": "GUIDE_ENTRY_REVISION",
+      "x": 60,
+      "y": 2980
+    },
+    {
+      "color": "#3B82F6",
+      "comment": "Optional: Governs namespaced Canon extension-document schemas.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable extension_schema_version identity",
+          "default": "",
+          "id": "f26_1",
+          "increment": false,
+          "name": "extension_schema_version_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f26_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f26_3",
+          "increment": false,
+          "name": "namespace",
+          "notNull": true,
+          "primary": false,
+          "size": 255,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f26_4",
+          "increment": false,
+          "name": "version",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f26_5",
+          "increment": false,
+          "name": "schema_uri",
+          "notNull": true,
+          "primary": false,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f26_6",
+          "increment": false,
+          "name": "schema_sha256",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "id": "extension_schema_version",
+      "indices": [
+        {
+          "fields": [
+            "f26_2",
+            "f26_3",
+            "f26_4"
+          ],
+          "name": "uq_extension_schema_version_1",
+          "unique": true
+        }
+      ],
+      "name": "EXTENSION_SCHEMA_VERSION",
+      "x": 490,
+      "y": 2980
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Stores deployment-wide setup and authentication state.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable tracker_instance identity",
+          "default": "",
+          "id": "f27_1",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f27_2",
+          "increment": false,
+          "name": "display_name",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f27_3",
+          "increment": false,
+          "name": "credential_hash",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f27_4",
+          "increment": false,
+          "name": "setup_completed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f27_5",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f27_6",
+          "increment": false,
+          "name": "updated_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "tracker_instance",
+      "indices": [],
+      "name": "TRACKER_INSTANCE",
+      "x": 1950,
+      "y": 100
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Stores the single active incomplete attempt for a Watchable.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable viewing_attempt identity",
+          "default": "",
+          "id": "f28_1",
+          "increment": false,
+          "name": "viewing_attempt_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f28_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f28_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f28_4",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f28_5",
+          "increment": false,
+          "name": "is_rewatch",
+          "notNull": true,
+          "primary": false,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f28_6",
+          "increment": false,
+          "name": "idempotency_key",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f28_7",
+          "increment": false,
+          "name": "started_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "viewing_attempt",
+      "indices": [
+        {
+          "fields": [
+            "f28_2",
+            "f28_3"
+          ],
+          "name": "uq_viewing_attempt_1",
+          "unique": true
+        }
+      ],
+      "name": "VIEWING_ATTEMPT",
+      "x": 2380,
+      "y": 100
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Retains one immutable completed viewing event for a Watchable.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable viewing_session identity",
+          "default": "",
+          "id": "f29_1",
+          "increment": false,
+          "name": "viewing_session_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_4",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_5",
+          "increment": false,
+          "name": "started_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_6",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_7",
+          "increment": false,
+          "name": "rewatch_sequence",
+          "notNull": true,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_8",
+          "increment": false,
+          "name": "completion_provenance",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f29_9",
+          "increment": false,
+          "name": "idempotency_key",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        }
+      ],
+      "id": "viewing_session",
+      "indices": [],
+      "name": "VIEWING_SESSION",
+      "x": 1950,
+      "y": 580
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Stores overall and optional per-session feedback without altering viewing history.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watchable_feedback identity",
+          "default": "",
+          "id": "f30_1",
+          "increment": false,
+          "name": "watchable_feedback_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_4",
+          "increment": false,
+          "name": "viewing_session_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "feedback_scope IN ('overall','session') AND ((feedback_scope = 'overall' AND viewing_session_id IS NULL) OR (feedback_scope = 'session' AND viewing_session_id IS NOT NULL))",
+          "comment": "",
+          "default": "",
+          "id": "f30_5",
+          "increment": false,
+          "name": "feedback_scope",
+          "notNull": true,
+          "primary": false,
+          "size": 16,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "rating IS NULL OR (rating >= 0.5 AND rating <= 5.0)",
+          "comment": "",
+          "default": "",
+          "id": "f30_6",
+          "increment": false,
+          "name": "rating",
+          "notNull": false,
+          "primary": false,
+          "type": "DECIMAL",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_7",
+          "increment": false,
+          "name": "favorite",
+          "notNull": true,
+          "primary": false,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_8",
+          "increment": false,
+          "name": "would_rewatch",
+          "notNull": true,
+          "primary": false,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_9",
+          "increment": false,
+          "name": "note",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_10",
+          "increment": false,
+          "name": "review",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_11",
+          "increment": false,
+          "name": "note_has_spoilers",
+          "notNull": true,
+          "primary": false,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_12",
+          "increment": false,
+          "name": "review_has_spoilers",
+          "notNull": true,
+          "primary": false,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f30_13",
+          "increment": false,
+          "name": "updated_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "watchable_feedback",
+      "indices": [],
+      "name": "WATCHABLE_FEEDBACK",
+      "x": 2380,
+      "y": 580
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Stores mutable display, ordering, and spoiler preferences.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable tracker_preference identity",
+          "default": "",
+          "id": "f31_1",
+          "increment": false,
+          "name": "tracker_preference_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f31_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f31_3",
+          "increment": false,
+          "name": "preference_key",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f31_4",
+          "increment": false,
+          "name": "preference_value",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f31_5",
+          "increment": false,
+          "name": "updated_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "tracker_preference",
+      "indices": [
+        {
+          "fields": [
+            "f31_2",
+            "f31_3"
+          ],
+          "name": "uq_tracker_preference_1",
+          "unique": true
+        }
+      ],
+      "name": "TRACKER_PREFERENCE",
+      "x": 1950,
+      "y": 1060
+    },
+    {
+      "color": "#10B981",
+      "comment": "Optional: Records explicit per-Watchable spoiler-reveal choices.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable spoiler_reveal identity",
+          "default": "",
+          "id": "f32_1",
+          "increment": false,
+          "name": "spoiler_reveal_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f32_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f32_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f32_4",
+          "increment": false,
+          "name": "revealed_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "spoiler_reveal",
+      "indices": [
+        {
+          "fields": [
+            "f32_2",
+            "f32_3"
+          ],
+          "name": "uq_spoiler_reveal_1",
+          "unique": true
+        }
+      ],
+      "name": "SPOILER_REVEAL",
+      "x": 2380,
+      "y": 1060
+    },
+    {
+      "color": "#10B981",
+      "comment": "Optional: Stores governed user-owned overlays on immutable Canon content.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable local_override identity",
+          "default": "",
+          "id": "f33_1",
+          "increment": false,
+          "name": "local_override_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f33_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f33_3",
+          "increment": false,
+          "name": "canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f33_4",
+          "increment": false,
+          "name": "field_path",
+          "notNull": true,
+          "primary": false,
+          "size": 512,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f33_5",
+          "increment": false,
+          "name": "override_value",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f33_6",
+          "increment": false,
+          "name": "reason",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f33_7",
+          "increment": false,
+          "name": "updated_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "local_override",
+      "indices": [
+        {
+          "fields": [
+            "f33_2",
+            "f33_3",
+            "f33_4"
+          ],
+          "name": "uq_local_override_1",
+          "unique": true
+        }
+      ],
+      "name": "LOCAL_OVERRIDE",
+      "x": 1950,
+      "y": 1540
+    },
+    {
+      "color": "#10B981",
+      "comment": "Optional: Stores user-defined prerequisite relationships.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable personal_watch_relationship identity",
+          "default": "",
+          "id": "f34_1",
+          "increment": false,
+          "name": "personal_watch_relationship_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f34_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f34_3",
+          "increment": false,
+          "name": "prerequisite_canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f34_4",
+          "increment": false,
+          "name": "watchable_canon_entity_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f34_5",
+          "increment": false,
+          "name": "note",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f34_6",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "personal_watch_relationship",
+      "indices": [],
+      "name": "PERSONAL_WATCH_RELATIONSHIP",
+      "x": 2380,
+      "y": 1540
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Stores saved Focus identity, target, lifecycle, and active status.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus identity",
+          "default": "",
+          "id": "f35_1",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_3",
+          "increment": false,
+          "name": "target_canon_entity_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_4",
+          "increment": false,
+          "name": "name",
+          "notNull": true,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_5",
+          "increment": false,
+          "name": "route_strategy",
+          "notNull": true,
+          "primary": false,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_6",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_7",
+          "increment": false,
+          "name": "is_active",
+          "notNull": true,
+          "primary": false,
+          "type": "BOOLEAN",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_8",
+          "increment": false,
+          "name": "configuration",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_9",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f35_10",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "watch_focus",
+      "indices": [],
+      "name": "WATCH_FOCUS",
+      "x": 1950,
+      "y": 2020
+    },
+    {
+      "color": "#10B981",
+      "comment": "MVP-required: Stores validated filters, policies, weights, pins, and decisions.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus_rule identity",
+          "default": "",
+          "id": "f36_1",
+          "increment": false,
+          "name": "watch_focus_rule_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f36_2",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f36_3",
+          "increment": false,
+          "name": "rule_kind",
+          "notNull": true,
+          "primary": false,
+          "size": 48,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f36_4",
+          "increment": false,
+          "name": "position",
+          "notNull": true,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f36_5",
+          "increment": false,
+          "name": "rule_document",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        }
+      ],
+      "id": "watch_focus_rule",
+      "indices": [
+        {
+          "fields": [
+            "f36_2",
+            "f36_3",
+            "f36_4"
+          ],
+          "name": "uq_watch_focus_rule_1",
+          "unique": true
+        }
+      ],
+      "name": "WATCH_FOCUS_RULE",
+      "x": 2380,
+      "y": 2020
+    },
+    {
+      "color": "#10B981",
+      "comment": "Optional: Preserves immutable completion snapshots for finished Focuses.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus_completion identity",
+          "default": "",
+          "id": "f37_1",
+          "increment": false,
+          "name": "watch_focus_completion_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f37_2",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f37_3",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f37_4",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f37_5",
+          "increment": false,
+          "name": "completion_snapshot",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f37_6",
+          "increment": false,
+          "name": "snapshot_sha256",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        }
+      ],
+      "id": "watch_focus_completion",
+      "indices": [],
+      "name": "WATCH_FOCUS_COMPLETION",
+      "x": 1950,
+      "y": 2500
+    },
+    {
+      "color": "#10B981",
+      "comment": "Optional: Records reconciliation outcomes after Canon graph changes.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable focus_change_set identity",
+          "default": "",
+          "id": "f38_1",
+          "increment": false,
+          "name": "focus_change_set_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_2",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_3",
+          "increment": false,
+          "name": "from_canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_4",
+          "increment": false,
+          "name": "to_canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_5",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_6",
+          "increment": false,
+          "name": "change_document",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_7",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f38_8",
+          "increment": false,
+          "name": "resolved_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "focus_change_set",
+      "indices": [],
+      "name": "FOCUS_CHANGE_SET",
+      "x": 2380,
+      "y": 2500
+    },
+    {
+      "color": "#F59E0B",
+      "comment": "MVP-required: Caches the generated Focus queue, explanations, and reconciliation baseline.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable watch_focus_projection identity",
+          "default": "",
+          "id": "f39_1",
+          "increment": false,
+          "name": "watch_focus_projection_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_2",
+          "increment": false,
+          "name": "watch_focus_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_3",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_4",
+          "increment": false,
+          "name": "algorithm_version",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_5",
+          "increment": false,
+          "name": "queue_document",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_6",
+          "increment": false,
+          "name": "explanation_document",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_7",
+          "increment": false,
+          "name": "baseline_sha256",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f39_8",
+          "increment": false,
+          "name": "generated_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "watch_focus_projection",
+      "indices": [],
+      "name": "WATCH_FOCUS_PROJECTION",
+      "x": 2900,
+      "y": 100
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Stores hashed deployment authentication sessions and expiration state.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable deployment_session identity",
+          "default": "",
+          "id": "f40_1",
+          "increment": false,
+          "name": "deployment_session_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_3",
+          "increment": false,
+          "name": "token_hash",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_4",
+          "increment": false,
+          "name": "csrf_hash",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_5",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_6",
+          "increment": false,
+          "name": "last_seen_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_7",
+          "increment": false,
+          "name": "idle_expires_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_8",
+          "increment": false,
+          "name": "absolute_expires_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f40_9",
+          "increment": false,
+          "name": "revoked_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "deployment_session",
+      "indices": [],
+      "name": "DEPLOYMENT_SESSION",
+      "x": 3350,
+      "y": 100
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Stores short-lived host-generated recovery credentials.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable password_recovery_credential identity",
+          "default": "",
+          "id": "f41_1",
+          "increment": false,
+          "name": "password_recovery_credential_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f41_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f41_3",
+          "increment": false,
+          "name": "code_hash",
+          "notNull": true,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": true
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f41_4",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f41_5",
+          "increment": false,
+          "name": "expires_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f41_6",
+          "increment": false,
+          "name": "failed_attempt_count",
+          "notNull": true,
+          "primary": false,
+          "type": "INT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f41_7",
+          "increment": false,
+          "name": "consumed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "password_recovery_credential",
+      "indices": [],
+      "name": "PASSWORD_RECOVERY_CREDENTIAL",
+      "x": 3780,
+      "y": 100
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Configures the Phase 1 Canon Pack release source.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_repository identity",
+          "default": "",
+          "id": "f42_1",
+          "increment": false,
+          "name": "canon_pack_repository_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f42_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f42_3",
+          "increment": false,
+          "name": "repository_url",
+          "notNull": true,
+          "primary": false,
+          "size": 2048,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f42_4",
+          "increment": false,
+          "name": "release_channel",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f42_5",
+          "increment": false,
+          "name": "trust_policy",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f42_6",
+          "increment": false,
+          "name": "created_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "canon_pack_repository",
+      "indices": [],
+      "name": "CANON_PACK_REPOSITORY",
+      "x": 3350,
+      "y": 580
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Records validation and transactional import attempts.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_import identity",
+          "default": "",
+          "id": "f43_1",
+          "increment": false,
+          "name": "canon_pack_import_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_2",
+          "increment": false,
+          "name": "canon_pack_repository_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_3",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": false,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_4",
+          "increment": false,
+          "name": "artifact_sha256",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_5",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_6",
+          "increment": false,
+          "name": "validation_report",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_7",
+          "increment": false,
+          "name": "started_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f43_8",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "canon_pack_import",
+      "indices": [],
+      "name": "CANON_PACK_IMPORT",
+      "x": 3780,
+      "y": 580
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Records which verified release was active during each interval.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_activation identity",
+          "default": "",
+          "id": "f44_1",
+          "increment": false,
+          "name": "canon_pack_activation_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f44_2",
+          "increment": false,
+          "name": "canon_pack_release_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f44_3",
+          "increment": false,
+          "name": "canon_pack_import_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f44_4",
+          "increment": false,
+          "name": "activated_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f44_5",
+          "increment": false,
+          "name": "deactivated_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "canon_pack_activation",
+      "indices": [],
+      "name": "CANON_PACK_ACTIVATION",
+      "x": 3350,
+      "y": 1060
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Records update checks and discovered candidate releases.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable canon_pack_update_check identity",
+          "default": "",
+          "id": "f45_1",
+          "increment": false,
+          "name": "canon_pack_update_check_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f45_2",
+          "increment": false,
+          "name": "canon_pack_repository_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f45_3",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f45_4",
+          "increment": false,
+          "name": "candidate_version",
+          "notNull": false,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f45_5",
+          "increment": false,
+          "name": "result_document",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f45_6",
+          "increment": false,
+          "name": "started_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f45_7",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "canon_pack_update_check",
+      "indices": [],
+      "name": "CANON_PACK_UPDATE_CHECK",
+      "x": 3780,
+      "y": 1060
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Records guarded startup migration executions and outcomes.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable schema_migration_run identity",
+          "default": "",
+          "id": "f46_1",
+          "increment": false,
+          "name": "schema_migration_run_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_2",
+          "increment": false,
+          "name": "application_version",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_3",
+          "increment": false,
+          "name": "database_version",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_4",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_5",
+          "increment": false,
+          "name": "backup_reference",
+          "notNull": false,
+          "primary": false,
+          "type": "TEXT",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_6",
+          "increment": false,
+          "name": "error_code",
+          "notNull": false,
+          "primary": false,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_7",
+          "increment": false,
+          "name": "started_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f46_8",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "schema_migration_run",
+      "indices": [],
+      "name": "SCHEMA_MIGRATION_RUN",
+      "x": 3350,
+      "y": 1540
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Tracks individual migration versions and checksums.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f47_1",
+          "increment": false,
+          "name": "schema_migration_id",
+          "notNull": true,
+          "primary": true,
+          "size": 128,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f47_2",
+          "increment": false,
+          "name": "schema_migration_run_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f47_3",
+          "increment": false,
+          "name": "checksum_sha256",
+          "notNull": true,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f47_4",
+          "increment": false,
+          "name": "applied_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "schema_migration",
+      "indices": [],
+      "name": "SCHEMA_MIGRATION",
+      "x": 3780,
+      "y": 1540
+    },
+    {
+      "color": "#8B5CF6",
+      "comment": "Infrastructure: Records portable export, restore, and validation operations.",
+      "fields": [
+        {
+          "check": "",
+          "comment": "Stable portable_transfer identity",
+          "default": "",
+          "id": "f48_1",
+          "increment": false,
+          "name": "portable_transfer_id",
+          "notNull": true,
+          "primary": true,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_2",
+          "increment": false,
+          "name": "tracker_instance_id",
+          "notNull": true,
+          "primary": false,
+          "type": "UUID",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_3",
+          "increment": false,
+          "name": "direction",
+          "notNull": true,
+          "primary": false,
+          "size": 16,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_4",
+          "increment": false,
+          "name": "format_version",
+          "notNull": true,
+          "primary": false,
+          "size": 32,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_5",
+          "increment": false,
+          "name": "artifact_sha256",
+          "notNull": false,
+          "primary": false,
+          "size": 64,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_6",
+          "increment": false,
+          "name": "status",
+          "notNull": true,
+          "primary": false,
+          "size": 24,
+          "type": "VARCHAR",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_7",
+          "increment": false,
+          "name": "result_document",
+          "notNull": true,
+          "primary": false,
+          "type": "JSON",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_8",
+          "increment": false,
+          "name": "started_at",
+          "notNull": true,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "",
+          "default": "",
+          "id": "f48_9",
+          "increment": false,
+          "name": "completed_at",
+          "notNull": false,
+          "primary": false,
+          "type": "TIMESTAMP",
+          "unique": false
+        }
+      ],
+      "id": "portable_transfer",
+      "indices": [],
+      "name": "PORTABLE_TRANSFER",
+      "x": 3350,
+      "y": 2020
+    }
+  ],
+  "title": "Watch Tracker — Lean Phase 1 Logical ERD",
+  "types": []
+}

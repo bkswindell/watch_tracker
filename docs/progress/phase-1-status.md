@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Autonomous execution is authorized. Milestone M0 is complete and M1 is in progress. No application, database, or Watch Tracker Docker deployment has been implemented yet.
+Autonomous execution is authorized. Milestones M0 and M1 are complete; M2 is next. No application, database, or Watch Tracker Docker deployment has been implemented yet.
 
 ## Authorization boundary
 
@@ -16,8 +16,8 @@ Autonomous execution is authorized. Milestone M0 is complete and M1 is in progre
 | Milestone | Status | Evidence | Blockers |
 |---|---|---|---|
 | M0 Durable plan and baselines | Complete | Plan/status commit `e32af8c`; draft PR #1; three independent planning reviews | None |
-| M1 Reduced complete Phase 1 ERD | In progress | Independent audit recommends 48 persisted tables plus 9 derived views; prior 105-table draft removed | Exact inventory recovery and artifact generation |
-| M2 Canon Pack contract 0.2.x | Pending | Current released contract is 0.1.0 | M1 |
+| M1 Reduced complete Phase 1 ERD | Complete | Reproducible 48-table/95-relationship/9-view model; DrawDB, DDB, and DBML validation; independent review passed | None |
+| M2 Canon Pack contract 0.2.x | Next | Current released contract is 0.1.0; declarative Watchable Type design accepted | None |
 | M3 Core/PostgreSQL/Docker foundation | Pending | Repository foundation only | M1, M2 importer contract |
 | M4 Setup/auth/import/activation | Pending | Design requirements only | M3 |
 | M5 MVP UX and viewing loop | Pending | Design requirements only | M4 |
@@ -54,3 +54,12 @@ Autonomous execution is authorized. Milestone M0 is complete and M1 is in progre
 - Independent security/deployment review defined hard gates for authentication, hostile Pack input, migration backup, Compose, persistence, CI, dependencies, and Chromium/Firefox/WebKit/Edge evidence.
 - Schema review completed its analysis at the timeout boundary and recommended 48 persisted tables (26 Canon, 12 mutable Core, 1 persisted projection, 9 operational) plus 9 derived views, a 54.3% reduction from the rejected model.
 - Dispatched a narrow recovery worker to return the exact 48-table/9-view inventory without repeating the source audit.
+
+### 2026-08-23 — M1 completed / M2 next
+
+- Replaced the rejected 105-table direction with the reviewed 48-table budget: 26 immutable Canon, 12 mutable Core, 1 rebuildable projection, and 9 operational tables.
+- Generated and synchronized the logical JSON, native DrawDB JSON, byte-identical DDB, DBML fallback, table budget, data dictionary, semantic ownership documentation, and checksum manifest.
+- Verified 95 foreign-key relationships, including 90 many-to-one and 5 one-to-one cardinalities, plus 9 non-persisted derived views.
+- Passed deterministic regeneration, Python compilation, checksum, DrawDB Generic, DDB, DBML, and Git diff gates.
+- Corrected viewing lifecycle ownership, optional per-session feedback, First Public Release Region/note seams, relationship cardinalities, and generator source-of-truth documentation during independent review.
+- Final independent re-review passed with no remaining findings.
