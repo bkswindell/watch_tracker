@@ -1,0 +1,157 @@
+name: Validate Core
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  POSTGRES_PASSWORD: ci-only-watch-tracker-password
+  TEST_DATABASE_URL: postgresql://watch_tracker:ci-only-watch-tracker-password@127.0.0.1:5432/watch_tracker_ci
+  WATCH_TRACKER_IMAGE: watch-tracker:${{ github.sha }}
+  WATCH_TRACKER_DATABASE_IMAGE: watch-tracker-postgres:${{ github.sha }}
+  TRIVY_IMAGE: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+  APP_PORT: "3100"
+  COMPOSE_PROJECT_NAME: watch-tracker-ci-${{ github.run_id }}-${{ github.run_attempt }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+        env:
+          POSTGRES_DB: watch_tracker_ci
+          POSTGRES_USER: watch_tracker
+          POSTGRES_PASSWORD: ci-only-watch-tracker-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U watch_tracker -d watch_tracker_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22.22.3
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify lockfile metadata is current
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          git diff --exit-code -- package-lock.json
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Audit complete dependency graph
+        run: npm audit --audit-level=high
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Test with isolated PostgreSQL
+        run: npm test
+
+      - name: Build production application
+        run: npm run build:deterministic
+
+      - name: Check Dockerfile
+        run: docker build --check .
+
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      - name: Build production image
+        run: |
+          docker build --pull --tag "$WATCH_TRACKER_IMAGE" .
+          docker build --pull --target database --tag "$WATCH_TRACKER_DATABASE_IMAGE" .
+
+      - name: Scan application and database images
+        run: |
+          for image in \
+            "$WATCH_TRACKER_IMAGE" \
+            "$WATCH_TRACKER_DATABASE_IMAGE"
+          do
+            docker run --rm \
+              --volume /var/run/docker.sock:/var/run/docker.sock \
+              "$TRIVY_IMAGE" image \
+              --scanners vuln \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              --ignore-unfixed \
+              "$image"
+          done
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --volume "$PWD:/workspace" \
+            "$TRIVY_IMAGE" image \
+            --format cyclonedx \
+            --output /workspace/watch-tracker.cdx.json \
+            "$WATCH_TRACKER_IMAGE"
+          test -s watch-tracker.cdx.json
+
+      - name: Smoke built Compose runtime
+        run: |
+          docker compose up --detach --no-build --wait --wait-timeout 120
+          docker compose ps --all
+
+          node --input-type=module <<'NODE'
+          const base = `http://127.0.0.1:${process.env.APP_PORT}`;
+          for (const endpoint of ['/', '/health', '/ready']) {
+            const response = await fetch(`${base}${endpoint}`);
+            if (!response.ok) {
+              throw new Error(`${endpoint} returned ${response.status}`);
+            }
+          }
+
+          const html = await (await fetch(`${base}/`)).text();
+          const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
+          const hashedAssets = assets.filter((asset) =>
+            /^\/assets\/.+-[A-Za-z0-9_-]+\.(?:js|css)$/.test(asset),
+          );
+          if (hashedAssets.length === 0) throw new Error('No hashed production assets found');
+          for (const asset of hashedAssets) {
+            const response = await fetch(new URL(asset, base));
+            if (!response.ok) throw new Error(`${asset} returned ${response.status}`);
+          }
+          console.log(`PASS runtime endpoints=3 hashed-assets=${hashedAssets.length}`);
+          NODE
+
+          expected_checksum="$(sha256sum db/migrations/0.01_foundation.sql | cut -d ' ' -f 1)"
+          actual_migration="$(docker compose exec -T database env PGPASSWORD="$POSTGRES_PASSWORD" \
+            psql -h 127.0.0.1 -U watch_tracker -d watch_tracker -Atc \
+            "SELECT migration_version || ':' || migration_sha256 FROM schema_migration ORDER BY migration_version")"
+          test "$actual_migration" = "0.01:$expected_checksum"
+          printf 'PASS migration=%s\n' "$actual_migration"
+
+      - name: Show Compose diagnostics
+        if: failure()
+        run: |
+          docker compose ps --all || true
+          docker compose logs --no-color || true
+
+      - name: Clean up Compose runtime
+        if: always()
+        run: docker compose down --volumes --remove-orphans

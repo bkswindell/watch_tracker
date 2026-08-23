@@ -1,0 +1,638 @@
+// Watch Tracker Phase 1 lean logical model
+// Generated; authoritative definitions are in scripts/generate_phase1_data_model.py
+
+Table canon_pack {
+  canon_pack_id uuid [pk, not null]
+  slug varchar(128) [not null, unique]
+  title text [not null]
+  created_at timestamp [not null]
+  Note: 'MVP-required: Identifies the logical Canon Pack across releases.'
+}
+
+Table canon_pack_release {
+  canon_pack_release_id uuid [pk, not null]
+  canon_pack_id uuid [not null]
+  version varchar(64) [not null]
+  contract_version varchar(32) [not null]
+  core_schema_range varchar(128) [not null]
+  artifact_sha256 varchar(64) [not null, unique]
+  release_metadata json [not null]
+  published_at timestamp [not null]
+  Indexes { (canon_pack_id, version) [unique, name: 'uq_canon_pack_release_1'] }
+  Note: 'MVP-required: Stores immutable release metadata and verified artifact details.'
+}
+
+Table canon_entity {
+  canon_entity_id uuid [pk, not null]
+  canon_pack_id uuid [not null]
+  canonical_urn varchar(512) [not null, unique]
+  entity_class varchar(32) [not null]
+  Note: 'MVP-required: Provides stable canonical identity across all releases and types.'
+}
+
+Table canon_entity_revision {
+  canon_entity_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_entity_id uuid [not null]
+  slug varchar(160) [not null]
+  title text [not null]
+  aliases json
+  summary text
+  extension_document json
+  Indexes { (canon_pack_release_id, canon_entity_id) [unique, name: 'uq_canon_entity_revision_1'] }
+  Indexes { (canon_pack_release_id, slug) [unique, name: 'uq_canon_entity_revision_2'] }
+  Note: 'MVP-required: Stores release-scoped common entity labels and metadata.'
+}
+
+Table canon_entity_identity_link {
+  canon_entity_identity_link_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  subject_canon_entity_id uuid [not null]
+  target_canon_entity_id uuid [not null]
+  link_kind varchar(32) [not null]
+  provenance_claim_id uuid
+  Note: 'Optional: Records governed equivalence or replacement links between identities.'
+}
+
+Table canon_term_revision {
+  canon_term_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_entity_id uuid [not null]
+  term_kind varchar(48) [not null]
+  code varchar(128) [not null]
+  label text [not null]
+  display_weight int
+  capabilities json
+  presentation json
+  Indexes { (canon_pack_release_id, term_kind, code) [unique, name: 'uq_canon_term_revision_1'] }
+  Note: 'MVP-required: Defines release-scoped declarative types, roles, and vocabularies.'
+}
+
+Table source_revision {
+  source_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_entity_id uuid [not null]
+  source_type varchar(48) [not null]
+  citation text [not null]
+  url varchar(2048)
+  retrieved_at timestamp
+  license json
+  Indexes { (canon_pack_release_id, canon_entity_id) [unique, name: 'uq_source_revision_1'] }
+  Note: 'MVP-required: Stores immutable release-scoped provenance-source details.'
+}
+
+Table source_relation {
+  source_relation_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  subject_source_revision_id uuid [not null]
+  target_source_revision_id uuid [not null]
+  relation_kind varchar(48) [not null]
+  note text
+  Note: 'Optional: Relates sources through governed citation or derivation semantics.'
+}
+
+Table provenance_claim {
+  provenance_claim_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_entity_revision_id uuid
+  record_kind varchar(64) [not null]
+  record_id uuid [not null]
+  field_path varchar(512)
+  method varchar(32) [not null]
+  note text
+  Note: 'MVP-required: Identifies a record- or field-level canonical claim.'
+}
+
+Table provenance_claim_source {
+  provenance_claim_source_id uuid [pk, not null]
+  provenance_claim_id uuid [not null]
+  source_revision_id uuid [not null]
+  locator text
+  note text
+  Indexes { (provenance_claim_id, source_revision_id) [unique, name: 'uq_provenance_claim_source_1'] }
+  Note: 'MVP-required: Connects each provenance claim to supporting sources.'
+}
+
+Table decision_record {
+  decision_record_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  decision_code varchar(128) [not null]
+  status varchar(32) [not null]
+  title text [not null]
+  rationale text [not null]
+  effective_at timestamp [not null]
+  Indexes { (canon_pack_release_id, decision_code) [unique, name: 'uq_decision_record_1'] }
+  Note: 'Optional: Captures governed canonical modeling decisions and rationale.'
+}
+
+Table container_revision {
+  container_revision_id uuid [pk, not null]
+  canon_entity_revision_id uuid [not null, unique]
+  container_kind_canon_term_revision_id uuid [not null]
+  presentation json
+  Note: 'MVP-required: Stores release-scoped structural Container records.'
+}
+
+Table watchable_revision {
+  watchable_revision_id uuid [pk, not null]
+  canon_entity_revision_id uuid [not null, unique]
+  watchable_type_canon_term_revision_id uuid [not null]
+  runtime_minutes int
+  spoiler_metadata json
+  extension_document json
+  Note: 'MVP-required: Stores release-scoped Watchable metadata and type assignment.'
+}
+
+Table first_public_release {
+  first_public_release_id uuid [pk, not null]
+  watchable_revision_id uuid [not null, unique]
+  release_date date [not null]
+  precision varchar(16) [not null]
+  status varchar(24) [not null]
+  region_code varchar(32)
+  contributor_note text
+  provenance_claim_id uuid [not null]
+  Note: 'MVP-required: Stores the Phase 1 first-public-release fact per Watchable revision.'
+}
+
+Table external_identifier {
+  external_identifier_id uuid [pk, not null]
+  canon_entity_revision_id uuid [not null]
+  namespace varchar(128) [not null]
+  value varchar(512) [not null]
+  provenance_claim_id uuid [not null]
+  Indexes { (canon_entity_revision_id, namespace, value) [unique, name: 'uq_external_identifier_1'] }
+  Note: 'Optional: Associates canonical entities with external namespace/value identifiers.'
+}
+
+Table media_reference {
+  media_reference_id uuid [pk, not null]
+  canon_entity_revision_id uuid [not null]
+  media_kind varchar(32) [not null]
+  url varchar(2048) [not null]
+  title text
+  language varchar(32)
+  duration_seconds int
+  provenance_claim_id uuid
+  Note: 'MVP-required: Stores governed poster, artwork, and trailer references.'
+}
+
+Table entity_organization {
+  entity_organization_id uuid [pk, not null]
+  canon_entity_revision_id uuid [not null]
+  organization_canon_entity_revision_id uuid [not null]
+  role_canon_term_revision_id uuid [not null]
+  provenance_claim_id uuid
+  Note: 'Optional: Assigns reusable organizations to entities in defined roles.'
+}
+
+Table classification_value_revision {
+  classification_value_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_entity_id uuid [not null]
+  dimension_canon_term_revision_id uuid [not null]
+  slug varchar(128) [not null]
+  label text [not null]
+  Indexes { (canon_pack_release_id, dimension_canon_term_revision_id, slug) [unique, name: 'uq_classification_value_revision_1'] }
+  Note: 'Optional: Defines release-scoped reusable classification values.'
+}
+
+Table classification_value_parent {
+  classification_value_parent_id uuid [pk, not null]
+  child_classification_value_revision_id uuid [not null]
+  parent_classification_value_revision_id uuid [not null]
+  position int
+  Note: 'Optional: Represents classification hierarchy edges.'
+}
+
+Table entity_classification {
+  entity_classification_id uuid [pk, not null]
+  canon_entity_revision_id uuid [not null]
+  classification_value_revision_id uuid [not null]
+  provenance_claim_id uuid
+  Indexes { (canon_entity_revision_id, classification_value_revision_id) [unique, name: 'uq_entity_classification_1'] }
+  Note: 'Optional: Assigns classification values to canonical entities.'
+}
+
+Table container_membership_revision {
+  container_membership_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  container_canon_entity_revision_id uuid [not null]
+  member_canon_entity_revision_id uuid [not null]
+  role_canon_term_revision_id uuid [not null]
+  position int
+  provenance_claim_id uuid [not null]
+  Note: 'MVP-required: Stores immutable release-scoped structural memberships and ordering.'
+}
+
+Table watch_relationship_revision {
+  watch_relationship_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  prerequisite_watchable_revision_id uuid [not null]
+  watchable_revision_id uuid [not null]
+  relationship_type_canon_term_revision_id uuid [not null]
+  summary text
+  provenance_claim_id uuid [not null]
+  Note: 'MVP-required: Stores immutable directed Watchable relationships and prerequisites.'
+}
+
+Table watch_guide_revision {
+  watch_guide_revision_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_entity_id uuid [not null]
+  slug varchar(160) [not null]
+  title text [not null]
+  description text
+  Indexes { (canon_pack_release_id, canon_entity_id) [unique, name: 'uq_watch_guide_revision_1'] }
+  Note: 'Optional: Defines immutable release-scoped Watch Guides.'
+}
+
+Table guide_stage_revision {
+  guide_stage_revision_id uuid [pk, not null]
+  watch_guide_revision_id uuid [not null]
+  position int [not null]
+  stage_mode varchar(32) [not null]
+  title text
+  description text
+  Indexes { (watch_guide_revision_id, position) [unique, name: 'uq_guide_stage_revision_1'] }
+  Note: 'Optional: Defines ordered stages within a Watch Guide revision.'
+}
+
+Table guide_entry_revision {
+  guide_entry_revision_id uuid [pk, not null]
+  guide_stage_revision_id uuid [not null]
+  canon_entity_revision_id uuid [not null]
+  position int [not null]
+  inclusion_class varchar(24) [not null]
+  choice_group varchar(64)
+  Indexes { (guide_stage_revision_id, position) [unique, name: 'uq_guide_entry_revision_1'] }
+  Note: 'Optional: Places canonical entities within Guide stages.'
+}
+
+Table extension_schema_version {
+  extension_schema_version_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  namespace varchar(255) [not null]
+  version varchar(64) [not null]
+  schema_uri varchar(2048) [not null]
+  schema_sha256 varchar(64) [not null]
+  Indexes { (canon_pack_release_id, namespace, version) [unique, name: 'uq_extension_schema_version_1'] }
+  Note: 'Optional: Governs namespaced Canon extension-document schemas.'
+}
+
+Table tracker_instance {
+  tracker_instance_id uuid [pk, not null]
+  display_name text [not null]
+  credential_hash text
+  setup_completed_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+  Note: 'MVP-required: Stores deployment-wide setup and authentication state.'
+}
+
+Table viewing_attempt {
+  viewing_attempt_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  canon_entity_id uuid [not null]
+  watch_focus_id uuid
+  is_rewatch boolean [not null]
+  idempotency_key varchar(128) [not null, unique]
+  started_at timestamp [not null]
+  Indexes { (tracker_instance_id, canon_entity_id) [unique, name: 'uq_viewing_attempt_1'] }
+  Note: 'MVP-required: Stores the single active incomplete attempt for a Watchable.'
+}
+
+Table viewing_session {
+  viewing_session_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  canon_entity_id uuid [not null]
+  watch_focus_id uuid
+  started_at timestamp
+  completed_at timestamp [not null]
+  rewatch_sequence int [not null]
+  completion_provenance varchar(32) [not null]
+  idempotency_key varchar(128) [not null, unique]
+  Note: 'MVP-required: Retains one immutable completed viewing event for a Watchable.'
+}
+
+Table watchable_feedback {
+  watchable_feedback_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  canon_entity_id uuid [not null]
+  viewing_session_id uuid
+  feedback_scope varchar(16) [not null]
+  rating decimal
+  favorite boolean [not null]
+  would_rewatch boolean [not null]
+  note text
+  review text
+  note_has_spoilers boolean [not null]
+  review_has_spoilers boolean [not null]
+  updated_at timestamp [not null]
+  Note: 'MVP-required: Stores overall and optional per-session feedback without altering viewing history.'
+}
+
+Table tracker_preference {
+  tracker_preference_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  preference_key varchar(128) [not null]
+  preference_value json [not null]
+  updated_at timestamp [not null]
+  Indexes { (tracker_instance_id, preference_key) [unique, name: 'uq_tracker_preference_1'] }
+  Note: 'MVP-required: Stores mutable display, ordering, and spoiler preferences.'
+}
+
+Table spoiler_reveal {
+  spoiler_reveal_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  canon_entity_id uuid [not null]
+  revealed_at timestamp [not null]
+  Indexes { (tracker_instance_id, canon_entity_id) [unique, name: 'uq_spoiler_reveal_1'] }
+  Note: 'Optional: Records explicit per-Watchable spoiler-reveal choices.'
+}
+
+Table local_override {
+  local_override_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  canon_entity_id uuid [not null]
+  field_path varchar(512) [not null]
+  override_value json [not null]
+  reason text
+  updated_at timestamp [not null]
+  Indexes { (tracker_instance_id, canon_entity_id, field_path) [unique, name: 'uq_local_override_1'] }
+  Note: 'Optional: Stores governed user-owned overlays on immutable Canon content.'
+}
+
+Table personal_watch_relationship {
+  personal_watch_relationship_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  prerequisite_canon_entity_id uuid [not null]
+  watchable_canon_entity_id uuid [not null]
+  note text
+  created_at timestamp [not null]
+  Note: 'Optional: Stores user-defined prerequisite relationships.'
+}
+
+Table watch_focus {
+  watch_focus_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  target_canon_entity_id uuid
+  name text [not null]
+  route_strategy varchar(48) [not null]
+  status varchar(24) [not null]
+  is_active boolean [not null]
+  configuration json [not null]
+  created_at timestamp [not null]
+  completed_at timestamp
+  Note: 'MVP-required: Stores saved Focus identity, target, lifecycle, and active status.'
+}
+
+Table watch_focus_rule {
+  watch_focus_rule_id uuid [pk, not null]
+  watch_focus_id uuid [not null]
+  rule_kind varchar(48) [not null]
+  position int [not null]
+  rule_document json [not null]
+  Indexes { (watch_focus_id, rule_kind, position) [unique, name: 'uq_watch_focus_rule_1'] }
+  Note: 'MVP-required: Stores validated filters, policies, weights, pins, and decisions.'
+}
+
+Table watch_focus_completion {
+  watch_focus_completion_id uuid [pk, not null]
+  watch_focus_id uuid [not null, unique]
+  canon_pack_release_id uuid [not null]
+  completed_at timestamp [not null]
+  completion_snapshot json [not null]
+  snapshot_sha256 varchar(64) [not null]
+  Note: 'Optional: Preserves immutable completion snapshots for finished Focuses.'
+}
+
+Table focus_change_set {
+  focus_change_set_id uuid [pk, not null]
+  watch_focus_id uuid [not null]
+  from_canon_pack_release_id uuid [not null]
+  to_canon_pack_release_id uuid [not null]
+  status varchar(24) [not null]
+  change_document json [not null]
+  created_at timestamp [not null]
+  resolved_at timestamp
+  Note: 'Optional: Records reconciliation outcomes after Canon graph changes.'
+}
+
+Table watch_focus_projection {
+  watch_focus_projection_id uuid [pk, not null]
+  watch_focus_id uuid [not null, unique]
+  canon_pack_release_id uuid [not null]
+  algorithm_version varchar(64) [not null]
+  queue_document json [not null]
+  explanation_document json [not null]
+  baseline_sha256 varchar(64) [not null]
+  generated_at timestamp [not null]
+  Note: 'MVP-required: Caches the generated Focus queue, explanations, and reconciliation baseline.'
+}
+
+Table deployment_session {
+  deployment_session_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  token_hash varchar(128) [not null, unique]
+  csrf_hash varchar(128) [not null]
+  created_at timestamp [not null]
+  last_seen_at timestamp [not null]
+  idle_expires_at timestamp [not null]
+  absolute_expires_at timestamp [not null]
+  revoked_at timestamp
+  Note: 'Infrastructure: Stores hashed deployment authentication sessions and expiration state.'
+}
+
+Table password_recovery_credential {
+  password_recovery_credential_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  code_hash varchar(128) [not null, unique]
+  created_at timestamp [not null]
+  expires_at timestamp [not null]
+  failed_attempt_count int [not null]
+  consumed_at timestamp
+  Note: 'Infrastructure: Stores short-lived host-generated recovery credentials.'
+}
+
+Table canon_pack_repository {
+  canon_pack_repository_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  repository_url varchar(2048) [not null]
+  release_channel varchar(32) [not null]
+  trust_policy json [not null]
+  created_at timestamp [not null]
+  Note: 'Infrastructure: Configures the Phase 1 Canon Pack release source.'
+}
+
+Table canon_pack_import {
+  canon_pack_import_id uuid [pk, not null]
+  canon_pack_repository_id uuid
+  canon_pack_release_id uuid
+  artifact_sha256 varchar(64) [not null]
+  status varchar(24) [not null]
+  validation_report json [not null]
+  started_at timestamp [not null]
+  completed_at timestamp
+  Note: 'Infrastructure: Records validation and transactional import attempts.'
+}
+
+Table canon_pack_activation {
+  canon_pack_activation_id uuid [pk, not null]
+  canon_pack_release_id uuid [not null]
+  canon_pack_import_id uuid [not null]
+  activated_at timestamp [not null]
+  deactivated_at timestamp
+  Note: 'Infrastructure: Records which verified release was active during each interval.'
+}
+
+Table canon_pack_update_check {
+  canon_pack_update_check_id uuid [pk, not null]
+  canon_pack_repository_id uuid [not null]
+  status varchar(24) [not null]
+  candidate_version varchar(64)
+  result_document json [not null]
+  started_at timestamp [not null]
+  completed_at timestamp
+  Note: 'Infrastructure: Records update checks and discovered candidate releases.'
+}
+
+Table schema_migration_run {
+  schema_migration_run_id uuid [pk, not null]
+  application_version varchar(64) [not null]
+  database_version varchar(64) [not null]
+  status varchar(24) [not null]
+  backup_reference text
+  error_code varchar(128)
+  started_at timestamp [not null]
+  completed_at timestamp
+  Note: 'Infrastructure: Records guarded startup migration executions and outcomes.'
+}
+
+Table schema_migration {
+  schema_migration_id varchar(128) [pk, not null]
+  schema_migration_run_id uuid [not null]
+  checksum_sha256 varchar(64) [not null]
+  applied_at timestamp [not null]
+  Note: 'Infrastructure: Tracks individual migration versions and checksums.'
+}
+
+Table portable_transfer {
+  portable_transfer_id uuid [pk, not null]
+  tracker_instance_id uuid [not null]
+  direction varchar(16) [not null]
+  format_version varchar(32) [not null]
+  artifact_sha256 varchar(64)
+  status varchar(24) [not null]
+  result_document json [not null]
+  started_at timestamp [not null]
+  completed_at timestamp
+  Note: 'Infrastructure: Records portable export, restore, and validation operations.'
+}
+
+Ref: canon_pack_release.canon_pack_id > canon_pack.canon_pack_id
+Ref: canon_entity.canon_pack_id > canon_pack.canon_pack_id
+Ref: canon_entity_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: canon_entity_revision.canon_entity_id > canon_entity.canon_entity_id
+Ref: canon_entity_identity_link.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: canon_entity_identity_link.subject_canon_entity_id > canon_entity.canon_entity_id
+Ref: canon_entity_identity_link.target_canon_entity_id > canon_entity.canon_entity_id
+Ref: canon_entity_identity_link.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: canon_term_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: canon_term_revision.canon_entity_id > canon_entity.canon_entity_id
+Ref: source_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: source_revision.canon_entity_id > canon_entity.canon_entity_id
+Ref: source_relation.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: source_relation.subject_source_revision_id > source_revision.source_revision_id
+Ref: source_relation.target_source_revision_id > source_revision.source_revision_id
+Ref: provenance_claim.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: provenance_claim.canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: provenance_claim_source.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: provenance_claim_source.source_revision_id > source_revision.source_revision_id
+Ref: decision_record.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: container_revision.canon_entity_revision_id - canon_entity_revision.canon_entity_revision_id
+Ref: container_revision.container_kind_canon_term_revision_id > canon_term_revision.canon_term_revision_id
+Ref: watchable_revision.canon_entity_revision_id - canon_entity_revision.canon_entity_revision_id
+Ref: watchable_revision.watchable_type_canon_term_revision_id > canon_term_revision.canon_term_revision_id
+Ref: first_public_release.watchable_revision_id - watchable_revision.watchable_revision_id
+Ref: first_public_release.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: external_identifier.canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: external_identifier.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: media_reference.canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: media_reference.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: entity_organization.canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: entity_organization.organization_canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: entity_organization.role_canon_term_revision_id > canon_term_revision.canon_term_revision_id
+Ref: entity_organization.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: classification_value_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: classification_value_revision.canon_entity_id > canon_entity.canon_entity_id
+Ref: classification_value_revision.dimension_canon_term_revision_id > canon_term_revision.canon_term_revision_id
+Ref: classification_value_parent.child_classification_value_revision_id > classification_value_revision.classification_value_revision_id
+Ref: classification_value_parent.parent_classification_value_revision_id > classification_value_revision.classification_value_revision_id
+Ref: entity_classification.canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: entity_classification.classification_value_revision_id > classification_value_revision.classification_value_revision_id
+Ref: entity_classification.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: container_membership_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: container_membership_revision.container_canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: container_membership_revision.member_canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: container_membership_revision.role_canon_term_revision_id > canon_term_revision.canon_term_revision_id
+Ref: container_membership_revision.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: watch_relationship_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: watch_relationship_revision.prerequisite_watchable_revision_id > watchable_revision.watchable_revision_id
+Ref: watch_relationship_revision.watchable_revision_id > watchable_revision.watchable_revision_id
+Ref: watch_relationship_revision.relationship_type_canon_term_revision_id > canon_term_revision.canon_term_revision_id
+Ref: watch_relationship_revision.provenance_claim_id > provenance_claim.provenance_claim_id
+Ref: watch_guide_revision.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: watch_guide_revision.canon_entity_id > canon_entity.canon_entity_id
+Ref: guide_stage_revision.watch_guide_revision_id > watch_guide_revision.watch_guide_revision_id
+Ref: guide_entry_revision.guide_stage_revision_id > guide_stage_revision.guide_stage_revision_id
+Ref: guide_entry_revision.canon_entity_revision_id > canon_entity_revision.canon_entity_revision_id
+Ref: extension_schema_version.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: viewing_attempt.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: viewing_attempt.canon_entity_id > canon_entity.canon_entity_id
+Ref: viewing_attempt.watch_focus_id > watch_focus.watch_focus_id
+Ref: viewing_session.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: viewing_session.canon_entity_id > canon_entity.canon_entity_id
+Ref: viewing_session.watch_focus_id > watch_focus.watch_focus_id
+Ref: watchable_feedback.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: watchable_feedback.canon_entity_id > canon_entity.canon_entity_id
+Ref: watchable_feedback.viewing_session_id > viewing_session.viewing_session_id
+Ref: tracker_preference.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: spoiler_reveal.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: spoiler_reveal.canon_entity_id > canon_entity.canon_entity_id
+Ref: local_override.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: local_override.canon_entity_id > canon_entity.canon_entity_id
+Ref: personal_watch_relationship.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: personal_watch_relationship.prerequisite_canon_entity_id > canon_entity.canon_entity_id
+Ref: personal_watch_relationship.watchable_canon_entity_id > canon_entity.canon_entity_id
+Ref: watch_focus.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: watch_focus.target_canon_entity_id > canon_entity.canon_entity_id
+Ref: watch_focus_rule.watch_focus_id > watch_focus.watch_focus_id
+Ref: watch_focus_completion.watch_focus_id - watch_focus.watch_focus_id
+Ref: watch_focus_completion.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: focus_change_set.watch_focus_id > watch_focus.watch_focus_id
+Ref: focus_change_set.from_canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: focus_change_set.to_canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: watch_focus_projection.watch_focus_id - watch_focus.watch_focus_id
+Ref: watch_focus_projection.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: deployment_session.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: password_recovery_credential.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: canon_pack_repository.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: canon_pack_import.canon_pack_repository_id > canon_pack_repository.canon_pack_repository_id
+Ref: canon_pack_import.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: canon_pack_activation.canon_pack_release_id > canon_pack_release.canon_pack_release_id
+Ref: canon_pack_activation.canon_pack_import_id > canon_pack_import.canon_pack_import_id
+Ref: canon_pack_update_check.canon_pack_repository_id > canon_pack_repository.canon_pack_repository_id
+Ref: schema_migration.schema_migration_run_id > schema_migration_run.schema_migration_run_id
+Ref: portable_transfer.tracker_instance_id > tracker_instance.tracker_instance_id
+
+// Derived SQL views (not persisted)
+// - effective_canon_entity: Active release entity rows with Local Overrides layered separately.
+// - effective_container: Effective structural Containers for the active Pack.
+// - effective_watchable: Effective Watchables with declarative Type and release fact.
+// - catalog_watchable: Catalog projection with placement, media, state, and prerequisite summaries.
+// - viewing_state: Derived Not Started, In Progress, or Watched state.
+// - active_watch_focus_queue: Ordered queue rows expanded from the active Focus projection.
+// - next_up: First eligible queue entry with deterministic explanation.
+// - guide_stage_satisfaction: Derived Guide Stage satisfaction from Entry inclusion and viewing state.
+// - watch_focus_progress: Derived Focus completion and progress aggregates.
