@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Autonomous execution is authorized. Milestones M0 and M1 are complete. M2 remains in progress, and the M3 Core foundation is undergoing final review: API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
+Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane. The Core API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
 
 ## Authorization boundary
 
@@ -18,8 +18,8 @@ Autonomous execution is authorized. Milestones M0 and M1 are complete. M2 remain
 | M0 Durable plan and baselines | Complete | Plan/status commit `e32af8c`; draft PR #1; three independent planning reviews | None |
 | M1 Reduced complete Phase 1 ERD | Complete | Reproducible 48-table/95-relationship/9-view model; DrawDB, DDB, and DBML validation; independent review passed | None |
 | M2 Canon Pack contract 0.2.x | In progress | Declarative Watchable Types slice merged in Template PR #6 at `2df3818`; 26 tests and pre/post-merge CI passed | Remaining accepted Pack structures, contract ERD, lint/gate completion |
-| M3 Core/PostgreSQL/Docker foundation | In progress | 25/25 tests including PostgreSQL/shared contracts/schema damage/environment, ledger, and deterministic-build validation; deterministic production rebuild; hardened fresh/retained-volume Compose; Edge rendering; zero high/critical final-image findings; CycloneDX SBOM; restart/recreation persistence | Final re-review, commit/push, and PR CI |
-| M4 Setup/auth/import/activation | Pending | Design requirements only | M3 |
+| M3 Core/PostgreSQL/Docker foundation | Complete | Core PR #1 merged as `c4a6a07`; PR CI `32658514890` and post-merge CI `32658626306` passed; 25/25 tests; deterministic build; hardened Compose; zero high/critical final-image findings; SBOM; persistence | None |
+| M4 Setup/auth/import/activation | Pending | Design requirements only | M2 Canon contract completion |
 | M5 MVP UX and viewing loop | Pending | Design requirements only | M4 |
 | M6 MVP deployed verification/release | Pending | Docker access preflight passed | M5 |
 | M7 Remaining accepted Phase 1 | Pending | ADR/requirements corpus exists | M6 |
@@ -111,3 +111,11 @@ Autonomous execution is authorized. Milestones M0 and M1 are complete. M2 remain
 - Made the image health check honor `PORT`. A hardened local container using non-default internal port `3210` reported Docker health `healthy`, and `/ready` returned HTTP 200 with Watch Tracker readiness JSON through loopback host port `32772`.
 - `docker build --check`, Compose configuration validation, exact Node image build, formatting, typecheck, lint, full tests, production builds, deterministic comparison, audits, and both Git diff checks passed after the corrections.
 - Final quality re-review confirmed those four corrections and found one low-severity stale lockfile engine field. Regenerated `package-lock.json` with Node `22.22.3`/npm `10.9.8` so its root engine metadata matches `package.json`, and added a CI lockfile-regeneration drift check.
+
+### 2026-08-23 — M3 completed
+
+- Final independent specification review passed with no findings on the exact implementation diff. Final independent code-quality/security review passed with no findings after all correction rounds.
+- Signed implementation commit `6b2711a1215111f01259505fa93630b063f2d0cd` was pushed. Core PR #1 became review-ready only after local gates and both final reviews passed.
+- Core PR #1 CI run `32658514890` passed every required step, including locked install, lockfile drift, both audits, formatting, strict typechecks, lint, 25 tests with PostgreSQL, deterministic build, Dockerfile/Compose checks, image builds and scans, SBOM generation, and Compose smoke.
+- Core PR #1 merged as `c4a6a0751a52f9c2289bec46fa5b4590b74e58be`. Post-merge `main` CI run `32658626306` passed the same complete gate.
+- Core `main` and Template `main` were clean after the merge. No remote deployment or GitHub release was performed. M2 remains the next dependency-ready milestone lane.
