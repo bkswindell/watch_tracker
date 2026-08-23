@@ -1,0 +1,22 @@
+name: Community conduct concern
+description: Flag a non-sensitive project conduct issue for maintainer review
+title: "[Conduct concern]: "
+labels: ["conduct-review"]
+body:
+  - type: markdown
+    attributes:
+      value: This is a public issue. Do not include private information, confidential evidence, harassment details, or content that could endanger anyone. Use GitHub's private abuse-reporting channel for sensitive matters.
+  - type: input
+    id: location
+    attributes:
+      label: Public project location
+      description: Link to the issue, pull request, discussion, or other public project interaction.
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Non-sensitive concern
+      description: Briefly identify the project standard that needs maintainer review without repeating harmful content unnecessarily.
+    validations:
+      required: true

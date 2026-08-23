@@ -1,0 +1,27 @@
+name: Copyright concern
+description: Flag repository material for good-faith review
+title: "[Copyright concern]: "
+labels: ["copyright-review"]
+body:
+  - type: markdown
+    attributes:
+      value: This public form is for non-confidential coordination, not a formal legal notice. Do not publish personal information or confidential evidence. Formal notices concerning GitHub-hosted content should use GitHub's DMCA process linked from COPYRIGHT_POLICY.md.
+  - type: input
+    id: material
+    attributes:
+      label: Exact repository material
+      description: Provide the file path, line, commit, release, or URL.
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Rights concern
+      description: Identify the work and why you believe the repository material should be reviewed.
+    validations:
+      required: true
+  - type: textarea
+    id: requested_action
+    attributes:
+      label: Requested action
+      description: State whether temporary removal, attribution correction, or another response is requested.

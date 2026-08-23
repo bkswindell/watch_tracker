@@ -1,0 +1,34 @@
+name: Bug report
+description: Report reproducible incorrect behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Do not disclose security vulnerabilities, credentials, or private data here. Follow SECURITY.md instead.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest reproducible sequence and relevant configuration without secrets.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Revision or version
+      description: Commit, tag, image version, or state that no release exists.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Additional evidence
+      description: Logs, screenshots, or diagnostics with credentials and private data removed.
