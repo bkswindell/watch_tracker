@@ -32,6 +32,7 @@
     "@xyflow/react": "^12.11.3",
     "ag-grid-community": "^36.1.0",
     "ag-grid-react": "^36.1.0",
+    "argon2": "0.45.1",
     "fastify": "5.12.1",
     "pg": "8.16.3",
     "react": "19.2.8",

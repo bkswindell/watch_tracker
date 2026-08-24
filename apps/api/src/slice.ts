@@ -7,6 +7,7 @@ import {
 } from "node:crypto";
 import path from "node:path";
 
+import argon2, { argon2id } from "argon2";
 import type { Pool } from "pg";
 
 import type {
@@ -255,14 +256,35 @@ function digest(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function credentialHash(
-  password: string,
-  salt = randomBytes(16).toString("hex"),
-): string {
-  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+export const PASSWORD_POLICY = Object.freeze({
+  minLength: 15,
+  maxLength: 1024,
+});
+
+export const ARGON2ID_OPTIONS = Object.freeze({
+  type: argon2id,
+  memoryCost: 65_536,
+  timeCost: 3,
+  parallelism: 1,
+});
+
+export function passwordPolicyError(password: string): string | undefined {
+  if (password.length < PASSWORD_POLICY.minLength)
+    return `Password must be at least ${PASSWORD_POLICY.minLength} characters`;
+  if (password.length > PASSWORD_POLICY.maxLength)
+    return `Password must be at most ${PASSWORD_POLICY.maxLength} characters`;
+  if (password.includes("\0")) return "Password must not contain NUL bytes";
+  return undefined;
 }
 
-function credentialMatches(password: string, stored: string): boolean {
+async function credentialHash(password: string): Promise<string> {
+  return argon2.hash(password, ARGON2ID_OPTIONS);
+}
+
+// Existing deployments used this format before the Argon2id baseline. Keep
+// verification-only support so an additive deploy never rewrites a live
+// credential; newly persisted credentials are always Argon2id.
+function legacyCredentialMatches(password: string, stored: string): boolean {
   const [salt, expected] = stored.split(":");
   if (!salt || !expected) return false;
   const actual = scryptSync(password, salt, 64).toString("hex");
@@ -270,6 +292,14 @@ function credentialMatches(password: string, stored: string): boolean {
     actual.length === expected.length &&
     timingSafeEqual(Buffer.from(actual), Buffer.from(expected))
   );
+}
+
+async function credentialMatches(
+  password: string,
+  stored: string,
+): Promise<boolean> {
+  if (stored.startsWith("$argon2id$")) return argon2.verify(stored, password);
+  return legacyCredentialMatches(password, stored);
 }
 
 function newSession(trackerInstanceId: string): SliceSession {
@@ -440,14 +470,14 @@ export class MemorySliceStore implements SliceStore {
   async setup(): Promise<boolean> {
     if (this.#credential !== undefined || !this.#configuredPassword)
       return false;
-    this.#credential = credentialHash(this.#configuredPassword);
+    this.#credential = await credentialHash(this.#configuredPassword);
     this.#configuredPassword = undefined;
     return true;
   }
   async authenticate(password: string): Promise<boolean> {
     return (
       this.#credential !== undefined &&
-      credentialMatches(password, this.#credential)
+      (await credentialMatches(password, this.#credential))
     );
   }
   async createSession(): Promise<SliceSession> {
@@ -715,7 +745,7 @@ export class SqlSliceStore implements SliceStore {
   }
   async setup(): Promise<boolean> {
     const initialPassword = this.#initialPassword;
-    if (!initialPassword) return false;
+    if (!initialPassword || passwordPolicyError(initialPassword)) return false;
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
@@ -729,7 +759,7 @@ export class SqlSliceStore implements SliceStore {
       }
       const instance = await client.query<{ tracker_instance_id: string }>(
         "INSERT INTO tracker_instance (display_name, credential_hash, setup_completed_at) VALUES ('Local admin', $1, CURRENT_TIMESTAMP) RETURNING tracker_instance_id",
-        [credentialHash(initialPassword)],
+        [await credentialHash(initialPassword)],
       );
       const trackerInstanceId = instance.rows[0]?.tracker_instance_id;
       if (!trackerInstanceId)
@@ -753,7 +783,7 @@ export class SqlSliceStore implements SliceStore {
       "SELECT instance.credential_hash FROM tracker_instance instance JOIN installation_setup setup ON setup.tracker_instance_id = instance.tracker_instance_id WHERE setup.singleton = true",
     );
     return result.rows[0]?.credential_hash
-      ? credentialMatches(password, result.rows[0].credential_hash)
+      ? await credentialMatches(password, result.rows[0].credential_hash)
       : false;
   }
   async createSession(): Promise<SliceSession> {

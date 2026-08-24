@@ -3,9 +3,12 @@ import { test } from "node:test";
 
 import { buildApp } from "../apps/api/src/app.js";
 import {
+  ARGON2ID_OPTIONS,
   MemorySliceStore,
+  PASSWORD_POLICY,
   SESSION_ABSOLUTE_LIFETIME_MS,
   SESSION_IDLE_LIFETIME_MS,
+  passwordPolicyError,
 } from "../apps/api/src/slice.js";
 
 async function configuredApp(
@@ -123,4 +126,26 @@ test("session activity slides idle expiry but never beyond 90 days", async () =>
   }
   now = SESSION_ABSOLUTE_LIFETIME_MS;
   assert.equal(await store.getSession(session.token), undefined);
+});
+
+test("password policy rejects undersized, oversized, and NUL-containing values", () => {
+  assert.match(
+    passwordPolicyError("x".repeat(PASSWORD_POLICY.minLength - 1)) ?? "",
+    /at least/,
+  );
+  assert.match(
+    passwordPolicyError("x".repeat(PASSWORD_POLICY.maxLength + 1)) ?? "",
+    /at most/,
+  );
+  assert.match(passwordPolicyError("x".repeat(14) + "\0") ?? "", /NUL/);
+  assert.equal(
+    passwordPolicyError("x".repeat(PASSWORD_POLICY.minLength)),
+    undefined,
+  );
+  assert.deepEqual(ARGON2ID_OPTIONS, {
+    type: 2,
+    memoryCost: 65_536,
+    timeCost: 3,
+    parallelism: 1,
+  });
 });

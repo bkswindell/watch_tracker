@@ -8,7 +8,7 @@ import { Pool } from "pg";
 
 import { buildApp, type ReadinessProbe } from "./app.js";
 import { loadMigrations, verifySchema } from "./migrations.js";
-import { SqlSliceStore } from "./slice.js";
+import { passwordPolicyError, SqlSliceStore } from "./slice.js";
 
 export const SHUTDOWN_DEADLINE_MS = 10_000;
 
@@ -190,6 +190,13 @@ export async function startServer(): Promise<void> {
       : undefined;
     if (environment.initialAdminPasswordFile && !initialAdminPassword) {
       throw new Error("INITIAL_ADMIN_PASSWORD_FILE is empty");
+    }
+    if (initialAdminPassword) {
+      const policyError = passwordPolicyError(initialAdminPassword);
+      if (policyError)
+        throw new Error(
+          `INITIAL_ADMIN_PASSWORD_FILE violates password policy: ${policyError}`,
+        );
     }
     const databaseReadinessProbe: ReadinessProbe = async () => {
       try {
