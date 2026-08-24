@@ -50,7 +50,7 @@ export function requestOptions(
   if (method === "GET") return options;
   options.method = method;
   options.headers = {
-    "content-type": "application/json",
+    ...(body !== undefined ? { "content-type": "application/json" } : {}),
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
   if (body !== undefined) options.body = JSON.stringify(body);

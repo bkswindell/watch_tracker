@@ -5,6 +5,13 @@ import { requestOptions } from "../apps/web/src/api.js";
 
 test("browser API requests keep same-origin credentials and protect unsafe calls with CSRF", () => {
   assert.deepEqual(requestOptions("GET"), { credentials: "same-origin" });
+  assert.deepEqual(requestOptions("POST", "csrf-123"), {
+    credentials: "same-origin",
+    method: "POST",
+    headers: {
+      "x-csrf-token": "csrf-123",
+    },
+  });
   assert.deepEqual(
     requestOptions("POST", "csrf-123", { password: "not asserted" }),
     {
