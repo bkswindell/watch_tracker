@@ -33,3 +33,16 @@
 - Remaining accepted gates are Argon2id/password policy and host-controlled recovery. Recovery requires provider/UX decisions; the safe next lane is Argon2id/password policy without changing deployed credentials.
 - Validate Core run `32786887814` completed successfully for progress parent `c235859`; all workflow steps passed, including PostgreSQL integration, image scanning, SBOM, and Compose runtime smoke.
 - Historical audit remains **FAIL** pending every accepted auth/session gate.
+
+## 2026-08-24 — authentication/session hardening slice 3
+
+- Confirmed the prior watched-feedback Validate Core run `32784974478` completed successfully for `89555034495238e5b9b0206bc56228a648238b58`.
+- Delivered Core checkpoint `9c47d4692e9de96186d4b13812013c7ab24506fa`:
+  - fresh deployment setup persists Argon2id hashes at the required `m=65536`, `t=3`, `p=1` parameters;
+  - host initial-password input has a 15–1024 character/no-NUL policy at startup and SQL setup;
+  - legacy scrypt records remain verification-only compatible, so this change does not rewrite a deployed credential.
+- Validation: focused authentication/SQL suite passed (8 tests); `npm run check` passed (104 portable tests); deterministic build passed (25 artifacts); `npm audit --omit=dev --audit-level=high` reported 0 vulnerabilities; production image build passed.
+- PostgreSQL integration command was attempted but correctly stopped before connection because `TEST_DATABASE_URL` is not supplied to this host. The live database remains intentionally un-published; no database container, volume, or credential was changed.
+- App-only deployment: rebuilt `watch-tracker:verify`, recreated only `watch-tracker-lan-foundation-app-1` with `--no-deps`, and observed healthy app/database containers plus `http://10.18.0.201:3100/ready` ready. No migration ran.
+- Browser certification remains blocked because the cron harness has no supported Chromium-family browser and no deployment credential was accessed. No authenticated proof was fabricated.
+- Remote branch SHA verified at `9c47d4692e9de96186d4b13812013c7ab24506fa`; fresh Validate Core status is pending. Host-controlled recovery is the remaining accepted auth gate, but provider/UX delivery details require a host-channel decision. Historical audit remains **FAIL**.
