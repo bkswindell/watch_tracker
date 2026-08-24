@@ -9,7 +9,7 @@ import {
 import FocusGraph from "./FocusGraph";
 import WatchableActionMenu from "./WatchableActions";
 import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
-import { api } from "./api";
+import { api, recommendedNext } from "./api";
 import { artworkUrl } from "./mediaUrls";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -91,6 +91,7 @@ function App() {
     [items, setItems] = useState([]),
     [relations, setRelations] = useState([]),
     [target, setTarget] = useState(),
+    [nextUp, setNextUp] = useState([]),
     [history, setHistory] = useState([]),
     [pack, setPack] = useState();
   const [selected, setSelected] = useState(),
@@ -107,9 +108,10 @@ function App() {
     setItems(data.items.map(normalize));
     setRelations(data.relationships.map((r) => [r.fromSlug, r.toSlug, r.type]));
     setTarget(data.targetSlug);
+    setNextUp(data.nextUp.map(normalize));
     setHistory(data.history || []);
     setPack(data.pack);
-    const next = data.items.find((x) => x.slug === data.nextUp?.slug);
+    const next = data.items.find((x) => x.slug === data.nextUp[0]?.slug);
     if (next && !selected) setSelected(normalize(next));
   };
   useEffect(() => {
@@ -327,7 +329,7 @@ function App() {
                 items={items}
                 relations={relations}
                 target={target || items[0]?.id}
-                nextUpId={items.find((x) => x.state === "Not Started")?.id}
+                nextUpId={nextUp[0]?.id}
                 selectedId={selected?.id}
                 onTarget={(id) => markTarget(items.find((x) => x.id === id))}
                 mode={mode}
@@ -379,6 +381,7 @@ function App() {
           {view === "next" && (
             <NextPage
               items={items}
+              nextUp={nextUp}
               target={target}
               onTarget={markTarget}
               onPick={openDetails}
@@ -498,8 +501,8 @@ function RelationshipSummary({ selected }) {
     </section>
   );
 }
-function NextPage({ items, target, onTarget, onPick, onAction }) {
-  const next = items.find((x) => x.state === "Not Started") || items[0];
+function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
+  const next = recommendedNext(items, nextUp);
   return (
     <>
       <div className="pageTitle">

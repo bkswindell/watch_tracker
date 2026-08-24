@@ -35,7 +35,7 @@ export type WorkspaceResponse = {
   items: CatalogItem[];
   relationships: WorkspaceRelationship[];
   targetSlug?: string;
-  nextUp?: CatalogItem;
+  nextUp: CatalogItem[];
   history: WorkspaceHistory[];
   pack?: Record<string, unknown>;
 };
@@ -78,6 +78,14 @@ async function call<T>(
     response.status === 204 ? (undefined as T) : ((await response.json()) as T);
   return { data, response };
 }
+export function recommendedNext<T extends { slug: string }>(
+  items: T[],
+  nextUp: { slug: string }[],
+): T | undefined {
+  const nextSlug = nextUp[0]?.slug;
+  return items.find((item) => item.slug === nextSlug) ?? items[0];
+}
+
 export const api = {
   bootstrap: () =>
     call<{ setupRequired: boolean; authenticated: boolean; csrfToken: string }>(
