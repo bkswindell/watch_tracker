@@ -85,3 +85,38 @@ test("CI smoke uses the built production images with disposable loopback Compose
   );
   assert.doesNotMatch(database, /ports:/);
 });
+
+test("Compose file secrets use the app's non-root UID and CI provides the runner UID", () => {
+  const setup = workflow.slice(
+    workflow.indexOf("Generate disposable Compose secrets"),
+    workflow.indexOf("Check Dockerfile"),
+  );
+  const app = compose.slice(
+    compose.indexOf("  app:"),
+    compose.indexOf("\nnetworks:"),
+  );
+  const secrets = compose.slice(compose.indexOf("\nsecrets:\n"));
+
+  assert.match(app, /\n\s+user: "\$\{APP_USER_ID:-1000\}"/);
+  assert.match(
+    secrets,
+    /initial_admin_password:\n\s+file: \$\{INITIAL_ADMIN_PASSWORD_FILE:-\.\/\.secrets\/initial_admin_password\}/,
+  );
+  assert.match(setup, /app_user_id="\$\(id -u\)"/);
+  assert.match(
+    setup,
+    /printf '%s\\n' "\$admin_password" > "\$COMPOSE_SECRET_FILE"/,
+  );
+  assert.match(
+    setup,
+    /test "\$\(stat -c '%a' "\$COMPOSE_SECRET_FILE"\)" = 600/,
+  );
+  assert.match(setup, /printf 'APP_USER_ID=%s\\n' "\$app_user_id"/);
+  const smoke = workflow.slice(workflow.indexOf("Smoke built Compose runtime"));
+  assert.match(
+    smoke,
+    /effective_app_uid="\$\(docker exec "\$container_id" node -p 'process\.getuid\(\)'\)"/,
+  );
+  assert.match(smoke, /test "\$effective_app_uid" -ne 0/);
+  assert.match(smoke, /test "\$mounted_secret_uid" = "\$source_secret_uid"/);
+});

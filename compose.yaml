@@ -58,6 +58,9 @@ services:
 
   app:
     <<: [*watch-tracker-image, *watch-tracker-security]
+    # Compose file secrets are bind-mounted and retain the source ownership.
+    # Keep this UID aligned with the owner of the mode-0600 source file.
+    user: "${APP_USER_ID:-1000}"
     restart: unless-stopped
     depends_on:
       database:
@@ -72,9 +75,6 @@ services:
     secrets:
       - source: initial_admin_password
         target: /run/secrets/initial_admin_password
-        uid: "1000"
-        gid: "1000"
-        mode: 0400
     ports:
       - "${APP_BIND_ADDRESS:-10.18.0.201}:${APP_PORT:-3100}:3000"
     healthcheck:

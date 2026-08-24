@@ -63,13 +63,19 @@ This deployment path is for local development and verification only. It does not
    `INITIAL_ADMIN_PASSWORD_FILE`) only when the file is absent or empty. It
    creates and checks a private parent directory, writes a strong random
    password with mode `0600`, never prints the password, and is safe to run
-   repeatedly. Compose mounts this ignored file read-only for the non-root
-   application container.
+   repeatedly. Compose mounts this ignored file read-only and preserves its
+   source UID, so the non-root application UID must match the local user that
+   owns the file.
 4. Start the stack:
 
    ```bash
-   docker compose up --build -d
+   APP_USER_ID="$(id -u)" docker compose up --build -d
    ```
+
+   `APP_USER_ID` defaults to `1000` for the image's normal non-root user. Set
+   it to the owner UID of a mode-`0600` `INITIAL_ADMIN_PASSWORD_FILE` whenever
+   that file is owned by a different local user; do not make the secret
+   world-readable.
 
 5. Open <http://127.0.0.1:3100/>. API liveness and readiness are available at `/health` and `/ready`.
 

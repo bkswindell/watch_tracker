@@ -93,11 +93,14 @@ jobs:
           COMPOSE_SECRET_FILE="$RUNNER_TEMP/watch-tracker-initial-admin-password"
           compose_password="$(openssl rand -hex 32)"
           admin_password="$(openssl rand -hex 32)"
+          app_user_id="$(id -u)"
           umask 077
           printf '%s\n' "$admin_password" > "$COMPOSE_SECRET_FILE"
+          test "$(stat -c '%a' "$COMPOSE_SECRET_FILE")" = 600
           {
             printf 'POSTGRES_PASSWORD=%s\n' "$compose_password"
             printf 'INITIAL_ADMIN_PASSWORD_FILE=%s\n' "$COMPOSE_SECRET_FILE"
+            printf 'APP_USER_ID=%s\n' "$app_user_id"
             printf 'APP_BIND_ADDRESS=127.0.0.1\nAPP_PORT=3100\n'
             printf 'WATCH_TRACKER_IMAGE=%s\n' "$WATCH_TRACKER_IMAGE"
             printf 'WATCH_TRACKER_DATABASE_IMAGE=%s\n' "$WATCH_TRACKER_DATABASE_IMAGE"
@@ -154,12 +157,18 @@ jobs:
           running_image_id="$(docker inspect "$container_id" --format '{{.Image}}')"
           test -n "$container_id"
           test "$running_image_id" = "$expected_image_id"
+          effective_app_uid="$(docker exec "$container_id" node -p 'process.getuid()')"
+          source_secret_uid="$(stat -c '%u' "$COMPOSE_SECRET_FILE")"
+          mounted_secret_uid="$(docker exec "$container_id" stat -c '%u' /run/secrets/initial_admin_password)"
+          test "$effective_app_uid" -ne 0
+          test "$effective_app_uid" = "$source_secret_uid"
+          test "$mounted_secret_uid" = "$source_secret_uid"
 
           base="http://127.0.0.1:${APP_PORT}"
           for endpoint in / /health /ready; do
             curl --fail --silent --show-error --max-time 10 "$base$endpoint" >/dev/null
           done
-          printf 'PASS runtime endpoints=3\\n'
+          printf 'PASS runtime uid=%s endpoints=3\\n' "$effective_app_uid"
 
       - name: Compose runtime diagnostics
         if: ${{ failure() }}
