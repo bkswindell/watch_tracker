@@ -62,6 +62,8 @@ export interface CanonPackWatchable {
   watchableTypeId: string;
   releaseDate: string;
   releaseOrder: number;
+  runtimeMinutes: number;
+  series: string;
 }
 export interface CanonPackMembership {
   id: string;
@@ -1013,7 +1015,7 @@ export async function importCanonPackDirectory(
           "title",
           "watchableTypeId",
         ],
-        ["externalIdentifiers", "runtimeMinutes"],
+        ["externalIdentifiers", "packOrder", "runtimeMinutes", "series"],
       );
       generatedUrn(record, identity.id, `watchables[${index}]`);
       sourceReferences(record, sourceIds, `watchables[${index}]`);
@@ -1057,16 +1059,20 @@ export async function importCanonPackDirectory(
         sourceIds,
         `watchables[${index}].firstPublicRelease.provenance`,
       );
-      if (record.runtimeMinutes !== undefined) {
-        const runtimeMinutes = integer(
-          record.runtimeMinutes,
-          `watchables[${index}].runtimeMinutes`,
-        );
-        if (runtimeMinutes < 1)
-          throw new Error(
-            `watchables[${index}].runtimeMinutes must be positive`,
-          );
-      }
+      const runtimeMinutes = integer(
+        record.runtimeMinutes,
+        `watchables[${index}].runtimeMinutes`,
+      );
+      if (runtimeMinutes < 1)
+        throw new Error(`watchables[${index}].runtimeMinutes must be positive`);
+      const series =
+        record.series === undefined
+          ? "Unclassified"
+          : string(record.series, `watchables[${index}].series`);
+      const packOrder = optionalPositiveInteger(
+        record.packOrder,
+        `watchables[${index}].packOrder`,
+      );
       if (record.externalIdentifiers !== undefined) {
         for (const [identifierIndex, identifier] of array(
           record.externalIdentifiers,
@@ -1099,6 +1105,9 @@ export async function importCanonPackDirectory(
         summary: string(record.summary, `watchables[${index}].summary`),
         watchableTypeId,
         releaseDate,
+        packOrder,
+        runtimeMinutes,
+        series,
       };
     });
     const watchableIds = ids(watchables, "watchable");
@@ -1108,11 +1117,22 @@ export async function importCanonPackDirectory(
         throw new Error(`duplicate watchable slug ${watchable.slug}`);
       slugSet.add(watchable.slug);
     }
-    watchables.sort(
-      (left, right) =>
-        left.releaseDate.localeCompare(right.releaseDate) ||
-        left.slug.localeCompare(right.slug),
-    );
+    const explicitOrders = watchables.map((watchable) => watchable.packOrder);
+    if (explicitOrders.some((order) => order !== undefined)) {
+      if (explicitOrders.some((order) => order === undefined))
+        throw new Error(
+          "packOrder must be supplied for every watchable or none",
+        );
+      if (new Set(explicitOrders).size !== explicitOrders.length)
+        throw new Error("duplicate watchable packOrder");
+      watchables.sort((left, right) => left.packOrder! - right.packOrder!);
+    } else {
+      watchables.sort(
+        (left, right) =>
+          left.releaseDate.localeCompare(right.releaseDate) ||
+          left.slug.localeCompare(right.slug),
+      );
+    }
     const orderedWatchables = watchables.map((watchable, index) => ({
       ...watchable,
       releaseOrder: index + 1,

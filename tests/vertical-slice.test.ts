@@ -93,7 +93,7 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
     headers: { "x-csrf-token": authenticated.json().csrfToken },
   });
   assert.equal(imported.statusCode, 201);
-  assert.equal(imported.json().pack.version, "0.2.0");
+  assert.equal(imported.json().pack.version, "0.2.2");
 
   const unauthenticatedWorkspace = await request(app, {
     method: "GET",
@@ -107,81 +107,70 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
     cookies: sessionCookie,
   });
   assert.equal(workspace.statusCode, 200);
-  assert.equal(workspace.json().pack.version, "0.2.0");
-  assert.equal(workspace.json().items.length, 5);
+  assert.equal(workspace.json().pack.version, "0.2.2");
+  assert.equal(workspace.json().items.length, 31);
+  assert.equal(workspace.json().relationships.length, 32);
+  assert.equal(workspace.json().items[0].series, "Lantern Vale");
+  assert.equal(workspace.json().items[0].runtime, 48);
   assert.equal(workspace.json().items[0].media, null);
   const relationshipKey = (relationship: {
     fromSlug: string;
     toSlug: string;
     type: string;
   }) => `${relationship.fromSlug}:${relationship.toSlug}:${relationship.type}`;
+  const relationshipKeys = new Set(
+    workspace.json().relationships.map(relationshipKey),
+  );
+  assert.equal(relationshipKeys.size, 32);
   assert.deepEqual(
-    [...workspace.json().relationships].sort((left, right) =>
-      relationshipKey(left).localeCompare(relationshipKey(right)),
-    ),
     [
-      {
-        fromSlug: "midwinter-signal",
-        toSlug: "lantern-vale-first-light",
-        type: "required",
-        summary:
-          "First Light establishes the restored beacon network used by the Special.",
-      },
-      {
-        fromSlug: "the-echo-line",
-        toSlug: "the-quiet-beacon",
-        type: "sequence",
-        summary:
-          "The Quiet Beacon precedes The Echo Line in the episode sequence.",
-      },
-      {
-        fromSlug: "the-quiet-beacon",
-        toSlug: "a-light-between",
-        type: "recommended",
-        summary: "The Short introduces the lantern exchanged in the Episode.",
-      },
-      {
-        fromSlug: "a-light-between",
-        toSlug: "midwinter-signal",
-        type: "optional",
-        summary:
-          "A background signal in the Short echoes the Special's relay pattern.",
-      },
-    ].sort((left, right) =>
-      relationshipKey(left).localeCompare(relationshipKey(right)),
-    ),
+      "lamp:rain:required",
+      "rain:orchard:sequence",
+      "orchard:lowwater-film:required",
+      "lowwater-film:green-lantern-2011:required",
+      "green-lantern-2011:bell:required",
+      "bell:ember:required",
+    ].filter((key) => relationshipKeys.has(key)),
+    [
+      "lamp:rain:required",
+      "rain:orchard:sequence",
+      "orchard:lowwater-film:required",
+      "lowwater-film:green-lantern-2011:required",
+      "green-lantern-2011:bell:required",
+      "bell:ember:required",
+    ],
+  );
+  const itemSlugs = new Set(
+    workspace.json().items.map((item: { slug: string }) => item.slug),
+  );
+  assert.ok(
+    workspace
+      .json()
+      .relationships.every(
+        (relationship: { fromSlug: string; toSlug: string }) =>
+          itemSlugs.has(relationship.fromSlug) &&
+          itemSlugs.has(relationship.toSlug),
+      ),
   );
 
   const detail = await request(app, {
     method: "GET",
-    url: "/api/catalog/midwinter-signal",
+    url: "/api/catalog/ember",
     cookies: sessionCookie,
   });
   assert.equal(detail.statusCode, 200);
-  assert.deepEqual(detail.json().relationships, [
-    {
-      type: "required",
-      direction: "requires",
-      referencedWatchable: {
-        id: "01954123-0000-7000-8000-000000000201",
-        slug: "lantern-vale-first-light",
-        title: "Lantern Vale: First Light",
-      },
-      summary:
-        "First Light establishes the restored beacon network used by the Special.",
-    },
-    {
-      type: "optional-connection",
-      direction: "required-by",
-      referencedWatchable: {
-        id: "01954123-0000-7000-8000-000000000205",
-        slug: "a-light-between",
-        title: "A Light Between",
-      },
-      summary:
-        "A background signal in the Short echoes the Special's relay pattern.",
-    },
-  ]);
+  assert.ok(
+    detail
+      .json()
+      .relationships.some(
+        (relationship: {
+          direction: string;
+          referencedWatchable: { slug: string };
+        }) =>
+          relationship.direction === "requires" &&
+          relationship.referencedWatchable.slug === "bell",
+      ),
+  );
 
   const catalog = await request(app, {
     method: "GET",
@@ -189,10 +178,10 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
     cookies: sessionCookie,
   });
   assert.equal(catalog.statusCode, 200);
-  assert.equal(catalog.json().items.length, 5);
+  assert.equal(catalog.json().items.length, 31);
   const first = catalog.json().items[0];
   const second = catalog.json().items[1];
-  assert.equal(first.title, "Lantern Vale: First Light");
+  assert.equal(first.title, "The Cartographer’s Lamp");
   assert.equal(second.state, "not-started");
 
   const focus = await request(app, {
@@ -305,10 +294,13 @@ test("catalog search and type filters compose and reject unknown types", async (
   const catalog = (url: string) =>
     request(app, { method: "GET", url, cookies: cookie });
   const all = await catalog("/api/catalog");
-  assert.equal(all.json().items.length, 5);
+  assert.equal(all.json().items.length, 31);
   assert.deepEqual(Object.keys(all.json().items[0]).sort(), [
     "relationships",
+    "releaseDate",
     "releaseOrder",
+    "runtime",
+    "series",
     "slug",
     "state",
     "summary",
@@ -318,19 +310,19 @@ test("catalog search and type filters compose and reject unknown types", async (
   assert.equal(
     (await catalog("/api/catalog?search=%20%20&type=%20%20")).json().items
       .length,
-    5,
+    31,
   );
   assert.deepEqual(
-    (await catalog("/api/catalog?search=  FIRST LIGHT  "))
+    (await catalog("/api/catalog?search=  ORCHARD DOOR  "))
       .json()
       .items.map((item: { slug: string }) => item.slug),
-    ["lantern-vale-first-light"],
+    ["orchard"],
   );
   assert.deepEqual(
-    (await catalog("/api/catalog?search=BEACON"))
+    (await catalog("/api/catalog?search=CARTOGRAPHER"))
       .json()
       .items.map((item: { slug: string }) => item.slug),
-    ["lantern-vale-first-light", "the-quiet-beacon", "midwinter-signal"],
+    ["lamp", "final-film"],
   );
   assert.equal(
     (await catalog("/api/catalog?search=does-not-exist")).json().items.length,
@@ -343,17 +335,25 @@ test("catalog search and type filters compose and reject unknown types", async (
         assert.equal(item.type, "movie");
         return item.slug;
       }),
-    ["lantern-vale-first-light"],
+    [
+      "lowwater-film",
+      "green-lantern-2011",
+      "winter-film",
+      "roads",
+      "convergence-film",
+      "glass-film",
+      "final-film",
+    ],
   );
   assert.deepEqual(
-    (await catalog("/api/catalog?search=light&type=movie"))
+    (await catalog("/api/catalog?search=glass&type=movie"))
       .json()
       .items.map((item: { slug: string; type: string; title: string }) => {
         assert.equal(item.type, "movie");
-        assert.match(item.title, /light/i);
+        assert.match(item.title, /glass/i);
         return item.slug;
       }),
-    ["lantern-vale-first-light"],
+    ["glass-film"],
   );
   const invalid = await catalog("/api/catalog?type=not-a-pack-type");
   assert.equal(invalid.statusCode, 400);

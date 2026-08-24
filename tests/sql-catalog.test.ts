@@ -166,7 +166,7 @@ test("SQL workspace maps relationships with catalog-detail direction and types",
   ]);
   const relationshipQuery =
     queries.find((query) => /AS from_slug/i.test(query)) ?? "";
-  assert.match(relationshipQuery, /watchable\.slug AS from_slug/i);
-  assert.match(relationshipQuery, /prerequisite\.slug AS to_slug/i);
+  assert.match(relationshipQuery, /prerequisite\.slug AS from_slug/i);
+  assert.match(relationshipQuery, /watchable\.slug AS to_slug/i);
   assert.match(relationshipQuery, /relationship\.relationship_type/i);
 });

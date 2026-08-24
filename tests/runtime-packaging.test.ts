@@ -10,17 +10,17 @@ import {
 } from "../apps/api/src/slice.js";
 
 test("the compiled default resolves to the Core-vendored accepted Lantern Vale artifact", async () => {
-  assert.equal(DEFAULT_CANON_PACK_PATH, "/app/canon-packs/lantern-vale-0.2.0");
+  assert.equal(DEFAULT_CANON_PACK_PATH, "/app/canon-packs/lantern-vale-0.2.2");
   assert.deepEqual(ACCEPTED_LANTERN_VALE_RELEASE, {
     id: "01954123-0000-7000-8000-000000000001",
     slug: "lantern-vale",
     title: "Lantern Vale Stories",
-    version: "0.2.0",
+    version: "0.2.2",
     manifestSha256:
-      "f5c1041ad7daf7a49f8987bdd7d8127f0a8b6c94e70b4aca775e732010b98b8c",
+      "e1d707fee9974af8e055cd6d674029bc850ac32239b418d8f1e5aec762ebbc57",
   });
 
-  const vendored = path.resolve("canon-packs/lantern-vale-0.2.0");
+  const vendored = path.resolve("canon-packs/lantern-vale-0.2.2");
   await access(path.join(vendored, "manifest.json"));
   await access(path.join(vendored, "data/watchables.json"));
 
@@ -34,7 +34,7 @@ test("the compiled default resolves to the Core-vendored accepted Lantern Vale a
   );
   assert.match(
     compose,
-    /CANON_PACK_PATH: \/app\/canon-packs\/lantern-vale-0\.2\.0/,
+    /CANON_PACK_PATH: \/app\/canon-packs\/lantern-vale-0\.2\.2/,
   );
   assert.match(
     compose,
@@ -48,7 +48,7 @@ test("the test runtime default imports the validated vendored Lantern Vale artif
   const store = new MemorySliceStore();
   assert.deepEqual(await store.importLanternVale(), {
     title: "Lantern Vale Stories",
-    version: "0.2.0",
+    version: "0.2.2",
   });
-  assert.equal((await store.catalog()).length, 5);
+  assert.equal((await store.catalog()).length, 31);
 });

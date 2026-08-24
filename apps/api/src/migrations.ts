@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.03";
+export const EXPECTED_SCHEMA_VERSION = "0.04";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -106,6 +106,16 @@ const REQUIRED_CORE_SLICE_COLUMNS = [
   ["catalog_item", "type", "varchar", "NO"],
   ["catalog_item", "summary", "text", "NO"],
   ["catalog_item", "release_order", "int4", "NO"],
+  ["canon_pack_watchable", "canon_pack_release_id", "uuid", "NO"],
+  ["canon_pack_watchable", "watchable_id", "uuid", "NO"],
+  ["canon_pack_watchable", "slug", "varchar", "NO"],
+  ["canon_pack_watchable", "title", "text", "NO"],
+  ["canon_pack_watchable", "summary", "text", "NO"],
+  ["canon_pack_watchable", "watchable_type_id", "uuid", "NO"],
+  ["canon_pack_watchable", "release_date", "date", "NO"],
+  ["canon_pack_watchable", "release_order", "int4", "NO"],
+  ["canon_pack_watchable", "runtime_minutes", "int4", "NO"],
+  ["canon_pack_watchable", "primary_series", "text", "NO"],
   ["watch_focus", "singleton", "bool", "NO"],
   ["watch_focus", "target_slug", "varchar", "NO"],
   ["watch_focus", "updated_at", "timestamptz", "NO"],
@@ -135,6 +145,34 @@ const REQUIRED_CORE_SLICE_CONSTRAINTS = [
   ["catalog_item", "catalog_item_type_valid", "c"],
   ["catalog_item", "catalog_item_summary_not_blank", "c"],
   ["catalog_item", "catalog_item_release_order_positive", "c"],
+  ["canon_pack_watchable", "canon_pack_watchable_pkey", "p"],
+  [
+    "canon_pack_watchable",
+    "canon_pack_watchable_canon_pack_release_id_release_order_key",
+    "u",
+  ],
+  [
+    "canon_pack_watchable",
+    "canon_pack_watchable_canon_pack_release_id_slug_key",
+    "u",
+  ],
+  [
+    "canon_pack_watchable",
+    "canon_pack_watchable_canon_pack_release_id_fkey",
+    "f",
+  ],
+  [
+    "canon_pack_watchable",
+    "canon_pack_watchable_canon_pack_release_id_watchable_type__fkey",
+    "f",
+  ],
+  ["canon_pack_watchable", "canon_pack_watchable_release_order_positive", "c"],
+  ["canon_pack_watchable", "canon_pack_watchable_runtime_positive", "c"],
+  [
+    "canon_pack_watchable",
+    "canon_pack_watchable_primary_series_not_blank",
+    "c",
+  ],
   ["watch_focus", "watch_focus_pkey", "p"],
   ["watch_focus", "watch_focus_target_slug_fkey", "f"],
   ["watch_focus", "watch_focus_singleton_true", "c"],
@@ -318,6 +356,7 @@ async function verifyCoreSliceIntegrity(database: Queryable): Promise<boolean> {
     "app_session",
     "active_canon_pack",
     "catalog_item",
+    "canon_pack_watchable",
     "watch_focus",
     "viewing_attempt",
   ];

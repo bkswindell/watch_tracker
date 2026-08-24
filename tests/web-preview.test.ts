@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import { recommendedNext, requestOptions } from "../apps/web/src/api.js";
@@ -33,4 +34,28 @@ test("workspace next-up aggregate drives the recommended item rather than catalo
   ];
   assert.equal(recommendedNext(items, [{ slug: "focused" }])?.slug, "focused");
   assert.equal(recommendedNext(items, [])?.slug, "first");
+});
+
+test("approved details sidecar remains statefully resizable", async () => {
+  const source = await readFile("apps/web/src/App.tsx", "utf8");
+  assert.match(source, /\[sidecarWidth, setSidecarWidth\] = useState\(390\)/);
+  assert.match(source, /width=\{sidecarWidth\}/);
+  assert.match(source, /onResize=\{setSidecarWidth\}/);
+  assert.doesNotMatch(source, /onResize=\{\(\) => \{\}\}/);
+});
+
+test("approved workspace grids use bounded Infinite Row Model datasources", async () => {
+  const source = await readFile("apps/web/src/App.tsx", "utf8");
+  assert.equal((source.match(/rowModelType="infinite"/g) || []).length, 3);
+  assert.match(source, /datasource=\{catalogDatasource\}/);
+  assert.match(source, /datasource=\{queueDatasource\}/);
+  assert.match(source, /datasource=\{historyDatasource\}/);
+  assert.match(
+    source,
+    /createInfiniteDatasource\(nextUp, \{ allowSort: false \}\)/,
+  );
+  assert.doesNotMatch(
+    source,
+    /rowData=\{filtered\}|rowData=\{items\}|rowData=\{history\}/,
+  );
 });

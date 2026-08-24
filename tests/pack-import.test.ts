@@ -18,7 +18,7 @@ import {
   MemorySliceStore,
 } from "../apps/api/src/slice.js";
 
-const LANTERN_VALE_020 = path.resolve("canon-packs/lantern-vale-0.2.0");
+const LANTERN_VALE_022 = path.resolve("canon-packs/lantern-vale-0.2.2");
 const REQUIRED_DATA = [
   "data/pack.json",
   "data/sources.json",
@@ -240,29 +240,36 @@ async function packFixture(
   return directory;
 }
 
-test("imports the verified Lantern Vale 0.2.0 directory fixture", async () => {
+test("imports the verified Lantern Vale 0.2.2 directory fixture", async () => {
   assert.deepEqual(ACCEPTED_LANTERN_VALE_RELEASE, {
     id: "01954123-0000-7000-8000-000000000001",
     slug: "lantern-vale",
     title: "Lantern Vale Stories",
-    version: "0.2.0",
+    version: "0.2.2",
     manifestSha256:
-      "f5c1041ad7daf7a49f8987bdd7d8127f0a8b6c94e70b4aca775e732010b98b8c",
+      "e1d707fee9974af8e055cd6d674029bc850ac32239b418d8f1e5aec762ebbc57",
   });
-  const pack = await importCanonPackDirectory(LANTERN_VALE_020);
+  const pack = await importCanonPackDirectory(LANTERN_VALE_022);
   assert.deepEqual(pack.identity, {
     id: "01954123-0000-7000-8000-000000000001",
     slug: "lantern-vale",
     title: "Lantern Vale Stories",
-    version: "0.2.0",
+    version: "0.2.2",
   });
   assert.equal(
     pack.manifestSha256,
     ACCEPTED_LANTERN_VALE_RELEASE.manifestSha256,
   );
-  assert.equal(pack.watchables.length, 5);
-  assert.equal(pack.memberships.length, 6);
-  assert.equal(pack.memberships.at(-1)?.position, undefined);
+  // The accepted MVP pack must match the approved Focus Map specification.
+  // The old five-item foundation fixture produced disconnected type-based groups
+  // and could never render the 31-item dependency journey approved in the mockup.
+  assert.equal(pack.watchables.length, 31);
+  assert.equal(pack.relationships.length, 32);
+  assert.equal(pack.memberships.length, 31);
+  assert.equal(
+    new Set(pack.memberships.map((membership) => membership.position)).size,
+    31,
+  );
 });
 
 test("an outside trusted-pack-root metadata change does not interrupt an import", async (t) => {
@@ -610,7 +617,7 @@ test("the Lantern Vale import entry point rejects a self-attested replacement re
 test("an injected activation fault preserves the active pack and personal viewing and focus state", async () => {
   let failActivation = false;
   const store = new MemorySliceStore({
-    packPath: LANTERN_VALE_020,
+    packPath: LANTERN_VALE_022,
     faultAfterStage: () => failActivation,
   });
   await store.importLanternVale();

@@ -42,7 +42,9 @@ function migration(
         ? "foundation"
         : version === "0.02"
           ? "core-slice"
-          : "canon-pack-registry",
+          : version === "0.03"
+            ? "canon-pack-registry"
+            : "workspace-metadata",
     sha256,
     sql: "SELECT 1",
   };
@@ -50,7 +52,7 @@ function migration(
 
 test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 3);
+  assert.equal(migrations.length, 4);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
@@ -60,7 +62,10 @@ test("loads the ordered foundation and Core slice migrations with deterministic 
   assert.equal(migrations[2]?.version, "0.03");
   assert.equal(migrations[2]?.name, "canon-pack-registry");
   assert.match(migrations[2]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.03");
+  assert.equal(migrations[3]?.version, "0.04");
+  assert.equal(migrations[3]?.name, "workspace-metadata");
+  assert.match(migrations[3]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.04");
 });
 
 test("0.03 deterministically backfills a 0.02 active catalog, focus, and viewing history into the registry", async () => {
@@ -129,11 +134,11 @@ test("migration discovery rejects duplicate versions", async (t) => {
 test("migration discovery rejects a terminal version that differs from the application contract", async (t) => {
   const directory = await migrationDirectory(t, {
     "0.01_foundation.sql": "SELECT 1;",
-    "0.04_next.sql": "SELECT 2;",
+    "0.05_next.sql": "SELECT 2;",
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.04 does not match expected schema version 0\.03/,
+    /Migration terminal version 0\.05 does not match expected schema version 0\.04/,
   );
 });
 
@@ -191,8 +196,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.03",
-          migration_name: "canon-pack-registry",
+          migration_version: "0.04",
+          migration_name: "workspace-metadata",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -210,8 +215,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.03",
-          migration_name: "renamed-canon-pack-registry",
+          migration_version: "0.04",
+          migration_name: "renamed-workspace-metadata",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -342,8 +347,8 @@ test("schema verification fails closed when the migration ledger and foundation 
         return {
           rows: [
             {
-              migration_version: "0.03",
-              migration_name: "canon-pack-registry",
+              migration_version: "0.04",
+              migration_name: "workspace-metadata",
               migration_sha256: "a".repeat(64),
             },
           ],
@@ -377,7 +382,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.04",
+              migration_version: "0.05",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },

@@ -26,6 +26,9 @@ export interface CatalogItem {
   type: string;
   summary: string;
   releaseOrder: number;
+  releaseDate: string;
+  runtime: number;
+  series: string;
   state: ViewingState;
   relationships: CatalogRelationship[];
 }
@@ -94,11 +97,11 @@ type ImportedItem = Omit<CatalogItem, "state">;
 
 export { importCanonPackDirectory } from "./canon-pack.js";
 
-export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.0";
+export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.2";
 
 function defaultCanonPackPath(): string {
   return process.env.NODE_TEST_CONTEXT !== undefined
-    ? path.resolve("canon-packs/lantern-vale-0.2.0")
+    ? path.resolve("canon-packs/lantern-vale-0.2.2")
     : DEFAULT_CANON_PACK_PATH;
 }
 
@@ -107,9 +110,9 @@ export const ACCEPTED_LANTERN_VALE_RELEASE = Object.freeze({
   id: "01954123-0000-7000-8000-000000000001",
   slug: "lantern-vale",
   title: "Lantern Vale Stories",
-  version: "0.2.0",
+  version: "0.2.2",
   manifestSha256:
-    "f5c1041ad7daf7a49f8987bdd7d8127f0a8b6c94e70b4aca775e732010b98b8c",
+    "e1d707fee9974af8e055cd6d674029bc850ac32239b418d8f1e5aec762ebbc57",
 });
 
 async function importAcceptedLanternVale(
@@ -141,6 +144,9 @@ function projection(pack: CanonPack): ImportedItem[] {
         ?.code ?? "unknown",
     summary: watchable.summary,
     releaseOrder: watchable.releaseOrder,
+    releaseDate: watchable.releaseDate,
+    runtime: watchable.runtimeMinutes,
+    series: watchable.series,
     relationships: pack.relationships
       .filter(
         (relationship) =>
@@ -221,12 +227,12 @@ function workspaceFromCatalog(
         item.relationships.flatMap((relationship) => {
           const fromSlug =
             relationship.direction === "requires"
-              ? item.slug
-              : relationship.referencedWatchable.slug;
-          const toSlug =
-            relationship.direction === "requires"
               ? relationship.referencedWatchable.slug
               : item.slug;
+          const toSlug =
+            relationship.direction === "requires"
+              ? item.slug
+              : relationship.referencedWatchable.slug;
           return [
             {
               fromSlug,
@@ -577,7 +583,7 @@ export class SqlSliceStore implements SliceStore {
           );
         for (const watchable of pack.watchables)
           await client.query(
-            "INSERT INTO canon_pack_watchable (canon_pack_release_id, watchable_id, slug, title, summary, watchable_type_id, release_date, release_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+            "INSERT INTO canon_pack_watchable (canon_pack_release_id, watchable_id, slug, title, summary, watchable_type_id, release_date, release_order, runtime_minutes, primary_series) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
             [
               releaseId,
               watchable.id,
@@ -587,6 +593,8 @@ export class SqlSliceStore implements SliceStore {
               watchable.watchableTypeId,
               watchable.releaseDate,
               watchable.releaseOrder,
+              watchable.runtimeMinutes,
+              watchable.series,
             ],
           );
         for (const membership of pack.memberships)
@@ -653,7 +661,8 @@ export class SqlSliceStore implements SliceStore {
     }
     const result = await this.pool.query<Omit<CatalogItem, "relationships">>(
       `SELECT watchable.slug, watchable.title, type.code AS type, watchable.summary,
-              watchable.release_order AS "releaseOrder",
+              watchable.release_order AS "releaseOrder", watchable.release_date::text AS "releaseDate",
+              watchable.runtime_minutes AS runtime, watchable.primary_series AS series,
               CASE latest_attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
          FROM active_canon_pack_registry active
          JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
@@ -767,8 +776,8 @@ export class SqlSliceStore implements SliceStore {
       relationship_type: string;
       summary: string;
     }>(
-      `SELECT watchable.slug AS from_slug,
-              prerequisite.slug AS to_slug,
+      `SELECT prerequisite.slug AS from_slug,
+              watchable.slug AS to_slug,
               relationship.relationship_type,
               relationship.summary
          FROM active_canon_pack_registry active

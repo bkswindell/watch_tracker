@@ -1,0 +1,67 @@
+[
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000500",
+    "code": "movie",
+    "displayWeight": 100,
+    "id": "01954123-0000-7000-8000-000000000500",
+    "label": "Movie",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ]
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000501",
+    "code": "episode",
+    "displayWeight": 200,
+    "id": "01954123-0000-7000-8000-000000000501",
+    "label": "Episode",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ]
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000502",
+    "code": "special",
+    "displayWeight": 300,
+    "id": "01954123-0000-7000-8000-000000000502",
+    "label": "Special",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ]
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000503",
+    "code": "short",
+    "displayWeight": 400,
+    "id": "01954123-0000-7000-8000-000000000503",
+    "label": "Short",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ]
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000504",
+    "code": "lantern-signal",
+    "displayWeight": 500,
+    "id": "01954123-0000-7000-8000-000000000504",
+    "label": "Lantern Signal",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ]
+  }
+]

@@ -11,6 +11,7 @@ import WatchableActionMenu from "./WatchableActions";
 import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
 import { api, recommendedNext } from "./api";
 import { artworkUrl } from "./mediaUrls";
+import { createInfiniteDatasource } from "./infiniteGrid";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 export function graphRelationship(selectedTitle, relationship) {
@@ -97,6 +98,7 @@ function App() {
   const [selected, setSelected] = useState(),
     [detailsOpen, setDetailsOpen] = useState(false),
     [detailsModal, setDetailsModal] = useState(false),
+    [sidecarWidth, setSidecarWidth] = useState(390),
     [query, setQuery] = useState(""),
     [mode, setMode] = useState("Release Timeline");
   const notify = (text) => {
@@ -199,15 +201,11 @@ function App() {
       notify(`${result.data.pack.title} ${result.data.pack.version} imported.`);
     });
   }
-  const filtered = useMemo(
-    () =>
-      items.filter(
-        (x) =>
-          !query ||
-          `${x.title} ${x.series} ${x.type}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-      ),
+  // Keep the full workspace as the grid's immutable datasource snapshot. The
+  // Infinite Row Model applies its own column filters and requests bounded
+  // blocks, while this remains the approved all-column command search.
+  const catalogDatasource = useMemo(
+    () => createInfiniteDatasource(items, { quickFilter: query }),
     [items, query],
   );
   const columns = useMemo(
@@ -302,7 +300,10 @@ function App() {
           </div>
         </div>
       </aside>
-      <main className={detailsOpen ? "withDetails" : ""}>
+      <main
+        className={detailsOpen ? "withDetails" : ""}
+        style={{ "--detail-width": `${sidecarWidth}px` }}
+      >
         <header className="top">
           <div>
             <b>{current?.[2]}</b>
@@ -370,7 +371,10 @@ function App() {
               <div className="agWrap">
                 <AgGridReact
                   theme={appTheme}
-                  rowData={filtered}
+                  rowModelType="infinite"
+                  datasource={catalogDatasource}
+                  cacheBlockSize={50}
+                  maxBlocksInCache={4}
                   columnDefs={columns}
                   defaultColDef={{
                     sortable: true,
@@ -403,8 +407,8 @@ function App() {
           <>
             <WatchableSidecar
               item={selected}
-              width={390}
-              onResize={() => {}}
+              width={sidecarWidth}
+              onResize={setSidecarWidth}
               onClose={() => setDetailsOpen(false)}
               onMaximize={() => setDetailsModal(true)}
               targetId={target}
@@ -509,6 +513,10 @@ function RelationshipSummary({ selected }) {
 }
 function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
   const next = recommendedNext(items, nextUp);
+  const queueDatasource = useMemo(
+    () => createInfiniteDatasource(nextUp, { allowSort: false }),
+    [nextUp],
+  );
   return (
     <>
       <div className="pageTitle">
@@ -557,7 +565,10 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
       <div className="agWrap queueGrid">
         <AgGridReact
           theme={appTheme}
-          rowData={items}
+          rowModelType="infinite"
+          datasource={queueDatasource}
+          cacheBlockSize={50}
+          maxBlocksInCache={4}
           columnDefs={[
             { field: "order", headerName: "#", width: 70 },
             { field: "title", flex: 1, minWidth: 240 },
@@ -576,6 +587,10 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
   );
 }
 function HistoryPage({ history, items, onPick }) {
+  const historyDatasource = useMemo(
+    () => createInfiniteDatasource(history),
+    [history],
+  );
   return (
     <>
       <div className="pageTitle">
@@ -588,7 +603,10 @@ function HistoryPage({ history, items, onPick }) {
       <div className="agWrap historyGrid">
         <AgGridReact
           theme={appTheme}
-          rowData={history}
+          rowModelType="infinite"
+          datasource={historyDatasource}
+          cacheBlockSize={50}
+          maxBlocksInCache={4}
           columnDefs={[
             { field: "date", minWidth: 180 },
             { field: "title", flex: 1, minWidth: 240 },
