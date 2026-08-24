@@ -2,12 +2,23 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { graphRelationship } from "../apps/web/src/App.js";
+import { csvSafeValue, graphRelationship } from "../apps/web/src/App.js";
 
 const appSource = readFileSync(
   new URL("../apps/web/src/App.tsx", import.meta.url),
   "utf8",
 );
+
+test("Catalog CSV export neutralizes spreadsheet formulas", () => {
+  for (const value of ["=1+1", "+cmd", "-2+3", "@SUM(A1)", "  =1", "\t@x"])
+    assert.equal(csvSafeValue(value), `'${value}`);
+  assert.equal(csvSafeValue("Lantern Vale"), "Lantern Vale");
+  assert.equal(csvSafeValue(42), 42);
+  assert.match(
+    appSource,
+    /processCellCallback: \(\{ value \}\) => csvSafeValue\(value\)/,
+  );
+});
 
 test("catalog detail UI presents relationship lists and an explicit empty state", () => {
   assert.match(

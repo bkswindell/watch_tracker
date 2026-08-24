@@ -16,6 +16,11 @@ import { artworkUrl } from "./mediaUrls";
 import { createInfiniteDatasource } from "./infiniteGrid";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+export function csvSafeValue(value) {
+  if (typeof value !== "string") return value;
+  return /^[\t\r ]*[=+\-@]/.test(value) ? `'${value}` : value;
+}
+
 export function graphRelationship(selectedTitle, relationship) {
   const referencedTitle = relationship.referencedWatchable.title;
   const requiredBy = relationship.direction === "required-by";
@@ -609,7 +614,10 @@ function App() {
                 </button>
                 <button
                   onClick={() =>
-                    gridApi?.exportDataAsCsv({ fileName: "watch-tracker.csv" })
+                    gridApi?.exportDataAsCsv({
+                      fileName: "watch-tracker.csv",
+                      processCellCallback: ({ value }) => csvSafeValue(value),
+                    })
                   }
                 >
                   Export CSV
