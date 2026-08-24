@@ -25,6 +25,45 @@ test("SQL catalog latest viewing state is correlated to the active release and w
   );
 });
 
+test("SQL catalog filters use parameterized case-insensitive predicates", async () => {
+  let catalogQuery = "";
+  let catalogValues: unknown[] = [];
+  const pool = {
+    async query<T>(query: string, values?: unknown[]): Promise<{ rows: T[] }> {
+      catalogQuery = query;
+      catalogValues = values ?? [];
+      return { rows: [] };
+    },
+  };
+
+  await new SqlSliceStore(pool as never).catalog({
+    search: "First Light",
+    type: "movie",
+  });
+
+  assert.match(catalogQuery, /watchable\.title ILIKE \$1/i);
+  assert.match(catalogQuery, /watchable\.summary ILIKE \$1/i);
+  assert.match(catalogQuery, /type\.code = \$2/i);
+  assert.deepEqual(catalogValues, ["%First Light%", "movie"]);
+});
+
+test("SQL catalog search treats LIKE metacharacters as literal text", async () => {
+  let catalogQuery = "";
+  let catalogValues: unknown[] = [];
+  const pool = {
+    async query<T>(query: string, values?: unknown[]): Promise<{ rows: T[] }> {
+      catalogQuery = query;
+      catalogValues = values ?? [];
+      return { rows: [] };
+    },
+  };
+
+  await new SqlSliceStore(pool as never).catalog({ search: "%_\\" });
+
+  assert.match(catalogQuery, /ILIKE \$1 ESCAPE '\\'/i);
+  assert.deepEqual(catalogValues, ["%\\%\\_\\\\%"]);
+});
+
 test("SQL catalog detail maps prerequisite relationship context", async () => {
   const queries: string[] = [];
   const pool = {

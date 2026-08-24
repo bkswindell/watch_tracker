@@ -8,7 +8,7 @@ export type CatalogRelationship = {
 export type CatalogItem = {
   slug: string;
   title: string;
-  type: "Movie" | "Episode" | "Special" | "Short";
+  type: string;
   summary: string;
   releaseOrder: number;
   state: ViewingState;
@@ -71,7 +71,16 @@ export const api = {
       "POST",
       csrf,
     ),
-  catalog: () => call<CatalogResponse>("/api/catalog", "GET"),
+  catalog: (filters: { search?: string; type?: string } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.search?.trim()) params.set("search", filters.search.trim());
+    if (filters.type?.trim()) params.set("type", filters.type.trim());
+    const query = params.toString();
+    return call<CatalogResponse>(
+      `/api/catalog${query ? `?${query}` : ""}`,
+      "GET",
+    );
+  },
   item: (slug: string) =>
     call<CatalogItem>(`/api/catalog/${encodeURIComponent(slug)}`, "GET"),
   focus: (slug: string, csrf: string) =>

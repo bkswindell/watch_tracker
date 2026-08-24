@@ -43,7 +43,11 @@ export interface SliceStore {
   getSession(token: string): Promise<{ csrfToken: string } | undefined>;
   validateCsrf(token: string, csrfToken: string): Promise<boolean>;
   importLanternVale(): Promise<{ title: string; version: string }>;
-  catalog(): Promise<CatalogItem[]>;
+  catalog(options?: {
+    search?: string | undefined;
+    type?: string | undefined;
+  }): Promise<CatalogItem[]>;
+  catalogTypes(): Promise<string[]>;
   item(slug: string): Promise<CatalogItem | undefined>;
   setFocus(targetSlug: string): Promise<CatalogItem | undefined>;
   nextUp(): Promise<CatalogItem | undefined>;
@@ -93,16 +97,15 @@ async function importAcceptedLanternVale(
 }
 
 function projection(pack: CanonPack): ImportedItem[] {
-  const labels = new Map(
-    pack.watchableTypes.map((type) => [type.id, type.label]),
-  );
   const watchables = new Map(
     pack.watchables.map((watchable) => [watchable.id, watchable]),
   );
   return pack.watchables.map((watchable) => ({
     slug: watchable.slug,
     title: watchable.title,
-    type: labels.get(watchable.watchableTypeId) ?? "Unknown",
+    type:
+      pack.watchableTypes.find((type) => type.id === watchable.watchableTypeId)
+        ?.code ?? "unknown",
     summary: watchable.summary,
     releaseOrder: watchable.releaseOrder,
     relationships: pack.relationships
@@ -166,11 +169,19 @@ function stateFor(status?: string): ViewingState {
   return "not-started";
 }
 
+function escapeSqlLike(value: string): string {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll("%", "\\%")
+    .replaceAll("_", "\\_");
+}
+
 export class MemorySliceStore implements SliceStore {
   #configuredPassword: string | undefined;
   #credential: string | undefined;
   #sessions = new Map<string, string>();
   #items = new Map<string, ImportedItem>();
+  #types: string[] = [];
   #states = new Map<string, string>();
   #focus?: string;
   #packPath: string;
@@ -222,15 +233,28 @@ export class MemorySliceStore implements SliceStore {
     const staged = new Map(projection(pack).map((item) => [item.slug, item]));
     if (this.#faultAfterStage?.()) throw new Error("injected activation fault");
     this.#items = staged;
+    this.#types = pack.watchableTypes.map((type) => type.code);
     return { title: pack.identity.title, version: pack.identity.version };
   }
-  async catalog(): Promise<CatalogItem[]> {
+  async catalog(
+    options: { search?: string | undefined; type?: string | undefined } = {},
+  ): Promise<CatalogItem[]> {
+    const search = options.search?.trim().toLowerCase();
     return [...this.#items.values()]
+      .filter((item) => !options.type || item.type === options.type)
+      .filter(
+        (item) =>
+          !search ||
+          `${item.title} ${item.summary}`.toLowerCase().includes(search),
+      )
       .sort((a, b) => a.releaseOrder - b.releaseOrder)
       .map((item) => ({
         ...item,
         state: stateFor(this.#states.get(item.slug)),
       }));
+  }
+  async catalogTypes(): Promise<string[]> {
+    return [...this.#types];
   }
   async item(slug: string): Promise<CatalogItem | undefined> {
     const item = this.#items.get(slug);
@@ -469,9 +493,26 @@ export class SqlSliceStore implements SliceStore {
       client.release();
     }
   }
-  async catalog(): Promise<CatalogItem[]> {
+  async catalog(
+    options: { search?: string | undefined; type?: string | undefined } = {},
+  ): Promise<CatalogItem[]> {
+    const values: string[] = [];
+    const clauses = [
+      "watchable.canon_pack_release_id = active.canon_pack_release_id",
+    ];
+    const search = options.search?.trim();
+    if (search) {
+      values.push(`%${escapeSqlLike(search)}%`);
+      clauses.push(
+        `(watchable.title ILIKE $${values.length} ESCAPE '\\' OR watchable.summary ILIKE $${values.length} ESCAPE '\\')`,
+      );
+    }
+    if (options.type) {
+      values.push(options.type);
+      clauses.push(`type.code = $${values.length}`);
+    }
     const result = await this.pool.query<Omit<CatalogItem, "relationships">>(
-      `SELECT watchable.slug, watchable.title, type.label AS type, watchable.summary,
+      `SELECT watchable.slug, watchable.title, type.code AS type, watchable.summary,
               watchable.release_order AS "releaseOrder",
               CASE latest_attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
          FROM active_canon_pack_registry active
@@ -482,9 +523,19 @@ export class SqlSliceStore implements SliceStore {
             WHERE attempt.canon_pack_release_id = active.canon_pack_release_id AND attempt.watchable_id = watchable.watchable_id
             ORDER BY attempt.created_at DESC LIMIT 1
          ) latest_attempt ON true
+        WHERE ${clauses.join(" AND ")}
         ORDER BY watchable.release_order`,
+      values,
     );
     return result.rows.map((item) => ({ ...item, relationships: [] }));
+  }
+  async catalogTypes(): Promise<string[]> {
+    const result = await this.pool.query<{ code: string }>(
+      `SELECT type.code FROM active_canon_pack_registry active
+       JOIN canon_pack_watchable_type type ON type.canon_pack_release_id = active.canon_pack_release_id
+       ORDER BY type.display_weight, type.code`,
+    );
+    return result.rows.map((row) => row.code);
   }
   async item(slug: string): Promise<CatalogItem | undefined> {
     const item = (await this.catalog()).find((item) => item.slug === slug);

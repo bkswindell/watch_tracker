@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   api,
@@ -6,6 +6,7 @@ import {
   type CatalogResponse,
   type CatalogRelationship,
 } from "./api.js";
+import { createLatestCatalogRequest } from "./catalog-refresh.js";
 
 export function graphRelationship(
   selectedTitle: string,
@@ -43,11 +44,34 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("");
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
 
-  const refreshCatalog = useCallback(async () => {
-    const result = await api.catalog();
-    setCatalog(result.data);
-  }, []);
+  const catalogRequest = useMemo(
+    () =>
+      createLatestCatalogRequest(
+        (filters) => api.catalog(filters),
+        (result) => {
+          setCatalog(result.data);
+          setAvailableTypes((knownTypes) => [
+            ...new Set([
+              ...knownTypes,
+              ...result.data.items.map((item) => item.type),
+            ]),
+          ]);
+        },
+      ),
+    [],
+  );
+  const refreshCatalog = useCallback(
+    () => catalogRequest({ search, type }),
+    [catalogRequest, search, type],
+  );
+
+  const loadedTypes = [
+    ...new Set([...availableTypes, ...(type ? [type] : [])]),
+  ];
 
   useEffect(() => {
     void api
@@ -61,12 +85,6 @@ export default function App() {
               ? "setup"
               : "login",
         );
-        if (data.authenticated)
-          return refreshCatalog().catch((cause: unknown) =>
-            setError(
-              cause instanceof Error ? cause.message : "Unable to load catalog",
-            ),
-          );
       })
       .catch((cause: unknown) => {
         setError(
@@ -76,7 +94,16 @@ export default function App() {
         );
         setScreen("login");
       });
-  }, [refreshCatalog]);
+  }, []);
+
+  useEffect(() => {
+    if (screen !== "catalog") return;
+    void refreshCatalog().catch((cause: unknown) =>
+      setError(
+        cause instanceof Error ? cause.message : "Unable to load catalog",
+      ),
+    );
+  }, [refreshCatalog, screen]);
 
   async function perform(work: () => Promise<void>) {
     setBusy(true);
@@ -108,7 +135,6 @@ export default function App() {
       if (!token) throw new Error("Sign-in did not provide a CSRF token");
       setCsrf(token);
       setPassword("");
-      await refreshCatalog();
       setScreen("catalog");
     });
   }
@@ -204,6 +230,32 @@ export default function App() {
         {screen === "catalog" && (
           <>
             <div className="toolbar">
+              <div
+                className="catalog-filters"
+                role="group"
+                aria-label="Catalog filters"
+              >
+                <label htmlFor="catalog-search">Search catalog</label>
+                <input
+                  id="catalog-search"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+                <label htmlFor="catalog-type">Type</label>
+                <select
+                  id="catalog-type"
+                  value={type}
+                  onChange={(event) => setType(event.target.value)}
+                >
+                  <option value="">All types</option>
+                  {loadedTypes.map((itemType) => (
+                    <option key={itemType} value={itemType}>
+                      {itemType}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 type="button"
                 onClick={() => void importPack()}

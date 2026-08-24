@@ -223,10 +223,44 @@ export async function buildApp(
       if (!(await requireCsrf(request, reply))) return;
       return reply.status(201).send({ pack: await store.importLanternVale() });
     });
-    app.get("/api/catalog", async (request, reply) => {
-      if (!(await requireAuth(request, reply))) return;
-      return { items: await store.catalog(), nextUp: await store.nextUp() };
-    });
+    app.get<{ Querystring: { search?: unknown; type?: unknown } }>(
+      "/api/catalog",
+      async (request, reply) => {
+        if (!(await requireAuth(request, reply))) return;
+        const { search, type } = request.query;
+        if (
+          (search !== undefined && typeof search !== "string") ||
+          (type !== undefined && typeof type !== "string")
+        )
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            "search and type must be strings",
+          );
+        const normalizedSearch = search?.trim() || undefined;
+        const normalizedType = type?.trim() || undefined;
+        if (
+          normalizedType !== undefined &&
+          !(await store.catalogTypes()).includes(normalizedType)
+        )
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            "type is not an accepted Pack Watchable Type",
+          );
+        return {
+          items: await store.catalog({
+            search: normalizedSearch,
+            type: normalizedType,
+          }),
+          nextUp: await store.nextUp(),
+        };
+      },
+    );
     app.get<{ Params: { slug: string } }>(
       "/api/catalog/:slug",
       async (request, reply) => {

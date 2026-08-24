@@ -42,7 +42,8 @@ button:disabled {
   opacity: 0.6;
 }
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
@@ -118,12 +119,20 @@ h2 {
 label {
   font-weight: 700;
 }
-input {
+input,
+select {
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.75rem;
   color: #fff;
   background: #090b10;
+}
+.catalog-filters {
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 1fr) auto minmax(10rem, 1fr);
+  gap: 0.6rem;
+  align-items: center;
+  width: 100%;
 }
 .error,
 .notice {
@@ -333,5 +342,8 @@ input {
   }
   .actions button {
     flex: 1 1 40%;
+  }
+  .catalog-filters {
+    grid-template-columns: 1fr;
   }
 }
