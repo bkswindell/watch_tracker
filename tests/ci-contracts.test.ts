@@ -28,7 +28,38 @@ test("CI PostgreSQL credentials and migration gate are internally consistent", (
     workflow,
     /POSTGRES_PASSWORD: ci-only-watch-tracker-password\n\s+TEST_DATABASE_URL: postgresql:\/\/watch_tracker:ci-only-watch-tracker-password@127\.0\.0\.1:5432\/watch_tracker_ci/,
   );
-  assert.match(workflow, /migration_version.*0\.03|0\.03.*migration_version/s);
+
+  const migrationGate = workflow.slice(
+    workflow.indexOf(
+      "Verify PostgreSQL readiness and current migration identity",
+    ),
+    workflow.indexOf("Build production application"),
+  );
+  assert.notEqual(
+    migrationGate,
+    workflow,
+    "migration readiness gate must be present",
+  );
+  assert.match(migrationGate, /set -euo pipefail/);
+  assert.match(migrationGate, /migration_paths=\(db\/migrations\/\*\.sql\)/);
+  assert.match(migrationGate, /LC_ALL=C sort \| tail -n 1/);
+  assert.match(migrationGate, /Invalid terminal migration filename/);
+  assert.match(migrationGate, /expected_version="\$\{BASH_REMATCH\[1\]\}"/);
+  assert.match(migrationGate, /expected_name="\$\{BASH_REMATCH\[2\]\}"/);
+  assert.match(migrationGate, /sha256sum "\$migration_path"/);
+  assert.match(
+    migrationGate,
+    /expected_migration="\$expected_version:\$expected_name:\$expected_checksum"/,
+  );
+  assert.match(
+    migrationGate,
+    /migration_version \|\| ':' \|\| migration_name \|\| ':' \|\| migration_sha256/,
+  );
+  assert.match(
+    migrationGate,
+    /test "\$actual_migration" = "\$expected_migration"/,
+  );
+  assert.doesNotMatch(migrationGate, /0\.0[0-9]_[a-z0-9-]+\.sql/);
 });
 
 test("CI smoke uses the built production images with disposable loopback Compose inputs", () => {

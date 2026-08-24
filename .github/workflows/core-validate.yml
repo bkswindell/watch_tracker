@@ -74,14 +74,28 @@ jobs:
       - name: Run PostgreSQL integration gate
         run: npm run test:postgres
 
-      - name: Verify PostgreSQL readiness and migration head
+      - name: Verify PostgreSQL readiness and current migration identity
+        shell: bash
         run: |
+          set -euo pipefail
           pg_isready --host 127.0.0.1 --port 5432 --username watch_tracker --dbname watch_tracker_ci
-          expected_checksum="$(sha256sum db/migrations/0.03_canon-pack-registry.sql | cut -d ' ' -f 1)"
+
+          migration_paths=(db/migrations/*.sql)
+          test "${#migration_paths[@]}" -gt 0
+          migration_path="$(printf '%s\n' "${migration_paths[@]}" | LC_ALL=C sort | tail -n 1)"
+          migration_file="${migration_path##*/}"
+          if [[ ! "$migration_file" =~ ^(0\.[0-9]{2})_([a-z0-9][a-z0-9-]*)\.sql$ ]]; then
+            printf 'Invalid terminal migration filename: %s\n' "$migration_file" >&2
+            exit 1
+          fi
+          expected_version="${BASH_REMATCH[1]}"
+          expected_name="${BASH_REMATCH[2]}"
+          expected_checksum="$(sha256sum "$migration_path" | cut -d ' ' -f 1)"
+          expected_migration="$expected_version:$expected_name:$expected_checksum"
           actual_migration="$(PGPASSWORD="$POSTGRES_PASSWORD" psql \
             --host 127.0.0.1 --port 5432 --username watch_tracker --dbname watch_tracker_ci --tuples-only --no-align \
-            --command "SELECT migration_version || ':' || migration_sha256 FROM schema_migration ORDER BY migration_version DESC LIMIT 1")"
-          test "$actual_migration" = "0.03:$expected_checksum"
+            --command "SELECT migration_version || ':' || migration_name || ':' || migration_sha256 FROM schema_migration ORDER BY migration_version DESC LIMIT 1")"
+          test "$actual_migration" = "$expected_migration"
           printf 'PASS migration=%s\n' "$actual_migration"
 
       - name: Build production application
