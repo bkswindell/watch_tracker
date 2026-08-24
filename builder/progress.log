@@ -31,4 +31,5 @@
 - Branch, origin, and PR #4 head were verified at `c01000240d75b6102ade40c7ac45458aefee71e4`; Validate Core run `32786833530` started.
 - Browser harness retry failed because no supported Chromium-family browser is running. No credentials were accessed or changed and no browser evidence was fabricated.
 - Remaining accepted gates are Argon2id/password policy and host-controlled recovery. Recovery requires provider/UX decisions; the safe next lane is Argon2id/password policy without changing deployed credentials.
+- Validate Core run `32786887814` completed successfully for progress parent `c235859`; all workflow steps passed, including PostgreSQL integration, image scanning, SBOM, and Compose runtime smoke.
 - Historical audit remains **FAIL** pending every accepted auth/session gate.
