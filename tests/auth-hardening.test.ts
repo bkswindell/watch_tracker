@@ -12,7 +12,11 @@ import {
 } from "../apps/api/src/slice.js";
 
 async function configuredApp(
-  loginThrottle = { maxFailures: 5, windowMs: 60_000 },
+  loginThrottle: {
+    maxFailures: number;
+    windowMs: number;
+    maxEntries?: number;
+  } = { maxFailures: 5, windowMs: 60_000 },
 ) {
   const app = await buildApp({
     readinessProbe: async () => ({ ready: true }),
@@ -99,6 +103,28 @@ test("login failures are rate limited and a successful login resets the limit", 
   assert.equal(throttled.statusCode, 429);
   assert.equal(throttled.json().error.code, "auth.throttled");
   assert.match(String(throttled.headers["retry-after"]), /^\d+$/);
+});
+
+test("login throttle retains a bounded number of client entries", async (t) => {
+  const { app, csrf } = await configuredApp({
+    maxFailures: 1,
+    windowMs: 60_000,
+    maxEntries: 2,
+  });
+  t.after(() => app.close());
+  const failedLogin = (remoteAddress: string) =>
+    app.inject({
+      method: "POST",
+      url: "/api/login",
+      remoteAddress,
+      payload: { password: "wrong" },
+      headers: { "x-csrf-token": csrf },
+    });
+
+  assert.equal((await failedLogin("192.0.2.1")).statusCode, 401);
+  assert.equal((await failedLogin("192.0.2.2")).statusCode, 401);
+  assert.equal((await failedLogin("192.0.2.3")).statusCode, 401);
+  assert.equal((await failedLogin("192.0.2.1")).statusCode, 401);
 });
 
 test("logout invalidates the server session and clears the browser cookie", async (t) => {

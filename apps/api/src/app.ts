@@ -30,7 +30,11 @@ export interface BuildAppOptions {
   webRoot?: string;
   sliceStore?: SliceStore;
   posterFetch?: typeof fetch;
-  loginThrottle?: { maxFailures: number; windowMs: number };
+  loginThrottle?: {
+    maxFailures: number;
+    windowMs: number;
+    maxEntries?: number;
+  };
 }
 
 export const API_SERVER_LIMITS = Object.freeze({
@@ -200,13 +204,26 @@ export async function buildApp(
     const loginThrottle = options.loginThrottle ?? {
       maxFailures: 5,
       windowMs: 15 * 60_000,
+      maxEntries: 10_000,
     };
+    const loginThrottleMaxEntries = loginThrottle.maxEntries ?? 10_000;
     const failedLogins = new Map<
       string,
       { count: number; startedAt: number }
     >();
     function loginKey(request: FastifyRequest): string {
       return request.ip;
+    }
+    function pruneLoginFailures(now: number): void {
+      for (const [key, failure] of failedLogins) {
+        if (now - failure.startedAt >= loginThrottle.windowMs)
+          failedLogins.delete(key);
+      }
+      while (failedLogins.size >= loginThrottleMaxEntries) {
+        const oldest = failedLogins.keys().next().value;
+        if (oldest === undefined) return;
+        failedLogins.delete(oldest);
+      }
     }
     function loginBlocked(request: FastifyRequest): number | undefined {
       const failure = failedLogins.get(loginKey(request));
@@ -223,9 +240,10 @@ export async function buildApp(
       const key = loginKey(request);
       const existing = failedLogins.get(key);
       const now = Date.now();
-      if (!existing || now - existing.startedAt >= loginThrottle.windowMs)
+      if (!existing || now - existing.startedAt >= loginThrottle.windowMs) {
+        pruneLoginFailures(now);
         failedLogins.set(key, { count: 1, startedAt: now });
-      else existing.count += 1;
+      } else existing.count += 1;
     }
     function clearLoginFailures(request: FastifyRequest): void {
       failedLogins.delete(loginKey(request));
