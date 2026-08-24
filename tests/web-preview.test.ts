@@ -44,6 +44,20 @@ test("approved details sidecar remains statefully resizable", async () => {
   assert.doesNotMatch(source, /onResize=\{\(\) => \{\}\}/);
 });
 
+test("Core loads the official XYFlow structural stylesheet", async () => {
+  const source = await readFile("apps/web/src/main.tsx", "utf8");
+  assert.match(source, /import "@xyflow\/react\/dist\/style\.css"/);
+});
+
+test("Focus Map refits settled top-level series bounds rather than child-local bounds", async () => {
+  const source = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
+  assert.match(source, /flowInstance\.current = instance/);
+  assert.match(source, /graph\.nodes\.filter\(\(node\) => !node\.parentId\)/);
+  assert.match(source, /window\.setTimeout\(\(\) => \{/);
+  assert.match(source, /instance\.fitBounds\(/);
+  assert.doesNotMatch(source, /^\s+fitView$/m);
+});
+
 test("approved workspace grids use bounded Infinite Row Model datasources", async () => {
   const source = await readFile("apps/web/src/App.tsx", "utf8");
   assert.equal((source.match(/rowModelType="infinite"/g) || []).length, 3);

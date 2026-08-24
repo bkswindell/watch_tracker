@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App";
 import "./styles.css";
+import "@xyflow/react/dist/style.css";
 
 const rootElement = document.getElementById("root");
 
