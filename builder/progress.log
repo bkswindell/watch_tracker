@@ -82,3 +82,12 @@
 - Browser proof is blocked because the harness reports no supported Chromium-family browser is running. No deployment credential was accessed; no authenticated browser result was fabricated.
 - Implementation SHA and `origin/automation/phase1` were verified as `a832a0dc3f6f86b807649ddd2dbc8f688dd0e67a`; Validate Core is pending. The recovery blocker is unchanged: select an approved host-managed recovery delivery channel and user-facing recovery UX. Historical audit remains **FAIL** until that accepted gate and all CI gates pass.
 - Validate Core run `32789911970` completed successfully for progress/docs head `e8dc68dbce209d005e50c1dacb8b338b36866792`, with all required checks green: locked dependencies and production/full audits, typecheck, lint, formatting, portable tests, isolated PostgreSQL integration and migration identity, build, Dockerfile/Compose validation, image scans, CycloneDX SBOM, and disposable Compose smoke.
+
+## 2026-08-24 — independent authentication/session gate supervision
+
+- Verified PR #4, `origin/automation/phase1`, and the local branch at `882a7dc31cbcb93adbbfe54c4159724f91e60e60`; Validate Core run `32790095448` completed successfully, including isolated PostgreSQL integration, current migration identity, image scans, CycloneDX SBOM, and disposable Compose smoke.
+- Independently ran the focused authentication/SQL invocation; all 106 portable tests passed, including hostile Origin, login throttle/reset/bounded-state, logout invalidation, session lifetimes, Argon2id, owner isolation, and immutable Pack separation coverage.
+- Repeated credential-free live Origin proof against the healthy deployed app: opposite-scheme same-host returned `403 csrf.invalid`, while the exact HTTP Origin reached the existing `409 setup.unavailable` guard.
+- Confirmed the app remains healthy on image `sha256:19f0a7c89eefacf20c3e84e04e9d633574301b2c952c9f2c0bc616b1ba3ae6ad`. The database is healthy and predates the app recreation; no database container, volume, durable data, or credential was changed or accessed.
+- Template PR #10 remains green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.
+- Host-controlled recovery remains blocked on selection of an approved host-managed delivery channel and user-facing recovery UX. Historical audit remains **FAIL** pending that accepted gate.
