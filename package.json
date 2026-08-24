@@ -19,6 +19,7 @@
     "format:check": "prettier --check apps packages scripts tests package.json tsconfig.json tsconfig.build.json eslint.config.js compose.yaml .github/workflows",
     "test": "node scripts/run-portable-tests.mjs",
     "test:postgres": "node --import tsx --test tests/postgres-integration.test.ts",
+    "plex:probe": "tsx scripts/plex-integration-probe.ts",
     "migrate": "tsx scripts/migrate.ts",
     "migrate:prod": "node dist/scripts/migrate.js",
     "build:deterministic": "node scripts/verify-deterministic-build.mjs",
