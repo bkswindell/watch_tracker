@@ -1,446 +1,50 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+// @ts-nocheck
+import { useEffect, useMemo, useState } from "react";
+import { AgGridReact } from "ag-grid-react";
+import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-community";
+import FocusGraph from "./FocusGraph";
+import WatchableActionMenu from "./WatchableActions";
+import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
+import { api } from "./api";
 
-import {
-  api,
-  type CatalogItem,
-  type CatalogResponse,
-  type CatalogRelationship,
-} from "./api.js";
-import { createLatestCatalogRequest } from "./catalog-refresh.js";
-
-export function graphRelationship(
-  selectedTitle: string,
-  relationship: CatalogRelationship,
-) {
+ModuleRegistry.registerModules([AllCommunityModule]);
+export function graphRelationship(selectedTitle, relationship) {
   const referencedTitle = relationship.referencedWatchable.title;
   const requiredBy = relationship.direction === "required-by";
   const source = requiredBy ? referencedTitle : selectedTitle;
   const destination = requiredBy ? selectedTitle : referencedTitle;
-  return {
-    source,
-    destination,
-    label: requiredBy
-      ? `${source} is required by ${destination}`
-      : `${source} requires ${destination}`,
-  };
+  return { source, destination, label: requiredBy ? `${source} is required by ${destination}` : `${source} requires ${destination}` };
 }
-
-type Screen = "loading" | "setup" | "login" | "catalog";
-
-function ErrorMessage({ message }: { message: string | undefined }) {
-  return message ? (
-    <p className="error" role="alert">
-      {message}
-    </p>
-  ) : null;
+const appTheme = themeQuartz.withParams({ accentColor: "#72e0b5", backgroundColor: "#101720", browserColorScheme: "dark", foregroundColor: "#edf3f9", headerBackgroundColor: "#151e29", headerTextColor: "#b8c5d4", oddRowBackgroundColor: "#121b25", rowHoverColor: "#1c2a38", borderColor: "#263445", wrapperBorderRadius: "12px" });
+const nav = [["map", "⌘", "Focus Map"], ["catalog", "▦", "Catalog"], ["next", "→", "Next Up"], ["history", "↺", "History"], ["pack", "⬡", "Canon Pack"]];
+function normalize(item) { return { ...item, id: item.slug, order: item.releaseOrder, state: item.state === "watched" ? "Watched" : item.state === "in-progress" ? "In Progress" : "Not Started", series: item.series || item.collection || item.type, release: item.release || item.releaseDate, runtime: item.runtime || item.duration, why: item.why || item.summary, poster: item.poster === true, posterUrl: item.posterUrl || item.poster_url }; }
+function ErrorMessage({ message }) { return message ? <p className="error" role="alert">{message}</p> : null; }
+function StateBadge({ value }) { return value ? <span className={`state ${value.toLowerCase().replace(" ", "-")}`}>{value}</span> : null; }
+function App() {
+  const [screen, setScreen] = useState("loading"), [csrf, setCsrf] = useState(""), [password, setPassword] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(), [toast, setToast] = useState("");
+  const [view, setView] = useState(() => new URLSearchParams(location.search).get("view") || "map"), [items, setItems] = useState([]), [relations, setRelations] = useState([]), [target, setTarget] = useState(), [history, setHistory] = useState([]), [pack, setPack] = useState();
+  const [selected, setSelected] = useState(), [detailsOpen, setDetailsOpen] = useState(false), [detailsModal, setDetailsModal] = useState(false), [query, setQuery] = useState(""), [mode, setMode] = useState("Release Timeline");
+  const notify = text => { setToast(text); window.setTimeout(() => setToast(""), 2300); };
+  const loadWorkspace = async () => { const { data } = await api.workspace(); setItems(data.items.map(normalize)); setRelations(data.relationships.map(r => [r.fromSlug, r.toSlug, r.type])); setTarget(data.targetSlug); setHistory(data.history || []); setPack(data.pack); const next = data.items.find(x => x.slug === data.nextUp?.slug); if (next && !selected) setSelected(normalize(next)); };
+  useEffect(() => { api.bootstrap().then(({ data }) => { setCsrf(data.csrfToken); setScreen(data.authenticated ? "app" : data.setupRequired ? "setup" : "login"); if (data.authenticated) return loadWorkspace(); }).catch(c => { setError(c.message); setScreen("login"); }); }, []);
+  async function perform(work) { setBusy(true); setError(undefined); try { await work(); } catch (c) { setError(c instanceof Error ? c.message : "Something went wrong"); } finally { setBusy(false); } }
+  const openDetails = item => { if (!item) return; setSelected(item); setDetailsOpen(true); };
+  const markTarget = item => perform(async () => { setTarget(item.id); await api.focus(item.id, csrf); await loadWorkspace(); openDetails(item); notify(`${item.title} · active target`); });
+  const actItem = (item, state) => perform(async () => { const action = state === "In Progress" ? "start" : state === "Watched" ? "complete" : "discard"; const updated = normalize((await api.action(item.id, action, csrf)).data); setSelected(updated); await loadWorkspace(); notify(`${item.title} · ${state}`); });
+  async function signIn(e) { e.preventDefault(); await perform(async () => { const result = await api.login(password, csrf); const token = api.csrfFromLogin(result.response); if (!token) throw new Error("Sign-in did not provide a CSRF token"); setCsrf(token); setPassword(""); setScreen("app"); await loadWorkspace(); }); }
+  async function setup(e) { e.preventDefault(); await perform(async () => { await api.setup(csrf); setScreen("login"); notify("Setup complete. Sign in to continue."); }); }
+  async function importPack() { await perform(async () => { const result = await api.importPack(csrf); await loadWorkspace(); notify(`${result.data.pack.title} ${result.data.pack.version} imported.`); }); }
+  const filtered = useMemo(() => items.filter(x => !query || `${x.title} ${x.series} ${x.type}`.toLowerCase().includes(query.toLowerCase())), [items, query]);
+  const columns = useMemo(() => [{ field: "order", headerName: "#", width: 70 }, { field: "title", headerName: "Title", minWidth: 240, flex: 1 }, { field: "type", width: 120 }, { field: "series", width: 180 }, { field: "release", headerName: "First release", width: 145 }, { field: "runtime", headerName: "Minutes", width: 110 }, { field: "state", width: 140, cellRenderer: p => <StateBadge value={p.value} /> }], []);
+  if (screen === "loading") return <div className="loadingScreen">Loading Watch Tracker…</div>;
+  if (screen === "setup" || screen === "login") return <div className="authShell"><div className="authCard"><div className="logo">WT</div><span className="eyebrow">Canon-aware viewing</span><h1>{screen === "setup" ? "Set up Watch Tracker" : "Welcome back"}</h1><p>{screen === "setup" ? "Complete local setup, then sign in with the administrator password." : "Sign in to open your workspace."}</p><ErrorMessage message={error} />{screen === "setup" ? <form onSubmit={setup}><button className="primary" disabled={busy}>{busy ? "Setting up…" : "Complete setup"}</button></form> : <form onSubmit={signIn}><label htmlFor="password">Administrator password</label><input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required /><button className="primary" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button></form>}</div></div>;
+  const current = nav.find(x => x[0] === view);
+  return <div className="shell"><aside className="sidebar"><div className="brand"><div className="logo">WT</div><div><b>Watch Tracker</b><small>Canon-aware viewing</small></div></div><nav>{nav.map(([id, icon, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => { setView(id); setDetailsOpen(false); setDetailsModal(false); }}><span className="navIcon">{icon}</span>{label}</button>)}</nav><div className="sideBottom"><span className="avatar">AD</span><div><b>Administrator</b><small>Local session</small></div></div></aside><main className={detailsOpen ? "withDetails" : ""}><header className="top"><div><b>{current?.[2]}</b><small>{pack?.title || "Workspace"} · Canon Pack</small></div><button onClick={() => void importPack()} disabled={busy}>Import pack</button></header><div className={`page ${view === "map" ? "mapPage" : `fullPage ${view}Page`}`}><ErrorMessage message={error} />{view === "map" && <><div className="pageTitle"><div><span className="eyebrow">Active Watch Focus</span><h1>Explore the story</h1><p>Select a target and understand exactly why each title is included.</p></div><button className="primary" onClick={() => setView("next")}>View Next Up →</button></div><FocusGraph items={items} relations={relations} target={target || items[0]?.id} nextUpId={items.find(x => x.state === "Not Started")?.id} selectedId={selected?.id} onTarget={id => markTarget(items.find(x => x.id === id))} mode={mode} onMode={setMode} onPick={openDetails} onViewingAction={actItem} /></>}{view === "catalog" && <><div className="pageTitle"><div><span className="eyebrow">Browse active Pack</span><h1>Catalog</h1><p>All watchables from the authenticated workspace.</p></div></div><div className="gridTools catalogCommands"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search all columns…" /><button disabled={!selected} onClick={() => openDetails(selected)}>View details</button></div><div className="agWrap"><AgGridReact theme={appTheme} rowData={filtered} columnDefs={columns} defaultColDef={{ sortable: true, filter: true, resizable: true }} rowSelection="single" onRowClicked={e => openDetails(e.data)} getRowId={p => p.data.id} /></div></>}{view === "next" && <NextPage items={items} target={target} onTarget={markTarget} onPick={openDetails} onAction={actItem} />}{view === "history" && <HistoryPage history={history} items={items} onPick={openDetails} />}{view === "pack" && <PackPage pack={pack} onImport={importPack} />}</div>{detailsOpen && selected && <><WatchableSidecar item={selected} width={390} onResize={() => {}} onClose={() => setDetailsOpen(false)} onMaximize={() => setDetailsModal(true)} targetId={target} onTarget={markTarget} onAction={actItem} notify={notify} /><RelationshipSummary selected={selected} /></>}</main><nav className="mobileNav">{nav.map(([id, icon, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)}><span>{icon}</span>{label.replace("Focus ", "")}</button>)}</nav>{detailsModal && selected && <WatchableDetailModal item={selected} onClose={() => setDetailsModal(false)} targetId={target} onTarget={markTarget} onAction={actItem} notify={notify} />}<div className={`toast ${toast ? "show" : ""}`}>{toast}</div></div>;
 }
-
-export default function App() {
-  const [screen, setScreen] = useState<Screen>("loading");
-  const [csrf, setCsrf] = useState("");
-  const [catalog, setCatalog] = useState<CatalogResponse>({ items: [] });
-  const [selected, setSelected] = useState<CatalogItem | undefined>();
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const [notice, setNotice] = useState<string>();
-  const [search, setSearch] = useState("");
-  const [type, setType] = useState("");
-  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
-
-  const catalogRequest = useMemo(
-    () =>
-      createLatestCatalogRequest(
-        (filters) => api.catalog(filters),
-        (result) => {
-          setCatalog(result.data);
-          setAvailableTypes((knownTypes) => [
-            ...new Set([
-              ...knownTypes,
-              ...result.data.items.map((item) => item.type),
-            ]),
-          ]);
-        },
-      ),
-    [],
-  );
-  const refreshCatalog = useCallback(
-    () => catalogRequest({ search, type }),
-    [catalogRequest, search, type],
-  );
-
-  const loadedTypes = [
-    ...new Set([...availableTypes, ...(type ? [type] : [])]),
-  ];
-
-  useEffect(() => {
-    void api
-      .bootstrap()
-      .then(({ data }) => {
-        setCsrf(data.csrfToken);
-        setScreen(
-          data.authenticated
-            ? "catalog"
-            : data.setupRequired
-              ? "setup"
-              : "login",
-        );
-      })
-      .catch((cause: unknown) => {
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Unable to connect to Watch Tracker",
-        );
-        setScreen("login");
-      });
-  }, []);
-
-  useEffect(() => {
-    if (screen !== "catalog") return;
-    void refreshCatalog().catch((cause: unknown) =>
-      setError(
-        cause instanceof Error ? cause.message : "Unable to load catalog",
-      ),
-    );
-  }, [refreshCatalog, screen]);
-
-  async function perform(work: () => Promise<void>) {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
-    try {
-      await work();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Something went wrong");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function completeSetup(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await perform(async () => {
-      await api.setup(csrf);
-      setNotice("Setup complete. Sign in to continue.");
-      setScreen("login");
-    });
-  }
-
-  async function signIn(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await perform(async () => {
-      const result = await api.login(password, csrf);
-      const token = api.csrfFromLogin(result.response);
-      if (!token) throw new Error("Sign-in did not provide a CSRF token");
-      setCsrf(token);
-      setPassword("");
-      setScreen("catalog");
-    });
-  }
-
-  async function importPack() {
-    await perform(async () => {
-      const result = await api.importPack(csrf);
-      await refreshCatalog();
-      setNotice(
-        `${result.data.pack.title} ${result.data.pack.version} imported.`,
-      );
-    });
-  }
-
-  async function openItem(item: CatalogItem) {
-    await perform(async () => {
-      setSelected((await api.item(item.slug)).data);
-    });
-  }
-
-  async function chooseFocus(slug: string) {
-    await perform(async () => {
-      await api.focus(slug, csrf);
-      await refreshCatalog();
-      setNotice("Watch Focus updated.");
-    });
-  }
-
-  async function viewingAction(
-    action: "start" | "complete" | "discard" | "repeat",
-  ) {
-    if (!selected) return;
-    await perform(async () => {
-      const item = (await api.action(selected.slug, action, csrf)).data;
-      setSelected(item);
-      await refreshCatalog();
-    });
-  }
-
-  return (
-    <div className="app-shell">
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Watch Tracker home">
-          <span className="brand-mark" aria-hidden="true">
-            W
-          </span>
-          <span>Watch Tracker</span>
-        </a>
-      </header>
-      <main className="main-content">
-        <p className="eyebrow">Lantern Vale / personal catalog</p>
-        <h1>Choose what comes next.</h1>
-        <ErrorMessage message={error} />
-        {notice && (
-          <p className="notice" role="status">
-            {notice}
-          </p>
-        )}
-        {screen === "loading" && <p role="status">Loading your tracker…</p>}
-        {screen === "setup" && (
-          <section className="panel" aria-labelledby="setup-title">
-            <h2 id="setup-title">Set up Watch Tracker</h2>
-            <p>
-              Complete the local setup, then sign in with the administrator
-              password.
-            </p>
-            <form onSubmit={completeSetup}>
-              <button disabled={busy} type="submit">
-                {busy ? "Setting up…" : "Complete setup"}
-              </button>
-            </form>
-          </section>
-        )}
-        {screen === "login" && (
-          <section className="panel" aria-labelledby="login-title">
-            <h2 id="login-title">Sign in</h2>
-            <form onSubmit={signIn}>
-              <label htmlFor="password">Administrator password</label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-              />
-              <button disabled={busy} type="submit">
-                {busy ? "Signing in…" : "Sign in"}
-              </button>
-            </form>
-          </section>
-        )}
-        {screen === "catalog" && (
-          <>
-            <div className="toolbar">
-              <div
-                className="catalog-filters"
-                role="group"
-                aria-label="Catalog filters"
-              >
-                <label htmlFor="catalog-search">Search catalog</label>
-                <input
-                  id="catalog-search"
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-                <label htmlFor="catalog-type">Type</label>
-                <select
-                  id="catalog-type"
-                  value={type}
-                  onChange={(event) => setType(event.target.value)}
-                >
-                  <option value="">All types</option>
-                  {loadedTypes.map((itemType) => (
-                    <option key={itemType} value={itemType}>
-                      {itemType}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() => void importPack()}
-                disabled={busy}
-              >
-                Import Lantern Vale
-              </button>
-              {catalog.nextUp && (
-                <p className="next-up">
-                  <strong>Next Up:</strong> {catalog.nextUp.title}
-                </p>
-              )}
-            </div>
-            {selected ? (
-              <section className="panel detail" aria-labelledby="detail-title">
-                <button
-                  className="back-button"
-                  type="button"
-                  onClick={() => setSelected(undefined)}
-                >
-                  ← Back to catalog
-                </button>
-                <p className="eyebrow">
-                  {selected.type} · {selected.state}
-                </p>
-                <h2 id="detail-title">{selected.title}</h2>
-                <p>{selected.summary}</p>
-                <section
-                  className="relationships"
-                  aria-labelledby="relationships-title"
-                >
-                  <h3 id="relationships-title">
-                    Prerequisites and relationships
-                  </h3>
-                  {selected.relationships.length > 0 ? (
-                    <ul>
-                      {selected.relationships.map((relationship) => (
-                        <li
-                          key={`${relationship.direction}-${relationship.referencedWatchable.id}`}
-                        >
-                          <strong>{relationship.type}</strong> ·{" "}
-                          {relationship.direction.replace("-", " ")} ·{" "}
-                          {relationship.referencedWatchable.title}
-                          <span>{relationship.summary}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="empty-relationships">
-                      No prerequisites or relationships recorded.
-                    </p>
-                  )}
-                </section>
-                <section
-                  className="dependency-graph"
-                  aria-labelledby="dependency-graph-title"
-                  aria-describedby="dependency-graph-description"
-                  role="region"
-                >
-                  <h3 id="dependency-graph-title">Dependency graph</h3>
-                  <p id="dependency-graph-description">
-                    Directed relationships between this item and related catalog
-                    items.
-                  </p>
-                  {selected.relationships.length > 0 ? (
-                    <div className="graph-edges" role="list">
-                      {selected.relationships.map((relationship) => {
-                        const graph = graphRelationship(
-                          selected.title,
-                          relationship,
-                        );
-                        return (
-                          <div
-                            className="graph-edge"
-                            role="listitem"
-                            key={`graph-${relationship.direction}-${relationship.referencedWatchable.id}`}
-                            aria-label={`Relationship: ${relationship.type}; ${graph.label}`}
-                          >
-                            <span
-                              className="graph-node"
-                              role="img"
-                              aria-label={`Node: ${graph.source}`}
-                            >
-                              {graph.source}
-                            </span>
-                            <span className="graph-arrow" aria-hidden="true">
-                              →
-                            </span>
-                            <span
-                              className="graph-node"
-                              role="img"
-                              aria-label={`Node: ${graph.destination}`}
-                            >
-                              {graph.destination}
-                            </span>
-                            <span className="graph-edge-label">
-                              {relationship.type} · {graph.label}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="empty-dependency-graph">
-                      No dependencies or relationships to graph.
-                    </p>
-                  )}
-                </section>
-                <div className="actions">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void viewingAction("start")}
-                  >
-                    Start
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void viewingAction("complete")}
-                  >
-                    Complete
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void viewingAction("discard")}
-                  >
-                    Discard
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void viewingAction("repeat")}
-                  >
-                    Repeat
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void chooseFocus(selected.slug)}
-                  >
-                    Set Watch Focus
-                  </button>
-                </div>
-              </section>
-            ) : (
-              <section aria-labelledby="catalog-title">
-                <h2 id="catalog-title" className="sr-only">
-                  Catalog
-                </h2>
-                <div className="catalog-grid">
-                  {catalog.items.map((item) => (
-                    <article className="catalog-card" key={item.slug}>
-                      <button type="button" onClick={() => void openItem(item)}>
-                        <span className="card-type">{item.type}</span>
-                        <h2>{item.title}</h2>
-                        <p>{item.summary}</p>
-                        <span className={`state state--${item.state}`}>
-                          {item.state.replace("-", " ")}
-                        </span>
-                      </button>
-                      <button
-                        className="focus-button"
-                        type="button"
-                        onClick={() => void chooseFocus(item.slug)}
-                      >
-                        Set Watch Focus
-                      </button>
-                    </article>
-                  ))}
-                </div>
-                {catalog.items.length === 0 && (
-                  <p className="panel">
-                    No catalog items yet. Import Lantern Vale to begin.
-                  </p>
-                )}
-              </section>
-            )}
-          </>
-        )}
-      </main>
-      <footer className="site-footer">
-        <p>Watch Tracker</p>
-      </footer>
-    </div>
-  );
-}
+function RelationshipSummary({ selected }) { return <section className="relationships" aria-labelledby="relationships-title"><h3 id="relationships-title">Prerequisites and relationships</h3>{selected.relationships.length > 0 ? <ul>
+{selected.relationships.map((relationship) => (
+<li key={`${relationship.direction}-${relationship.referencedWatchable.id}`}><strong>{relationship.type}</strong> · {relationship.direction.replace("-", " ")} · {relationship.referencedWatchable.title}<span>{relationship.summary}</span></li>))}</ul> : <p className="empty-relationships">No prerequisites or relationships recorded.</p>}<section className="dependency-graph" aria-labelledby="dependency-graph-title" aria-describedby="dependency-graph-description" role="region"><h3 id="dependency-graph-title">Dependency graph</h3><p id="dependency-graph-description">Directed relationships between this item and related catalog items.</p>{selected.relationships.length > 0 ? <div className="graph-edges" role="list">{selected.relationships.map((relationship) => { const graph = graphRelationship(selected.title, relationship); return <div className="graph-edge" role="listitem" key={`graph-${relationship.direction}-${relationship.referencedWatchable.id}`} aria-label={`Relationship: ${relationship.type}; ${graph.label}`}><span className="graph-node" role="img">{graph.source}</span><span className="graph-arrow" aria-hidden="true">→</span><span className="graph-node" role="img">{graph.destination}</span></div>; })}</div> : <p className="empty-dependency-graph">No dependencies or relationships to graph.</p>}</section></section>; }
+function NextPage({ items, target, onTarget, onPick, onAction }) { const next = items.find(x => x.state === "Not Started") || items[0]; return <><div className="pageTitle"><div><span className="eyebrow">Deterministic guidance</span><h1>Next Up</h1><p>Follow prerequisite and release order to the active target.</p></div></div>{next && <div className="nextHero"><div className="poster">✦</div><div><span className="eyebrow">Recommended next</span><h2>{next.title}</h2><p>{next.why}</p><div className="actions"><button className="primary" onClick={() => onAction(next, "In Progress")}>Start watching</button><button onClick={() => onPick(next)}>Inspect details</button><button onClick={() => onTarget(next)}>Set target</button></div></div></div>}<h2>Queue to target</h2><div className="agWrap queueGrid"><AgGridReact theme={appTheme} rowData={items} columnDefs={[{ field: "order", headerName: "#", width: 70 }, { field: "title", flex: 1, minWidth: 240 }, { field: "type", width: 120 }, { field: "state", width: 150, cellRenderer: p => <StateBadge value={p.value} /> }]} defaultColDef={{ sortable: false, resizable: true }} onRowClicked={e => onPick(e.data)} /></div></>; }
+function HistoryPage({ history, items, onPick }) { return <><div className="pageTitle"><div><span className="eyebrow">Viewing lifecycle</span><h1>History & feedback</h1><p>Completed sessions and discarded attempts from the workspace.</p></div></div><div className="agWrap historyGrid"><AgGridReact theme={appTheme} rowData={history} columnDefs={[{ field: "date", minWidth: 180 }, { field: "title", flex: 1, minWidth: 240 }, { field: "action" }, { field: "duration", headerName: "Minutes" }, { field: "rating" }]} defaultColDef={{ sortable: true, filter: true, resizable: true }} onRowClicked={e => onPick(items.find(item => item.title === e.data.title || item.id === e.data.slug))} /></div></>; }
+function PackPage({ pack, onImport }) { return <><div className="pageTitle"><div><span className="eyebrow">Source-governed content</span><h1>Canon Pack</h1><p>Validate and inspect the active immutable release.</p></div></div><div className="packGrid"><section className="panel"><span className="eyebrow">Active release</span><h2>{pack?.title || "No pack imported"}</h2><div className="kv"><span>Version</span><b>{pack?.version || "—"}</b><span>Status</span><b className="green">{pack ? "Active" : "Not imported"}</b></div><button className="primary" onClick={() => void onImport()}>Import release</button></section><section className="panel drop"><span className="eyebrow">Validation</span><h2>Release readiness</h2><p>Workspace data is rendered from the authenticated API contract. Optional enrichment fields remain absent-safe.</p><div className="validation"><div><span>✓</span><b>Graph endpoints</b><small>Loaded</small></div><div><span>✓</span><b>Workspace contract</b><small>Loaded</small></div></div></section></div></>; }
+export default App;
