@@ -36,8 +36,11 @@ test("the compiled default resolves to the Core-vendored accepted Lantern Vale a
     compose,
     /CANON_PACK_PATH: \/app\/canon-packs\/lantern-vale-0\.2\.1/,
   );
-  assert.match(compose, /- "10\.18\.0\.201:3100:3000"/);
-  assert.doesNotMatch(compose, /APP_(?:BIND_ADDRESS|PORT)/);
+  assert.match(
+    compose,
+    /- "\$\{APP_BIND_ADDRESS:-10\.18\.0\.201\}:\$\{APP_PORT:-3100\}:3000"/,
+  );
+  assert.doesNotMatch(compose, /10\.18\.0\.201:3100:3000/);
   assert.equal((compose.match(/^\s+ports:$/gm) ?? []).length, 1);
 });
 
