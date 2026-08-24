@@ -9,6 +9,10 @@ import path from "node:path";
 
 import type { Pool } from "pg";
 
+import type {
+  CatalogAddition,
+  CatalogAdditionInput,
+} from "../../../packages/contracts/src/catalog.js";
 import { importCanonPackDirectory, type CanonPack } from "./canon-pack.js";
 
 export type ViewingState = "not-started" | "in-progress" | "watched";
@@ -86,6 +90,7 @@ export interface WorkspaceAggregate {
 export interface SliceSession {
   token: string;
   csrfToken: string;
+  trackerInstanceId: string;
 }
 
 export interface SliceStore {
@@ -93,7 +98,9 @@ export interface SliceStore {
   setup(): Promise<boolean>;
   authenticate(password: string): Promise<boolean>;
   createSession(): Promise<SliceSession>;
-  getSession(token: string): Promise<{ csrfToken: string } | undefined>;
+  getSession(
+    token: string,
+  ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined>;
   validateCsrf(token: string, csrfToken: string): Promise<boolean>;
   importLanternVale(): Promise<{ title: string; version: string }>;
   catalog(options?: {
@@ -109,6 +116,24 @@ export interface SliceStore {
     slug: string,
     action: "start" | "complete" | "discard" | "repeat",
   ): Promise<CatalogItem | undefined>;
+  catalogAdditions(trackerInstanceId: string): Promise<CatalogAddition[]>;
+  catalogAddition(
+    trackerInstanceId: string,
+    id: string,
+  ): Promise<CatalogAddition | undefined>;
+  createCatalogAddition(
+    trackerInstanceId: string,
+    input: CatalogAdditionInput,
+  ): Promise<CatalogAddition>;
+  updateCatalogAddition(
+    trackerInstanceId: string,
+    id: string,
+    input: CatalogAdditionInput,
+  ): Promise<CatalogAddition | undefined>;
+  deleteCatalogAddition(
+    trackerInstanceId: string,
+    id: string,
+  ): Promise<boolean>;
 }
 
 type ImportedItem = Omit<CatalogItem, "state">;
@@ -228,10 +253,11 @@ function credentialMatches(password: string, stored: string): boolean {
   );
 }
 
-function newSession(): SliceSession {
+function newSession(trackerInstanceId: string): SliceSession {
   return {
     token: randomBytes(32).toString("hex"),
     csrfToken: randomBytes(32).toString("hex"),
+    trackerInstanceId,
   };
 }
 
@@ -349,7 +375,12 @@ function escapeSqlLike(value: string): string {
 export class MemorySliceStore implements SliceStore {
   #configuredPassword: string | undefined;
   #credential: string | undefined;
-  #sessions = new Map<string, string>();
+  #trackerInstanceId = randomUUID();
+  #sessions = new Map<
+    string,
+    { csrfToken: string; trackerInstanceId: string }
+  >();
+  #additions = new Map<string, CatalogAddition>();
   #items = new Map<string, ImportedItem>();
   #types: string[] = [];
   #states = new Map<string, string>();
@@ -389,16 +420,20 @@ export class MemorySliceStore implements SliceStore {
     );
   }
   async createSession(): Promise<SliceSession> {
-    const session = newSession();
-    this.#sessions.set(session.token, session.csrfToken);
+    const session = newSession(this.#trackerInstanceId);
+    this.#sessions.set(session.token, {
+      csrfToken: session.csrfToken,
+      trackerInstanceId: session.trackerInstanceId,
+    });
     return session;
   }
-  async getSession(token: string): Promise<{ csrfToken: string } | undefined> {
-    const csrfToken = this.#sessions.get(token);
-    return csrfToken ? { csrfToken } : undefined;
+  async getSession(
+    token: string,
+  ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined> {
+    return this.#sessions.get(token);
   }
   async validateCsrf(token: string, csrfToken: string): Promise<boolean> {
-    return this.#sessions.get(token) === csrfToken;
+    return this.#sessions.get(token)?.csrfToken === csrfToken;
   }
   async importLanternVale(): Promise<{ title: string; version: string }> {
     const pack = await importAcceptedLanternVale(this.#packPath);
@@ -493,6 +528,83 @@ export class MemorySliceStore implements SliceStore {
     }
     return this.item(slug);
   }
+  async catalogAdditions(
+    trackerInstanceId: string,
+  ): Promise<CatalogAddition[]> {
+    return [...this.#additions.entries()]
+      .filter(([key]) => key.startsWith(`${trackerInstanceId}:`))
+      .map(([key, addition]) => ({
+        ...addition,
+        id: key.slice(trackerInstanceId.length + 1),
+      }))
+      .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  }
+  async catalogAddition(
+    trackerInstanceId: string,
+    id: string,
+  ): Promise<CatalogAddition | undefined> {
+    const addition = this.#additions.get(`${trackerInstanceId}:${id}`);
+    return addition ? { ...addition, id } : undefined;
+  }
+  async createCatalogAddition(
+    trackerInstanceId: string,
+    input: CatalogAdditionInput,
+  ): Promise<CatalogAddition> {
+    if (
+      [...this.#additions.entries()].some(
+        ([key, addition]) =>
+          key.startsWith(`${trackerInstanceId}:`) &&
+          addition.slug === input.slug,
+      )
+    )
+      throw Object.assign(new Error("Catalog addition slug already exists"), {
+        code: "23505",
+      });
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    const addition = {
+      ...input,
+      id,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    this.#additions.set(`${trackerInstanceId}:${id}`, addition);
+    return addition;
+  }
+  async updateCatalogAddition(
+    trackerInstanceId: string,
+    id: string,
+    input: CatalogAdditionInput,
+  ): Promise<CatalogAddition | undefined> {
+    const key = `${trackerInstanceId}:${id}`;
+    const existing = this.#additions.get(key);
+    if (!existing) return undefined;
+    if (
+      [...this.#additions.entries()].some(
+        ([candidateKey, addition]) =>
+          candidateKey !== key &&
+          candidateKey.startsWith(`${trackerInstanceId}:`) &&
+          addition.slug === input.slug,
+      )
+    )
+      throw Object.assign(new Error("Catalog addition slug already exists"), {
+        code: "23505",
+      });
+    const updated = {
+      ...input,
+      id,
+      createdAt: existing.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    this.#additions.set(key, updated);
+    return updated;
+  }
+  async deleteCatalogAddition(
+    trackerInstanceId: string,
+    id: string,
+  ): Promise<boolean> {
+    return this.#additions.delete(`${trackerInstanceId}:${id}`);
+  }
 }
 
 export class SqlSliceStore implements SliceStore {
@@ -561,20 +673,34 @@ export class SqlSliceStore implements SliceStore {
       : false;
   }
   async createSession(): Promise<SliceSession> {
-    const session = newSession();
+    const setup = await this.pool.query<{ tracker_instance_id: string }>(
+      "SELECT tracker_instance_id FROM installation_setup WHERE singleton = true",
+    );
+    const trackerInstanceId = setup.rows[0]?.tracker_instance_id;
+    if (!trackerInstanceId) throw new Error("setup is not complete");
+    const session = newSession(trackerInstanceId);
     await this.pool.query(
-      "INSERT INTO app_session (token_sha256, csrf_token, csrf_sha256, expires_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP + INTERVAL '7 days')",
-      [digest(session.token), session.csrfToken, digest(session.csrfToken)],
+      "INSERT INTO app_session (token_sha256, csrf_token, csrf_sha256, tracker_instance_id, expires_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP + INTERVAL '7 days')",
+      [
+        digest(session.token),
+        session.csrfToken,
+        digest(session.csrfToken),
+        session.trackerInstanceId,
+      ],
     );
     return session;
   }
-  async getSession(token: string): Promise<{ csrfToken: string } | undefined> {
-    const result = await this.pool.query<{ csrf_token: string }>(
-      "SELECT csrf_token FROM app_session WHERE token_sha256 = $1 AND expires_at > CURRENT_TIMESTAMP",
+  async getSession(
+    token: string,
+  ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined> {
+    const result = await this.pool.query<{
+      csrfToken: string;
+      trackerInstanceId: string;
+    }>(
+      'SELECT csrf_token AS "csrfToken", tracker_instance_id AS "trackerInstanceId" FROM app_session WHERE token_sha256 = $1 AND expires_at > CURRENT_TIMESTAMP',
       [digest(token)],
     );
-    const csrfToken = result.rows[0]?.csrf_token;
-    return csrfToken ? { csrfToken } : undefined;
+    return result.rows[0];
   }
   async validateCsrf(token: string, csrfToken: string): Promise<boolean> {
     const result = await this.pool.query(
@@ -946,5 +1072,113 @@ export class SqlSliceStore implements SliceStore {
       ],
     );
     return this.item(slug);
+  }
+  async catalogAdditions(
+    trackerInstanceId: string,
+  ): Promise<CatalogAddition[]> {
+    const result = await this.pool.query<CatalogAddition>(
+      `SELECT catalog_addition_id AS id, slug, title, type, summary,
+              release_date::text AS "releaseDate", runtime_minutes AS runtime,
+              primary_series AS series, aliases, queue_reason AS why,
+              poster_url AS "posterUrl", created_at::text AS "createdAt",
+              updated_at::text AS "updatedAt"
+         FROM catalog_addition
+        WHERE tracker_instance_id = $1 AND deleted_at IS NULL
+        ORDER BY created_at, catalog_addition_id`,
+      [trackerInstanceId],
+    );
+    return result.rows;
+  }
+  async catalogAddition(
+    trackerInstanceId: string,
+    id: string,
+  ): Promise<CatalogAddition | undefined> {
+    const result = await this.pool.query<CatalogAddition>(
+      `SELECT catalog_addition_id AS id, slug, title, type, summary,
+              release_date::text AS "releaseDate", runtime_minutes AS runtime,
+              primary_series AS series, aliases, queue_reason AS why,
+              poster_url AS "posterUrl", created_at::text AS "createdAt",
+              updated_at::text AS "updatedAt"
+         FROM catalog_addition
+        WHERE tracker_instance_id = $1 AND catalog_addition_id = $2
+          AND deleted_at IS NULL`,
+      [trackerInstanceId, id],
+    );
+    return result.rows[0];
+  }
+  async createCatalogAddition(
+    trackerInstanceId: string,
+    input: CatalogAdditionInput,
+  ): Promise<CatalogAddition> {
+    const result = await this.pool.query<{ id: string }>(
+      `INSERT INTO catalog_addition
+         (tracker_instance_id, slug, title, type, summary, release_date,
+          runtime_minutes, primary_series, aliases, queue_reason, poster_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING catalog_addition_id AS id`,
+      [
+        trackerInstanceId,
+        input.slug,
+        input.title,
+        input.type,
+        input.summary,
+        input.releaseDate,
+        input.runtime,
+        input.series,
+        input.aliases,
+        input.why,
+        input.posterUrl ?? null,
+      ],
+    );
+    const id = result.rows[0]?.id;
+    if (!id) throw new Error("Catalog addition was not created");
+    const created = await this.catalogAddition(trackerInstanceId, id);
+    if (!created)
+      throw new Error("Catalog addition was not readable after creation");
+    return created;
+  }
+  async updateCatalogAddition(
+    trackerInstanceId: string,
+    id: string,
+    input: CatalogAdditionInput,
+  ): Promise<CatalogAddition | undefined> {
+    const result = await this.pool.query(
+      `UPDATE catalog_addition
+          SET slug = $3, title = $4, type = $5, summary = $6,
+              release_date = $7, runtime_minutes = $8, primary_series = $9,
+              aliases = $10, queue_reason = $11, poster_url = $12,
+              updated_at = CURRENT_TIMESTAMP
+        WHERE tracker_instance_id = $1 AND catalog_addition_id = $2
+          AND deleted_at IS NULL`,
+      [
+        trackerInstanceId,
+        id,
+        input.slug,
+        input.title,
+        input.type,
+        input.summary,
+        input.releaseDate,
+        input.runtime,
+        input.series,
+        input.aliases,
+        input.why,
+        input.posterUrl ?? null,
+      ],
+    );
+    if (result.rowCount !== 1) return undefined;
+    return this.catalogAddition(trackerInstanceId, id);
+  }
+  async deleteCatalogAddition(
+    trackerInstanceId: string,
+    id: string,
+  ): Promise<boolean> {
+    const result = await this.pool.query(
+      `UPDATE catalog_addition
+          SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+        WHERE tracker_instance_id = $1 AND catalog_addition_id = $2
+          AND deleted_at IS NULL`,
+      [trackerInstanceId, id],
+    );
+    return result.rowCount === 1;
   }
 }

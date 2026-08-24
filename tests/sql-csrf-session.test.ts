@@ -7,15 +7,21 @@ import { SqlSliceStore } from "../apps/api/src/slice.js";
 
 test("SQL session resume returns the stored CSRF token", async () => {
   let storedCsrfToken = "";
+  const trackerInstanceId = "0198d9c4-7bd4-7000-8000-000000000099";
   const pool = {
     query: async (sql: string, values?: readonly unknown[]) => {
+      if (sql.startsWith("SELECT tracker_instance_id FROM installation_setup"))
+        return {
+          rows: [{ tracker_instance_id: trackerInstanceId }],
+          rowCount: 1,
+        };
       if (sql.startsWith("INSERT INTO app_session")) {
         storedCsrfToken = String(values?.[1] ?? "");
         return { rows: [], rowCount: 1 };
       }
-      if (sql.includes("SELECT csrf_token FROM app_session")) {
+      if (sql.includes('csrf_token AS "csrfToken"')) {
         return {
-          rows: [{ csrf_token: storedCsrfToken }],
+          rows: [{ csrfToken: storedCsrfToken, trackerInstanceId }],
           rowCount: 1,
         };
       }
@@ -30,5 +36,8 @@ test("SQL session resume returns the stored CSRF token", async () => {
   const created = await store.createSession();
   const resumed = await store.getSession(created.token);
 
-  assert.deepEqual(resumed, { csrfToken: created.csrfToken });
+  assert.deepEqual(resumed, {
+    csrfToken: created.csrfToken,
+    trackerInstanceId,
+  });
 });

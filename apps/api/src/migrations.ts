@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.05";
+export const EXPECTED_SCHEMA_VERSION = "0.06";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -97,6 +97,7 @@ const REQUIRED_CORE_SLICE_COLUMNS = [
   ["app_session", "csrf_sha256", "bpchar", "NO"],
   ["app_session", "expires_at", "timestamptz", "NO"],
   ["app_session", "created_at", "timestamptz", "NO"],
+  ["app_session", "tracker_instance_id", "uuid", "NO"],
   ["active_canon_pack", "singleton", "bool", "NO"],
   ["active_canon_pack", "title", "text", "NO"],
   ["active_canon_pack", "version", "varchar", "NO"],
@@ -141,6 +142,7 @@ const REQUIRED_CORE_SLICE_CONSTRAINTS = [
   ["app_session", "app_session_token_sha256_format", "c"],
   ["app_session", "app_session_csrf_token_format", "c"],
   ["app_session", "app_session_csrf_sha256_format", "c"],
+  ["app_session", "app_session_tracker_instance_id_fkey", "f"],
   ["active_canon_pack", "active_canon_pack_pkey", "p"],
   ["active_canon_pack", "active_canon_pack_singleton_true", "c"],
   ["active_canon_pack", "active_canon_pack_title_not_blank", "c"],
@@ -226,6 +228,40 @@ const REQUIRED_TRUTHFUL_METADATA_CONSTRAINTS = [
     "canon_pack_viewing_attempt_completed_at_consistent",
     "c",
   ],
+] as const;
+
+const REQUIRED_PERSONAL_CATALOG_COLUMNS = [
+  ["catalog_addition_id", "uuid", "NO"],
+  ["tracker_instance_id", "uuid", "NO"],
+  ["slug", "varchar", "NO"],
+  ["title", "text", "NO"],
+  ["type", "varchar", "NO"],
+  ["summary", "text", "NO"],
+  ["release_date", "date", "NO"],
+  ["runtime_minutes", "int4", "NO"],
+  ["primary_series", "text", "NO"],
+  ["aliases", "_text", "NO"],
+  ["queue_reason", "text", "NO"],
+  ["poster_url", "text", "YES"],
+  ["created_at", "timestamptz", "NO"],
+  ["updated_at", "timestamptz", "NO"],
+  ["deleted_at", "timestamptz", "YES"],
+] as const;
+
+const REQUIRED_PERSONAL_CATALOG_CONSTRAINTS = [
+  ["catalog_addition_pkey", "p"],
+  ["catalog_addition_tracker_instance_id_fkey", "f"],
+  ["catalog_addition_slug_format", "c"],
+  ["catalog_addition_title_not_blank", "c"],
+  ["catalog_addition_type_valid", "c"],
+  ["catalog_addition_summary_not_blank", "c"],
+  ["catalog_addition_runtime_valid", "c"],
+  ["catalog_addition_series_not_blank", "c"],
+  ["catalog_addition_queue_reason_not_blank", "c"],
+  ["catalog_addition_aliases_limited", "c"],
+  ["catalog_addition_poster_url_approved", "c"],
+  ["catalog_addition_updated_after_created", "c"],
+  ["catalog_addition_deleted_after_created", "c"],
 ] as const;
 
 export interface Migration {
@@ -497,6 +533,37 @@ async function verifyTruthfulMetadataIntegrity(
   );
 }
 
+async function verifyPersonalCatalogIntegrity(
+  database: Queryable,
+): Promise<boolean> {
+  const columns = await database.query(
+    `SELECT column_name, udt_name, is_nullable
+       FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'catalog_addition'`,
+  );
+  if (
+    !rowsMatchExactly(
+      columns.rows as Record<string, unknown>[],
+      ["column_name", "udt_name", "is_nullable"],
+      REQUIRED_PERSONAL_CATALOG_COLUMNS,
+    )
+  )
+    return false;
+  const constraints = await database.query(
+    `SELECT constraint_record.conname AS constraint_name,
+            constraint_record.contype AS constraint_type
+       FROM pg_constraint AS constraint_record
+       JOIN pg_class AS relation ON relation.oid = constraint_record.conrelid
+       JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+      WHERE namespace.nspname = 'public' AND relation.relname = 'catalog_addition'`,
+  );
+  return rowsMatchExactly(
+    constraints.rows as Record<string, unknown>[],
+    ["constraint_name", "constraint_type"],
+    REQUIRED_PERSONAL_CATALOG_CONSTRAINTS,
+  );
+}
+
 function validateMigrationInventory(migrations: readonly Migration[]): void {
   if (migrations.length === 0) throw new Error("Migration inventory is empty");
 
@@ -571,7 +638,8 @@ export async function verifySchema(
   if (
     !(await verifyFoundationIntegrity(database)) ||
     !(await verifyCoreSliceIntegrity(database)) ||
-    !(await verifyTruthfulMetadataIntegrity(database))
+    !(await verifyTruthfulMetadataIntegrity(database)) ||
+    !(await verifyPersonalCatalogIntegrity(database))
   ) {
     return { ready: false, reason: "database schema integrity mismatch" };
   }

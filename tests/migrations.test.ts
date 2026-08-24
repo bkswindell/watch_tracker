@@ -46,7 +46,9 @@ function migration(
             ? "canon-pack-registry"
             : version === "0.04"
               ? "workspace-metadata"
-              : "truthful-canon-metadata",
+              : version === "0.05"
+                ? "truthful-canon-metadata"
+                : "personal-catalog-additions",
     sha256,
     sql: "SELECT 1",
   };
@@ -54,7 +56,7 @@ function migration(
 
 test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 5);
+  assert.equal(migrations.length, 6);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
@@ -70,7 +72,28 @@ test("loads the ordered foundation and Core slice migrations with deterministic 
   assert.equal(migrations[4]?.version, "0.05");
   assert.equal(migrations[4]?.name, "truthful-canon-metadata");
   assert.match(migrations[4]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.05");
+  assert.equal(migrations[5]?.version, "0.06");
+  assert.equal(migrations[5]?.name, "personal-catalog-additions");
+  assert.match(migrations[5]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.06");
+});
+
+test("0.06 keeps user-owned Catalog additions separate from immutable Pack rows", async () => {
+  const sql = await readFile(
+    "db/migrations/0.06_personal-catalog-additions.sql",
+    "utf8",
+  );
+  assert.match(sql, /CREATE TABLE catalog_addition/);
+  assert.match(
+    sql,
+    /tracker_instance_id uuid NOT NULL REFERENCES tracker_instance/,
+  );
+  assert.match(
+    sql,
+    /CREATE UNIQUE INDEX catalog_addition_owner_slug_active_key/,
+  );
+  assert.match(sql, /deleted_at timestamptz/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
 });
 
 test("0.05 backfills completed attempts before enforcing completion timestamps", async () => {
@@ -152,11 +175,11 @@ test("migration discovery rejects duplicate versions", async (t) => {
 test("migration discovery rejects a terminal version that differs from the application contract", async (t) => {
   const directory = await migrationDirectory(t, {
     "0.01_foundation.sql": "SELECT 1;",
-    "0.06_next.sql": "SELECT 2;",
+    "0.05_next.sql": "SELECT 2;",
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.06 does not match expected schema version 0\.05/,
+    /Migration terminal version 0\.05 does not match expected schema version 0\.06/,
   );
 });
 
@@ -214,8 +237,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.05",
-          migration_name: "truthful-canon-metadata",
+          migration_version: "0.06",
+          migration_name: "personal-catalog-additions",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -233,8 +256,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.05",
-          migration_name: "renamed-truthful-canon-metadata",
+          migration_version: "0.06",
+          migration_name: "renamed-personal-catalog-additions",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -365,8 +388,8 @@ test("schema verification fails closed when the migration ledger and foundation 
         return {
           rows: [
             {
-              migration_version: "0.05",
-              migration_name: "truthful-canon-metadata",
+              migration_version: "0.06",
+              migration_name: "personal-catalog-additions",
               migration_sha256: "a".repeat(64),
             },
           ],
@@ -400,7 +423,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.06",
+              migration_version: "0.07",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },

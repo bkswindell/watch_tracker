@@ -9,6 +9,10 @@ import Fastify, {
   type FastifyRequest,
 } from "fastify";
 
+import {
+  isCatalogAdditionId,
+  parseCatalogAdditionInput,
+} from "../../../packages/contracts/src/catalog.js";
 import { WATCH_TRACKER_API_SERVICE } from "../../../packages/contracts/src/health.js";
 import type { SliceStore } from "./slice.js";
 
@@ -57,6 +61,15 @@ function readCsrf(request: FastifyRequest): string | undefined {
   return typeof value === "string" && /^[a-f0-9]{64}$/.test(value)
     ? value
     : undefined;
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "23505"
+  );
 }
 
 export async function buildApp(
@@ -132,7 +145,7 @@ export async function buildApp(
         sendError(reply, request, 401, "auth.required", "Sign in is required");
         return undefined;
       }
-      return found;
+      return { token: found.token, value: found.value };
     }
     async function requireCsrf(request: FastifyRequest, reply: FastifyReply) {
       const found = await requireAuth(request, reply);
@@ -265,6 +278,154 @@ export async function buildApp(
           }),
           nextUp: await store.nextUp(),
         };
+      },
+    );
+    app.get("/api/catalog-additions", async (request, reply) => {
+      const found = await requireAuth(request, reply);
+      if (!found) return;
+      return {
+        items: await store.catalogAdditions(found.value.trackerInstanceId),
+      };
+    });
+    app.get<{ Params: { id: string } }>(
+      "/api/catalog-additions/:id",
+      async (request, reply) => {
+        const found = await requireAuth(request, reply);
+        if (!found) return;
+        if (!isCatalogAdditionId(request.params.id))
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            "Catalog addition id must be a UUID",
+          );
+        const item = await store.catalogAddition(
+          found.value.trackerInstanceId,
+          request.params.id,
+        );
+        if (!item)
+          return sendError(
+            reply,
+            request,
+            404,
+            "catalog-addition.not-found",
+            "Catalog addition not found",
+          );
+        return item;
+      },
+    );
+    app.post<{ Body: unknown }>(
+      "/api/catalog-additions",
+      async (request, reply) => {
+        const found = await requireCsrf(request, reply);
+        if (!found) return;
+        const parsed = parseCatalogAdditionInput(request.body);
+        if (!parsed.value)
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            parsed.message ?? "Catalog addition is invalid",
+          );
+        try {
+          return reply.status(201).send({
+            item: await store.createCatalogAddition(
+              found.value.trackerInstanceId,
+              parsed.value,
+            ),
+          });
+        } catch (error) {
+          if (isUniqueViolation(error))
+            return sendError(
+              reply,
+              request,
+              409,
+              "catalog-addition.slug-conflict",
+              "A Catalog addition with this slug already exists",
+            );
+          throw error;
+        }
+      },
+    );
+    app.put<{ Params: { id: string }; Body: unknown }>(
+      "/api/catalog-additions/:id",
+      async (request, reply) => {
+        const found = await requireCsrf(request, reply);
+        if (!found) return;
+        if (!isCatalogAdditionId(request.params.id))
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            "Catalog addition id must be a UUID",
+          );
+        const parsed = parseCatalogAdditionInput(request.body);
+        if (!parsed.value)
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            parsed.message ?? "Catalog addition is invalid",
+          );
+        try {
+          const item = await store.updateCatalogAddition(
+            found.value.trackerInstanceId,
+            request.params.id,
+            parsed.value,
+          );
+          if (!item)
+            return sendError(
+              reply,
+              request,
+              404,
+              "catalog-addition.not-found",
+              "Catalog addition not found",
+            );
+          return { item };
+        } catch (error) {
+          if (isUniqueViolation(error))
+            return sendError(
+              reply,
+              request,
+              409,
+              "catalog-addition.slug-conflict",
+              "A Catalog addition with this slug already exists",
+            );
+          throw error;
+        }
+      },
+    );
+    app.delete<{ Params: { id: string } }>(
+      "/api/catalog-additions/:id",
+      async (request, reply) => {
+        const found = await requireCsrf(request, reply);
+        if (!found) return;
+        if (!isCatalogAdditionId(request.params.id))
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            "Catalog addition id must be a UUID",
+          );
+        if (
+          !(await store.deleteCatalogAddition(
+            found.value.trackerInstanceId,
+            request.params.id,
+          ))
+        )
+          return sendError(
+            reply,
+            request,
+            404,
+            "catalog-addition.not-found",
+            "Catalog addition not found",
+          );
+        void reply.status(204).send();
       },
     );
     app.get<{ Params: { slug: string } }>(
