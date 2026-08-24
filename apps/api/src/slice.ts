@@ -5,15 +5,18 @@ import {
   scryptSync,
   timingSafeEqual,
 } from "node:crypto";
+import path from "node:path";
 
 import type { Pool } from "pg";
+
+import { importCanonPackDirectory, type CanonPack } from "./canon-pack.js";
 
 export type ViewingState = "not-started" | "in-progress" | "watched";
 
 export interface CatalogItem {
   slug: string;
   title: string;
-  type: "Movie" | "Episode" | "Special" | "Short";
+  type: string;
   summary: string;
   releaseOrder: number;
   state: ViewingState;
@@ -44,51 +47,55 @@ export interface SliceStore {
 
 type ImportedItem = Omit<CatalogItem, "state">;
 
-// Projection of the verified Lantern Vale 0.2.0 release at Template commit
-// f3212a85f8cbb1dd79fb5332cec82e6ddc5fcc78. Only catalog fields required by
-// this first Core slice are retained; the Pack remains declarative data.
-const LANTERN_VALE: readonly ImportedItem[] = [
-  {
-    slug: "lantern-vale-first-light",
-    title: "Lantern Vale: First Light",
-    type: "Movie",
-    summary:
-      "A survey team restores an old beacon before the valley's longest night.",
-    releaseOrder: 1,
-  },
-  {
-    slug: "a-light-between",
-    title: "A Light Between",
-    type: "Short",
-    summary: "Two travelers trade a pocket lantern while waiting for dawn.",
-    releaseOrder: 2,
-  },
-  {
-    slug: "the-quiet-beacon",
-    title: "The Quiet Beacon",
-    type: "Episode",
-    summary:
-      "A junior keeper discovers that a silent tower is still sending a signal.",
-    releaseOrder: 3,
-  },
-  {
-    slug: "the-echo-line",
-    title: "The Echo Line",
-    type: "Episode",
-    summary: "The keepers follow the returning signal beyond the mapped ridge.",
-    releaseOrder: 4,
-  },
-  {
-    slug: "midwinter-signal",
-    title: "Midwinter Signal",
-    type: "Special",
-    summary:
-      "The valley gathers for a one-night relay across every restored beacon.",
-    releaseOrder: 5,
-  },
-];
+export { importCanonPackDirectory } from "./canon-pack.js";
 
-const PACK = { title: "Lantern Vale Stories", version: "0.2.0" };
+export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.1";
+
+function defaultCanonPackPath(): string {
+  return process.env.NODE_TEST_CONTEXT !== undefined
+    ? path.resolve("canon-packs/lantern-vale-0.2.1")
+    : DEFAULT_CANON_PACK_PATH;
+}
+
+/** The only release Core is authorized to activate in this preview. */
+export const ACCEPTED_LANTERN_VALE_RELEASE = Object.freeze({
+  id: "01954123-0000-7000-8000-000000000001",
+  slug: "lantern-vale",
+  title: "Lantern Vale Stories",
+  version: "0.2.1",
+  manifestSha256:
+    "feaf10ac4aea93cfa98644c65f238469383ed3cb2d40a05cd7ca6edf51ebb369",
+});
+
+async function importAcceptedLanternVale(
+  directory: string,
+): Promise<CanonPack> {
+  const pack = await importCanonPackDirectory(directory);
+  const accepted = ACCEPTED_LANTERN_VALE_RELEASE;
+  if (
+    pack.identity.id !== accepted.id ||
+    pack.identity.slug !== accepted.slug ||
+    pack.identity.title !== accepted.title ||
+    pack.identity.version !== accepted.version ||
+    pack.manifestSha256 !== accepted.manifestSha256
+  ) {
+    throw new Error("Canon Pack is not an accepted Canon Pack release");
+  }
+  return pack;
+}
+
+function projection(pack: CanonPack): ImportedItem[] {
+  const labels = new Map(
+    pack.watchableTypes.map((type) => [type.id, type.label]),
+  );
+  return pack.watchables.map((watchable) => ({
+    slug: watchable.slug,
+    title: watchable.title,
+    type: labels.get(watchable.watchableTypeId) ?? "Unknown",
+    summary: watchable.summary,
+    releaseOrder: watchable.releaseOrder,
+  }));
+}
 
 function digest(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -131,10 +138,20 @@ export class MemorySliceStore implements SliceStore {
   #items = new Map<string, ImportedItem>();
   #states = new Map<string, string>();
   #focus?: string;
+  #packPath: string;
+  #faultAfterStage: (() => boolean) | undefined;
 
-  constructor(options: { initialPassword?: string } = {}) {
+  constructor(
+    options: {
+      initialPassword?: string;
+      packPath?: string;
+      faultAfterStage?: () => boolean;
+    } = {},
+  ) {
     if (options.initialPassword !== undefined)
       this.#configuredPassword = options.initialPassword;
+    this.#packPath = options.packPath ?? defaultCanonPackPath();
+    this.#faultAfterStage = options.faultAfterStage;
   }
 
   async needsSetup(): Promise<boolean> {
@@ -166,8 +183,11 @@ export class MemorySliceStore implements SliceStore {
     return this.#sessions.get(token) === csrfToken;
   }
   async importLanternVale(): Promise<{ title: string; version: string }> {
-    for (const item of LANTERN_VALE) this.#items.set(item.slug, item);
-    return PACK;
+    const pack = await importAcceptedLanternVale(this.#packPath);
+    const staged = new Map(projection(pack).map((item) => [item.slug, item]));
+    if (this.#faultAfterStage?.()) throw new Error("injected activation fault");
+    this.#items = staged;
+    return { title: pack.identity.title, version: pack.identity.version };
   }
   async catalog(): Promise<CatalogItem[]> {
     return [...this.#items.values()]
@@ -214,11 +234,16 @@ export class MemorySliceStore implements SliceStore {
 
 export class SqlSliceStore implements SliceStore {
   #initialPassword: string | undefined = undefined;
+  #packPath: string;
+  #faultAfterStage: (() => boolean) | undefined;
   constructor(
     private readonly pool: Pool,
     initialPassword?: string,
+    options: { packPath?: string; faultAfterStage?: () => boolean } = {},
   ) {
     if (initialPassword !== undefined) this.#initialPassword = initialPassword;
+    this.#packPath = options.packPath ?? defaultCanonPackPath();
+    this.#faultAfterStage = options.faultAfterStage;
   }
   async needsSetup(): Promise<boolean> {
     return (
@@ -296,22 +321,114 @@ export class SqlSliceStore implements SliceStore {
     return result.rowCount === 1;
   }
   async importLanternVale(): Promise<{ title: string; version: string }> {
+    const pack = await importAcceptedLanternVale(this.#packPath);
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
-      for (const item of LANTERN_VALE)
-        await client.query(
-          "INSERT INTO catalog_item (slug, title, type, summary, release_order) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (slug) DO UPDATE SET title = EXCLUDED.title, type = EXCLUDED.type, summary = EXCLUDED.summary, release_order = EXCLUDED.release_order",
-          [item.slug, item.title, item.type, item.summary, item.releaseOrder],
+      const existing = await client.query<{
+        canon_pack_release_id: string;
+        manifest_sha256: string;
+      }>(
+        "SELECT canon_pack_release_id, manifest_sha256 FROM canon_pack_release WHERE pack_id = $1 AND pack_version = $2",
+        [pack.identity.id, pack.identity.version],
+      );
+      let releaseId = existing.rows[0]?.canon_pack_release_id;
+      if (
+        existing.rows[0] &&
+        existing.rows[0].manifest_sha256 !== pack.manifestSha256
+      )
+        throw new Error(
+          "immutable Canon Pack release identity has a different manifest",
         );
+      if (!releaseId) {
+        const created = await client.query<{ canon_pack_release_id: string }>(
+          "INSERT INTO canon_pack_release (pack_id, pack_slug, pack_title, pack_version, contract_version, manifest_sha256, source_path) VALUES ($1, $2, $3, $4, '0.2.0', $5, $6) RETURNING canon_pack_release_id",
+          [
+            pack.identity.id,
+            pack.identity.slug,
+            pack.identity.title,
+            pack.identity.version,
+            pack.manifestSha256,
+            pack.sourcePath,
+          ],
+        );
+        releaseId = created.rows[0]?.canon_pack_release_id;
+        if (!releaseId)
+          throw new Error("Canon Pack staging did not create a release");
+        for (const source of pack.sources)
+          await client.query(
+            "INSERT INTO canon_pack_source (canon_pack_release_id, source_id, slug, title) VALUES ($1, $2, $3, $4)",
+            [releaseId, source.id, source.slug, source.title],
+          );
+        for (const type of pack.watchableTypes)
+          await client.query(
+            "INSERT INTO canon_pack_watchable_type (canon_pack_release_id, watchable_type_id, code, label, display_weight) VALUES ($1, $2, $3, $4, $5)",
+            [releaseId, type.id, type.code, type.label, type.displayWeight],
+          );
+        for (const container of pack.containers)
+          await client.query(
+            "INSERT INTO canon_pack_container (canon_pack_release_id, container_id, slug, title, kind) VALUES ($1, $2, $3, $4, $5)",
+            [
+              releaseId,
+              container.id,
+              container.slug,
+              container.title,
+              container.kind,
+            ],
+          );
+        for (const watchable of pack.watchables)
+          await client.query(
+            "INSERT INTO canon_pack_watchable (canon_pack_release_id, watchable_id, slug, title, summary, watchable_type_id, release_date, release_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+            [
+              releaseId,
+              watchable.id,
+              watchable.slug,
+              watchable.title,
+              watchable.summary,
+              watchable.watchableTypeId,
+              watchable.releaseDate,
+              watchable.releaseOrder,
+            ],
+          );
+        for (const membership of pack.memberships)
+          await client.query(
+            "INSERT INTO canon_pack_membership (canon_pack_release_id, membership_id, container_id, member_id, position, role) VALUES ($1, $2, $3, $4, $5, $6)",
+            [
+              releaseId,
+              membership.id,
+              membership.containerId,
+              membership.memberId,
+              membership.position,
+              membership.role,
+            ],
+          );
+        for (const relationship of pack.relationships)
+          await client.query(
+            "INSERT INTO canon_pack_relationship (canon_pack_release_id, relationship_id, watchable_id, prerequisite_id, relationship_type, summary) VALUES ($1, $2, $3, $4, $5, $6)",
+            [
+              releaseId,
+              relationship.id,
+              relationship.watchableId,
+              relationship.prerequisiteId,
+              relationship.type,
+              relationship.summary,
+            ],
+          );
+      }
       await client.query(
-        "INSERT INTO active_canon_pack (singleton, title, version) VALUES (true, $1, $2) ON CONFLICT (singleton) DO UPDATE SET title = EXCLUDED.title, version = EXCLUDED.version",
-        [PACK.title, PACK.version],
+        "INSERT INTO canon_pack_import (canon_pack_release_id, manifest_sha256, source_path) VALUES ($1, $2, $3)",
+        [releaseId, pack.manifestSha256, pack.sourcePath],
+      );
+      if (this.#faultAfterStage?.())
+        throw new Error("injected activation fault");
+      await client.query(
+        "INSERT INTO active_canon_pack_registry (singleton, canon_pack_release_id) VALUES (true, $1) ON CONFLICT (singleton) DO UPDATE SET canon_pack_release_id = EXCLUDED.canon_pack_release_id, activated_at = CURRENT_TIMESTAMP",
+        [releaseId],
       );
       await client.query("COMMIT");
-      return PACK;
+      return { title: pack.identity.title, version: pack.identity.version };
     } catch (error) {
-      await client.query("ROLLBACK");
+      await client.query("ROLLBACK").catch(() => undefined);
       throw error;
     } finally {
       client.release();
@@ -319,7 +436,18 @@ export class SqlSliceStore implements SliceStore {
   }
   async catalog(): Promise<CatalogItem[]> {
     const result = await this.pool.query<CatalogItem>(
-      "SELECT item.slug, item.title, item.type, item.summary, item.release_order AS \"releaseOrder\", CASE active.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state FROM catalog_item item LEFT JOIN LATERAL (SELECT status FROM viewing_attempt WHERE catalog_slug = item.slug ORDER BY created_at DESC LIMIT 1) active ON true ORDER BY item.release_order",
+      `SELECT watchable.slug, watchable.title, type.label AS type, watchable.summary,
+              watchable.release_order AS "releaseOrder",
+              CASE attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
+         JOIN canon_pack_watchable_type type ON type.canon_pack_release_id = watchable.canon_pack_release_id AND type.watchable_type_id = watchable.watchable_type_id
+         LEFT JOIN LATERAL (
+           SELECT status FROM canon_pack_viewing_attempt
+            WHERE canon_pack_release_id = watchable.canon_pack_release_id AND watchable_id = watchable.watchable_id
+            ORDER BY created_at DESC LIMIT 1
+         ) attempt ON true
+        ORDER BY watchable.release_order`,
     );
     return result.rows;
   }
@@ -327,20 +455,44 @@ export class SqlSliceStore implements SliceStore {
     return (await this.catalog()).find((item) => item.slug === slug);
   }
   async setFocus(targetSlug: string): Promise<CatalogItem | undefined> {
-    if (!(await this.item(targetSlug))) return undefined;
-    await this.pool.query(
-      "INSERT INTO watch_focus (singleton, target_slug) VALUES (true, $1) ON CONFLICT (singleton) DO UPDATE SET target_slug = EXCLUDED.target_slug",
+    const target = await this.pool.query<{
+      canon_pack_release_id: string;
+      watchable_id: string;
+    }>(
+      `SELECT watchable.canon_pack_release_id, watchable.watchable_id
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
+        WHERE watchable.slug = $1`,
       [targetSlug],
+    );
+    const focus = target.rows[0];
+    if (!focus) return undefined;
+    await this.pool.query(
+      "INSERT INTO canon_pack_watch_focus (singleton, canon_pack_release_id, watchable_id) VALUES (true, $1, $2) ON CONFLICT (singleton) DO UPDATE SET canon_pack_release_id = EXCLUDED.canon_pack_release_id, watchable_id = EXCLUDED.watchable_id, updated_at = CURRENT_TIMESTAMP",
+      [focus.canon_pack_release_id, focus.watchable_id],
     );
     return this.nextUp();
   }
   async nextUp(): Promise<CatalogItem | undefined> {
     const catalog = await this.catalog();
-    const focus = await this.pool.query<{ target_slug: string }>(
-      "SELECT target_slug FROM watch_focus WHERE singleton = true",
+    const focus = await this.pool.query<{ watchable_id: string }>(
+      `SELECT focus.watchable_id FROM canon_pack_watch_focus focus
+        JOIN active_canon_pack_registry active ON active.canon_pack_release_id = focus.canon_pack_release_id
+       WHERE focus.singleton = true`,
     );
-    const targetIndex = focus.rows[0]
-      ? catalog.findIndex((item) => item.slug === focus.rows[0]?.target_slug)
+    const focusId = focus.rows[0]?.watchable_id;
+    const active = await this.pool.query<{
+      watchable_id: string;
+      slug: string;
+    }>(
+      `SELECT watchable.watchable_id, watchable.slug FROM active_canon_pack_registry registry
+        JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = registry.canon_pack_release_id`,
+    );
+    const focusSlug = active.rows.find(
+      (row) => row.watchable_id === focusId,
+    )?.slug;
+    const targetIndex = focusSlug
+      ? catalog.findIndex((item) => item.slug === focusSlug)
       : catalog.length - 1;
     return catalog
       .slice(0, targetIndex + 1)
@@ -350,12 +502,24 @@ export class SqlSliceStore implements SliceStore {
     slug: string,
     action: "start" | "complete" | "discard" | "repeat",
   ): Promise<CatalogItem | undefined> {
-    if (!(await this.item(slug))) return undefined;
+    const target = await this.pool.query<{
+      canon_pack_release_id: string;
+      watchable_id: string;
+    }>(
+      `SELECT watchable.canon_pack_release_id, watchable.watchable_id
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
+        WHERE watchable.slug = $1`,
+      [slug],
+    );
+    const watchable = target.rows[0];
+    if (!watchable) return undefined;
     await this.pool.query(
-      "INSERT INTO viewing_attempt (viewing_attempt_id, catalog_slug, status) VALUES ($1, $2, $3)",
+      "INSERT INTO canon_pack_viewing_attempt (viewing_attempt_id, canon_pack_release_id, watchable_id, status) VALUES ($1, $2, $3, $4)",
       [
         randomUUID(),
-        slug,
+        watchable.canon_pack_release_id,
+        watchable.watchable_id,
         action === "complete"
           ? "completed"
           : action === "discard"

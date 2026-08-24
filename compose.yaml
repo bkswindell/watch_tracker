@@ -6,6 +6,7 @@ x-watch-tracker-image: &watch-tracker-image
 
 x-watch-tracker-environment: &watch-tracker-environment
   DATABASE_URL: postgresql://watch_tracker:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@database:5432/watch_tracker
+  CANON_PACK_PATH: /app/canon-packs/lantern-vale-0.2.1
 
 x-watch-tracker-security: &watch-tracker-security
   read_only: true
@@ -75,7 +76,7 @@ services:
         gid: "1000"
         mode: 0400
     ports:
-      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-3100}:3000"
+      - "10.18.0.201:3100:3000"
     healthcheck:
       test:
         - CMD

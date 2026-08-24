@@ -1,0 +1,49 @@
+{
+  "files": [
+    {
+      "bytes": 99,
+      "mediaType": "application/json",
+      "path": "compatibility.json"
+    },
+    {
+      "bytes": 889,
+      "mediaType": "application/json",
+      "path": "data/containers.json"
+    },
+    {
+      "bytes": 2176,
+      "mediaType": "application/json",
+      "path": "data/memberships.json"
+    },
+    {
+      "bytes": 1193,
+      "mediaType": "application/json",
+      "path": "data/pack.json"
+    },
+    {
+      "bytes": 1739,
+      "mediaType": "application/json",
+      "path": "data/relationships.json"
+    },
+    {
+      "bytes": 454,
+      "mediaType": "application/json",
+      "path": "data/sources.json"
+    },
+    {
+      "bytes": 2044,
+      "mediaType": "application/json",
+      "path": "data/watchable-types.json"
+    },
+    {
+      "bytes": 4528,
+      "mediaType": "application/json",
+      "path": "data/watchables.json"
+    },
+    {
+      "bytes": 350,
+      "mediaType": "application/json",
+      "path": "manifest.json"
+    }
+  ]
+}

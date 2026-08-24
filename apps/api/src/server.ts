@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { isIP } from "node:net";
-import { resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { Pool } from "pg";
@@ -18,6 +18,7 @@ export interface ServerEnvironment {
   port: number;
   migrationsDirectory: string;
   initialAdminPasswordFile?: string;
+  canonPackPath?: string;
 }
 
 const HOSTNAME =
@@ -68,11 +69,18 @@ export function parseServerEnvironment(
   if (!migrationsDirectory) throw new Error("MIGRATIONS_DIR is invalid");
   const initialAdminPasswordFile =
     environment.INITIAL_ADMIN_PASSWORD_FILE?.trim();
+  const canonPackPath = environment.CANON_PACK_PATH?.trim();
   if (
     environment.INITIAL_ADMIN_PASSWORD_FILE !== undefined &&
     !initialAdminPasswordFile
   ) {
     throw new Error("INITIAL_ADMIN_PASSWORD_FILE is invalid");
+  }
+  if (
+    environment.CANON_PACK_PATH !== undefined &&
+    (!canonPackPath || !isAbsolute(canonPackPath))
+  ) {
+    throw new Error("CANON_PACK_PATH must be an absolute local path");
   }
   return {
     databaseUrl,
@@ -80,6 +88,7 @@ export function parseServerEnvironment(
     port,
     migrationsDirectory,
     ...(initialAdminPasswordFile ? { initialAdminPasswordFile } : {}),
+    ...(canonPackPath ? { canonPackPath } : {}),
   };
 }
 
@@ -183,7 +192,11 @@ export async function startServer(): Promise<void> {
     );
     app = await buildApp({
       readinessProbe: databaseReadinessProbe,
-      sliceStore: new SqlSliceStore(pool, initialAdminPassword),
+      sliceStore: new SqlSliceStore(pool, initialAdminPassword, {
+        ...(environment.canonPackPath
+          ? { packPath: environment.canonPackPath }
+          : {}),
+      }),
       ...(existsSync(builtWebRoot) ? { webRoot: builtWebRoot } : {}),
     });
     await app.listen({ host: environment.host, port: environment.port });

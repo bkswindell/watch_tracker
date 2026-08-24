@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.02";
+export const EXPECTED_SCHEMA_VERSION = "0.03";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;

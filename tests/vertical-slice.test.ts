@@ -93,7 +93,7 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
     headers: { "x-csrf-token": authenticated.json().csrfToken },
   });
   assert.equal(imported.statusCode, 201);
-  assert.equal(imported.json().pack.version, "0.2.0");
+  assert.equal(imported.json().pack.version, "0.2.1");
 
   const catalog = await request(app, {
     method: "GET",

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -37,7 +37,12 @@ function migration(
 ): Migration {
   return {
     version,
-    name: version === "0.01" ? "foundation" : "core-slice",
+    name:
+      version === "0.01"
+        ? "foundation"
+        : version === "0.02"
+          ? "core-slice"
+          : "canon-pack-registry",
     sha256,
     sql: "SELECT 1",
   };
@@ -45,14 +50,41 @@ function migration(
 
 test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 2);
+  assert.equal(migrations.length, 3);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
   assert.equal(migrations[1]?.version, "0.02");
   assert.equal(migrations[1]?.name, "core-slice");
   assert.match(migrations[1]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.02");
+  assert.equal(migrations[2]?.version, "0.03");
+  assert.equal(migrations[2]?.name, "canon-pack-registry");
+  assert.match(migrations[2]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.03");
+});
+
+test("0.03 deterministically backfills a 0.02 active catalog, focus, and viewing history into the registry", async () => {
+  const sql = await readFile(
+    "db/migrations/0.03_canon-pack-registry.sql",
+    "utf8",
+  );
+  assert.match(
+    sql,
+    /INSERT INTO canon_pack_release[\s\S]*FROM active_canon_pack/,
+  );
+  assert.match(sql, /INSERT INTO canon_pack_watchable[\s\S]*FROM catalog_item/);
+  assert.match(
+    sql,
+    /INSERT INTO active_canon_pack_registry[\s\S]*SELECT true, legacy_release\.canon_pack_release_id, active\.imported_at[\s\S]*FROM active_canon_pack AS active[\s\S]*JOIN canon_pack_release AS legacy_release/,
+  );
+  assert.match(
+    sql,
+    /INSERT INTO canon_pack_watch_focus[\s\S]*FROM watch_focus/,
+  );
+  assert.match(
+    sql,
+    /INSERT INTO canon_pack_viewing_attempt[\s\S]*FROM viewing_attempt/,
+  );
 });
 
 test("migration discovery rejects an empty inventory", async (t) => {
@@ -97,11 +129,11 @@ test("migration discovery rejects duplicate versions", async (t) => {
 test("migration discovery rejects a terminal version that differs from the application contract", async (t) => {
   const directory = await migrationDirectory(t, {
     "0.01_foundation.sql": "SELECT 1;",
-    "0.03_next.sql": "SELECT 2;",
+    "0.04_next.sql": "SELECT 2;",
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.03 does not match expected schema version 0\.02/,
+    /Migration terminal version 0\.04 does not match expected schema version 0\.03/,
   );
 });
 
@@ -159,8 +191,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.02",
-          migration_name: "core-slice",
+          migration_version: "0.03",
+          migration_name: "canon-pack-registry",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -178,8 +210,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.02",
-          migration_name: "renamed-core-slice",
+          migration_version: "0.03",
+          migration_name: "renamed-canon-pack-registry",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -310,8 +342,8 @@ test("schema verification fails closed when the migration ledger and foundation 
         return {
           rows: [
             {
-              migration_version: "0.02",
-              migration_name: "core-slice",
+              migration_version: "0.03",
+              migration_name: "canon-pack-registry",
               migration_sha256: "a".repeat(64),
             },
           ],
@@ -345,7 +377,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.03",
+              migration_version: "0.04",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },
