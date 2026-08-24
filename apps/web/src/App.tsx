@@ -109,7 +109,13 @@ function App() {
     setRelations(data.relationships.map((r) => [r.fromSlug, r.toSlug, r.type]));
     setTarget(data.targetSlug);
     setNextUp(data.nextUp.map(normalize));
-    setHistory(data.history || []);
+    setHistory(
+      (data.history || []).map((entry) => ({
+        ...entry,
+        date: entry.completedAt || entry.date,
+        action: entry.action || "completed",
+      })),
+    );
     setPack(data.pack);
     const next = data.items.find((x) => x.slug === data.nextUp[0]?.slug);
     if (next && !selected) setSelected(normalize(next));

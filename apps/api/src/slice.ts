@@ -46,6 +46,7 @@ export interface WorkspaceHistory {
   slug: string;
   title: string;
   completedAt: string;
+  action: "completed" | "discarded";
 }
 
 export interface WorkspaceAggregate {
@@ -416,13 +417,14 @@ export class MemorySliceStore implements SliceStore {
           ? "discarded"
           : "active",
     );
-    if (action === "complete") {
+    if (action === "complete" || action === "discard") {
       const item = this.#items.get(slug);
       if (item)
         this.#history.unshift({
           slug,
           title: item.title,
           completedAt: new Date().toISOString(),
+          action: action === "complete" ? "completed" : "discarded",
         });
     }
     return this.item(slug);
@@ -803,14 +805,15 @@ export class SqlSliceStore implements SliceStore {
            ON pack.canon_pack_release_id = registry.canon_pack_release_id`,
     );
     const history = await this.pool.query<WorkspaceHistory>(
-      `SELECT watchable.slug, watchable.title, attempt.created_at::text AS "completedAt"
+      `SELECT watchable.slug, watchable.title, attempt.created_at::text AS "completedAt",
+              attempt.status AS action
          FROM canon_pack_viewing_attempt attempt
          JOIN active_canon_pack_registry active
            ON active.canon_pack_release_id = attempt.canon_pack_release_id
          JOIN canon_pack_watchable watchable
            ON watchable.canon_pack_release_id = attempt.canon_pack_release_id
           AND watchable.watchable_id = attempt.watchable_id
-        WHERE attempt.status = 'completed'
+        WHERE attempt.status IN ('completed', 'discarded')
         ORDER BY attempt.created_at DESC LIMIT 20`,
     );
     return workspaceFromCatalog(

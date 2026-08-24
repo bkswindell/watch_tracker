@@ -250,6 +250,19 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   });
   assert.equal(discarded.statusCode, 200);
   assert.equal(discarded.json().state, "not-started");
+
+  const workspaceAfterLifecycle = await request(app, {
+    method: "GET",
+    url: "/api/workspace",
+    cookies: sessionCookie,
+  });
+  assert.equal(workspaceAfterLifecycle.statusCode, 200);
+  assert.deepEqual(
+    workspaceAfterLifecycle
+      .json()
+      .history.map((entry: { action: string }) => entry.action),
+    ["discarded", "completed"],
+  );
 });
 
 test("catalog search and type filters compose and reject unknown types", async (t) => {

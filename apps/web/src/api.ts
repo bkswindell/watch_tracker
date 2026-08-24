@@ -29,6 +29,7 @@ export type WorkspaceHistory = {
   action?: string;
   duration?: number;
   rating?: number | null;
+  completedAt?: string;
   [key: string]: unknown;
 };
 export type WorkspaceResponse = {
