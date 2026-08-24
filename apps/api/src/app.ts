@@ -119,7 +119,7 @@ function sameOrigin(request: FastifyRequest): boolean {
     return (
       Boolean(host) &&
       parsed.host === host &&
-      ["http:", "https:"].includes(parsed.protocol)
+      parsed.protocol === `${request.protocol}:`
     );
   } catch {
     return false;

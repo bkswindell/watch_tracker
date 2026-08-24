@@ -47,6 +47,36 @@ test("unsafe requests reject a mismatched Origin even with a valid CSRF token", 
   assert.equal(rejectedLogin.json().error.code, "csrf.invalid");
 });
 
+test("unsafe requests require the Origin scheme as well as the host to match", async (t) => {
+  const { app, csrf } = await configuredApp();
+  t.after(() => app.close());
+
+  const rejectedLogin = await app.inject({
+    method: "POST",
+    url: "/api/login",
+    payload: { password: "correct-password" },
+    headers: {
+      host: "localhost",
+      origin: "https://localhost",
+      "x-csrf-token": csrf,
+    },
+  });
+  assert.equal(rejectedLogin.statusCode, 403);
+  assert.equal(rejectedLogin.json().error.code, "csrf.invalid");
+
+  const acceptedLogin = await app.inject({
+    method: "POST",
+    url: "/api/login",
+    payload: { password: "correct-password" },
+    headers: {
+      host: "localhost",
+      origin: "http://localhost",
+      "x-csrf-token": csrf,
+    },
+  });
+  assert.equal(acceptedLogin.statusCode, 204);
+});
+
 test("login failures are rate limited and a successful login resets the limit", async (t) => {
   const { app, csrf } = await configuredApp({
     maxFailures: 2,
