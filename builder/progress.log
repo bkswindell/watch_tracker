@@ -46,3 +46,14 @@
 - App-only deployment: rebuilt `watch-tracker:verify`, recreated only `watch-tracker-lan-foundation-app-1` with `--no-deps`, and observed healthy app/database containers plus `http://10.18.0.201:3100/ready` ready. No migration ran.
 - Browser certification remains blocked because the cron harness has no supported Chromium-family browser and no deployment credential was accessed. No authenticated proof was fabricated.
 - Remote branch SHA verified at `9c47d4692e9de96186d4b13812013c7ab24506fa`; fresh Validate Core status is pending. Host-controlled recovery is the remaining accepted auth gate, but provider/UX delivery details require a host-channel decision. Historical audit remains **FAIL**.
+
+## 2026-08-24 — authentication/session hardening slice 4
+
+- Confirmed Core PR #4 head `2c6c392d006c0812b8b694860c166a600727182d` passed Validate Core run `32787824289`; the watched-feedback checkpoint `89555034495238e5b9b0206bc56228a648238b58` also passed run `32784974478`. Template PR #10 remains green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.
+- Independent review found supplied Origins were checked for host and a web scheme, but did not require the scheme to equal the effective request scheme.
+- Delivered Core checkpoint `a30dc896ebc1867b8c9a7ccecba41162e47bab0d`: unsafe requests now require exact scheme, host, and port agreement in addition to token CSRF.
+- Added regression coverage proving an opposite-scheme same-host Origin is rejected while the exact HTTP origin remains accepted.
+- Validation: focused authentication/SQL suite passed (9 tests); `npm run check` passed (105 portable tests); deterministic build passed (25 artifacts); `npm audit --omit=dev --audit-level=high` reported 0 vulnerabilities; production image build passed.
+- App-only deployment recreated `watch-tracker-lan-foundation-app-1` from `watch-tracker:verify` image `sha256:7c458537e267d14d1521e4bd92dd9e5a7ce0005261a7d65cffcc921a1064db41`. The database container remained healthy and untouched; `/ready` returned ready.
+- Live API proof using only the public bootstrap CSRF token returned `403 csrf.invalid` for `Origin: https://10.18.0.201:3100` and reached the existing setup guard (`409 setup.unavailable`) for exact `Origin: http://10.18.0.201:3100`. No credential was read or changed. The previously accepted browser matrix remains unchanged because this slice is API-only.
+- Host-controlled recovery remains blocked on provider/UX delivery details. Historical audit remains **FAIL** pending that accepted gate.
