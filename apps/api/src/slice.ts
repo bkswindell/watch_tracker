@@ -438,15 +438,15 @@ export class SqlSliceStore implements SliceStore {
     const result = await this.pool.query<CatalogItem>(
       `SELECT watchable.slug, watchable.title, type.label AS type, watchable.summary,
               watchable.release_order AS "releaseOrder",
-              CASE attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
+              CASE latest_attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
          FROM active_canon_pack_registry active
          JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
          JOIN canon_pack_watchable_type type ON type.canon_pack_release_id = watchable.canon_pack_release_id AND type.watchable_type_id = watchable.watchable_type_id
          LEFT JOIN LATERAL (
-           SELECT status FROM canon_pack_viewing_attempt
-            WHERE canon_pack_release_id = watchable.canon_pack_release_id AND watchable_id = watchable.watchable_id
-            ORDER BY created_at DESC LIMIT 1
-         ) attempt ON true
+           SELECT attempt.status FROM canon_pack_viewing_attempt attempt
+            WHERE attempt.canon_pack_release_id = active.canon_pack_release_id AND attempt.watchable_id = watchable.watchable_id
+            ORDER BY attempt.created_at DESC LIMIT 1
+         ) latest_attempt ON true
         ORDER BY watchable.release_order`,
     );
     return result.rows;

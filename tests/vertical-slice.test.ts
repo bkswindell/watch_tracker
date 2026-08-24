@@ -103,7 +103,9 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   assert.equal(catalog.statusCode, 200);
   assert.equal(catalog.json().items.length, 5);
   const first = catalog.json().items[0];
+  const second = catalog.json().items[1];
   assert.equal(first.title, "Lantern Vale: First Light");
+  assert.equal(second.state, "not-started");
 
   const focus = await request(app, {
     method: "POST",
@@ -126,6 +128,13 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   });
   assert.equal(started.statusCode, 200);
   assert.equal(started.json().state, "in-progress");
+  const afterStart = await request(app, {
+    method: "GET",
+    url: "/api/catalog",
+    cookies: sessionCookie,
+  });
+  assert.equal(afterStart.json().items[0].state, "in-progress");
+  assert.equal(afterStart.json().items[1].state, "not-started");
 
   const completed = await request(app, {
     method: "POST",
