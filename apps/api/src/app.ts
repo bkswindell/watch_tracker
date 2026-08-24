@@ -223,6 +223,10 @@ export async function buildApp(
       if (!(await requireCsrf(request, reply))) return;
       return reply.status(201).send({ pack: await store.importLanternVale() });
     });
+    app.get("/api/workspace", async (request, reply) => {
+      if (!(await requireAuth(request, reply))) return;
+      return store.workspace();
+    });
     app.get<{ Querystring: { search?: unknown; type?: unknown } }>(
       "/api/catalog",
       async (request, reply) => {

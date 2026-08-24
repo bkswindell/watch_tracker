@@ -30,6 +30,37 @@ export interface CatalogItem {
   relationships: CatalogRelationship[];
 }
 
+export interface WorkspaceRelationship {
+  fromSlug: string;
+  toSlug: string;
+  type: "required" | "sequence" | "recommended" | "optional";
+  summary: string;
+}
+
+export interface WorkspaceNextUp extends CatalogItem {
+  reason: "next-in-order" | "focus" | "unblocked";
+  blockingSummary: string | null;
+}
+
+export interface WorkspaceHistory {
+  slug: string;
+  title: string;
+  completedAt: string;
+}
+
+export interface WorkspaceAggregate {
+  items: (CatalogItem & {
+    rating: number | null;
+    feedback: string | null;
+    media: null;
+  })[];
+  relationships: WorkspaceRelationship[];
+  targetSlug: string | null;
+  nextUp: WorkspaceNextUp[];
+  history: WorkspaceHistory[];
+  pack: { title: string; version: string } | null;
+}
+
 export interface SliceSession {
   token: string;
   csrfToken: string;
@@ -51,6 +82,7 @@ export interface SliceStore {
   item(slug: string): Promise<CatalogItem | undefined>;
   setFocus(targetSlug: string): Promise<CatalogItem | undefined>;
   nextUp(): Promise<CatalogItem | undefined>;
+  workspace(): Promise<WorkspaceAggregate>;
   viewingAction(
     slug: string,
     action: "start" | "complete" | "discard" | "repeat",
@@ -169,6 +201,86 @@ function stateFor(status?: string): ViewingState {
   return "not-started";
 }
 
+function relationshipType(type: string): WorkspaceRelationship["type"] {
+  return type === "optional-connection"
+    ? "optional"
+    : (type as WorkspaceRelationship["type"]);
+}
+
+function workspaceFromCatalog(
+  items: CatalogItem[],
+  targetSlug: string | null,
+  pack: { title: string; version: string } | null,
+  history: WorkspaceHistory[],
+  projectedRelationships?: WorkspaceRelationship[],
+): WorkspaceAggregate {
+  const relationships = [
+    ...(projectedRelationships ??
+      items.flatMap((item) =>
+        item.relationships.flatMap((relationship) => {
+          const fromSlug =
+            relationship.direction === "requires"
+              ? item.slug
+              : relationship.referencedWatchable.slug;
+          const toSlug =
+            relationship.direction === "requires"
+              ? relationship.referencedWatchable.slug
+              : item.slug;
+          return [
+            {
+              fromSlug,
+              toSlug,
+              type: relationshipType(relationship.type),
+              summary: relationship.summary,
+            },
+          ];
+        }),
+      )),
+  ].filter(
+    (relationship, index, all) =>
+      all.findIndex(
+        (candidate) =>
+          candidate.fromSlug === relationship.fromSlug &&
+          candidate.toSlug === relationship.toSlug &&
+          candidate.type === relationship.type &&
+          candidate.summary === relationship.summary,
+      ) === index,
+  );
+  const bySlug = new Map(items.map((item) => [item.slug, item]));
+  const nextUp: WorkspaceNextUp[] = items
+    .filter((item) => item.state !== "watched")
+    .map((item) => {
+      const required = relationships.filter(
+        (r) => r.toSlug === item.slug && r.type === "required",
+      );
+      const blocked = required.find(
+        (r) => bySlug.get(r.fromSlug)?.state !== "watched",
+      );
+      return {
+        ...item,
+        reason: (item.slug === targetSlug
+          ? "focus"
+          : blocked
+            ? "unblocked"
+            : "next-in-order") as WorkspaceNextUp["reason"],
+        blockingSummary: blocked?.summary ?? null,
+      };
+    });
+  return {
+    items: items.map((item) => ({
+      ...item,
+      rating: null,
+      feedback: null,
+      media: null,
+    })),
+    relationships,
+    targetSlug,
+    nextUp,
+    history,
+    pack,
+  };
+}
+
 function escapeSqlLike(value: string): string {
   return value
     .replaceAll("\\", "\\\\")
@@ -184,6 +296,7 @@ export class MemorySliceStore implements SliceStore {
   #types: string[] = [];
   #states = new Map<string, string>();
   #focus?: string;
+  #history: WorkspaceHistory[] = [];
   #packPath: string;
   #faultAfterStage: (() => boolean) | undefined;
 
@@ -274,6 +387,22 @@ export class MemorySliceStore implements SliceStore {
       : items.length - 1;
     return items.slice(0, target + 1).find((item) => item.state !== "watched");
   }
+  async workspace(): Promise<WorkspaceAggregate> {
+    const items = await Promise.all(
+      [...this.#items.keys()].map((slug) => this.item(slug)),
+    );
+    return workspaceFromCatalog(
+      items.filter((item): item is CatalogItem => item !== undefined),
+      this.#focus ?? null,
+      this.#types.length
+        ? {
+            title: ACCEPTED_LANTERN_VALE_RELEASE.title,
+            version: ACCEPTED_LANTERN_VALE_RELEASE.version,
+          }
+        : null,
+      this.#history.slice(0, 20),
+    );
+  }
   async viewingAction(
     slug: string,
     action: "start" | "complete" | "discard" | "repeat",
@@ -287,6 +416,15 @@ export class MemorySliceStore implements SliceStore {
           ? "discarded"
           : "active",
     );
+    if (action === "complete") {
+      const item = this.#items.get(slug);
+      if (item)
+        this.#history.unshift({
+          slug,
+          title: item.title,
+          completedAt: new Date().toISOString(),
+        });
+    }
     return this.item(slug);
   }
 }
@@ -618,6 +756,70 @@ export class SqlSliceStore implements SliceStore {
     return catalog
       .slice(0, targetIndex + 1)
       .find((item) => item.state !== "watched");
+  }
+  async workspace(): Promise<WorkspaceAggregate> {
+    const items = await this.catalog();
+    const relationships = await this.pool.query<{
+      from_slug: string;
+      to_slug: string;
+      relationship_type: string;
+      summary: string;
+    }>(
+      `SELECT watchable.slug AS from_slug,
+              prerequisite.slug AS to_slug,
+              relationship.relationship_type,
+              relationship.summary
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_relationship relationship
+           ON relationship.canon_pack_release_id = active.canon_pack_release_id
+         JOIN canon_pack_watchable watchable
+           ON watchable.canon_pack_release_id = relationship.canon_pack_release_id
+          AND watchable.watchable_id = relationship.watchable_id
+         JOIN canon_pack_watchable prerequisite
+           ON prerequisite.canon_pack_release_id = relationship.canon_pack_release_id
+          AND prerequisite.watchable_id = relationship.prerequisite_id
+        ORDER BY relationship.relationship_id`,
+    );
+    const mappedRelationships = relationships.rows.map((row) => ({
+      fromSlug: row.from_slug,
+      toSlug: row.to_slug,
+      type: relationshipType(row.relationship_type),
+      summary: row.summary,
+    }));
+    const focus = await this.pool.query<{ slug: string }>(
+      `SELECT target.slug
+         FROM canon_pack_watch_focus focus
+         JOIN active_canon_pack_registry active
+           ON active.canon_pack_release_id = focus.canon_pack_release_id
+         JOIN canon_pack_watchable target
+           ON target.canon_pack_release_id = focus.canon_pack_release_id
+          AND target.watchable_id = focus.watchable_id
+        WHERE focus.singleton = true`,
+    );
+    const pack = await this.pool.query<{ title: string; version: string }>(
+      `SELECT pack.pack_title AS title, pack.pack_version AS version
+         FROM active_canon_pack_registry registry
+         JOIN canon_pack_release pack
+           ON pack.canon_pack_release_id = registry.canon_pack_release_id`,
+    );
+    const history = await this.pool.query<WorkspaceHistory>(
+      `SELECT watchable.slug, watchable.title, attempt.created_at::text AS "completedAt"
+         FROM canon_pack_viewing_attempt attempt
+         JOIN active_canon_pack_registry active
+           ON active.canon_pack_release_id = attempt.canon_pack_release_id
+         JOIN canon_pack_watchable watchable
+           ON watchable.canon_pack_release_id = attempt.canon_pack_release_id
+          AND watchable.watchable_id = attempt.watchable_id
+        WHERE attempt.status = 'completed'
+        ORDER BY attempt.created_at DESC LIMIT 20`,
+    );
+    return workspaceFromCatalog(
+      items,
+      focus.rows[0]?.slug ?? null,
+      pack.rows[0] ?? null,
+      history.rows,
+      mappedRelationships,
+    );
   }
   async viewingAction(
     slug: string,

@@ -107,3 +107,66 @@ test("SQL catalog detail maps prerequisite relationship context", async () => {
   assert.match(queries.at(-1) ?? "", /canon_pack_relationship/i);
   assert.match(queries.at(-1) ?? "", /prerequisite_id|watchable_id/i);
 });
+
+test("SQL workspace maps relationships with catalog-detail direction and types", async () => {
+  const queries: string[] = [];
+  const pool = {
+    async query<T>(query: string): Promise<{ rows: T[] }> {
+      queries.push(query);
+      if (/ORDER BY watchable\.release_order/i.test(query)) {
+        return {
+          rows: [
+            {
+              slug: "midwinter-signal",
+              title: "Midwinter Signal",
+              type: "special",
+              summary: "summary",
+              releaseOrder: 4,
+              state: "not-started",
+            } as T,
+          ],
+        };
+      }
+      if (/AS from_slug/i.test(query)) {
+        return {
+          rows: [
+            {
+              from_slug: "midwinter-signal",
+              to_slug: "lantern-vale-first-light",
+              relationship_type: "required",
+              summary: "requires First Light",
+            } as T,
+            {
+              from_slug: "a-light-between",
+              to_slug: "midwinter-signal",
+              relationship_type: "optional-connection",
+              summary: "echoes the relay pattern",
+            } as T,
+          ],
+        };
+      }
+      return { rows: [] };
+    },
+  };
+
+  const workspace = await new SqlSliceStore(pool as never).workspace();
+  assert.deepEqual(workspace.relationships, [
+    {
+      fromSlug: "midwinter-signal",
+      toSlug: "lantern-vale-first-light",
+      type: "required",
+      summary: "requires First Light",
+    },
+    {
+      fromSlug: "a-light-between",
+      toSlug: "midwinter-signal",
+      type: "optional",
+      summary: "echoes the relay pattern",
+    },
+  ]);
+  const relationshipQuery =
+    queries.find((query) => /AS from_slug/i.test(query)) ?? "";
+  assert.match(relationshipQuery, /watchable\.slug AS from_slug/i);
+  assert.match(relationshipQuery, /prerequisite\.slug AS to_slug/i);
+  assert.match(relationshipQuery, /relationship\.relationship_type/i);
+});
