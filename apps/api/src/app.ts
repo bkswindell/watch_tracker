@@ -29,6 +29,7 @@ export interface BuildAppOptions {
   bodyLimit?: number;
   webRoot?: string;
   sliceStore?: SliceStore;
+  posterFetch?: typeof fetch;
 }
 
 export const API_SERVER_LIMITS = Object.freeze({
@@ -37,6 +38,49 @@ export const API_SERVER_LIMITS = Object.freeze({
   keepAliveTimeout: 5_000,
   bodyLimit: 1_048_576,
 });
+
+const APPROVED_POSTER_HOSTS = new Set([
+  "image.tmdb.org",
+  "media.themoviedb.org",
+]);
+const POSTER_MAX_BYTES = 5 * 1024 * 1024;
+
+export function approvedPosterUrl(value: unknown): URL | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" &&
+      parsed.port === "" &&
+      parsed.username === "" &&
+      parsed.password === "" &&
+      APPROVED_POSTER_HOSTS.has(parsed.hostname)
+      ? parsed
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function boundedImage(response: Response): Promise<Buffer | undefined> {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > POSTER_MAX_BYTES)
+    return undefined;
+  if (!response.body) return undefined;
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > POSTER_MAX_BYTES) {
+      await reader.cancel();
+      return undefined;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks, total);
+}
 
 function sendError(
   reply: FastifyReply,
@@ -91,7 +135,7 @@ export async function buildApp(
         fontSrc: ["'self'"],
         formAction: ["'self'"],
         frameAncestors: ["'none'"],
-        imgSrc: ["'self'"],
+        imgSrc: ["'self'", "data:"],
         objectSrc: ["'none'"],
         scriptSrc: ["'self'"],
         scriptSrcAttr: ["'none'"],
@@ -164,6 +208,64 @@ export async function buildApp(
       }
       return found;
     }
+
+    app.get<{ Querystring: { url?: unknown } }>(
+      "/tmdb-image",
+      async (request, reply) => {
+        if (!(await requireAuth(request, reply))) return;
+        const source = approvedPosterUrl(request.query.url);
+        if (!source)
+          return sendError(
+            reply,
+            request,
+            400,
+            "poster.invalid-source",
+            "Poster URL must use an approved HTTPS media host",
+          );
+        try {
+          const response = await (options.posterFetch ?? fetch)(source, {
+            redirect: "error",
+            signal: AbortSignal.timeout(10_000),
+          });
+          const contentType = response.headers
+            .get("content-type")
+            ?.split(";")[0];
+          if (
+            !response.ok ||
+            !contentType ||
+            !["image/jpeg", "image/png", "image/webp"].includes(contentType)
+          )
+            return sendError(
+              reply,
+              request,
+              502,
+              "poster.unavailable",
+              "Poster source did not return an approved image",
+            );
+          const image = await boundedImage(response);
+          if (!image)
+            return sendError(
+              reply,
+              request,
+              502,
+              "poster.unavailable",
+              "Poster source exceeded the safe response limit",
+            );
+          return reply
+            .type(contentType)
+            .header("cache-control", "private, max-age=86400")
+            .send(image);
+        } catch {
+          return sendError(
+            reply,
+            request,
+            502,
+            "poster.unavailable",
+            "Poster source is unavailable",
+          );
+        }
+      },
+    );
 
     app.get("/api/bootstrap", async (request) => {
       const found = await session(request);
