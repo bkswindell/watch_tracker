@@ -81,7 +81,9 @@ export async function buildApp(
         objectSrc: ["'none'"],
         scriptSrc: ["'self'"],
         scriptSrcAttr: ["'none'"],
-        styleSrc: ["'self'"],
+        // React Flow and AG Grid calculate element geometry at runtime and emit
+        // style attributes. Permit only inline styles; scripts remain self-only.
+        styleSrc: ["'self'", "'unsafe-inline'"],
         upgradeInsecureRequests: null,
       },
     },
