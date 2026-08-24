@@ -65,6 +65,20 @@ test("CI smoke uses the built production images with disposable loopback Compose
   assert.doesNotMatch(smoke, /--privileged/);
   assert.doesNotMatch(smoke, /--volume \/var\/run\/docker\.sock/);
   assert.match(compose, /backend:\n\s+internal: true/);
+  const app = compose.slice(
+    compose.indexOf("  app:"),
+    compose.indexOf("\nnetworks:"),
+  );
+  assert.match(
+    app,
+    /ports:\n\s+- "\$\{APP_BIND_ADDRESS:-10\.18\.0\.201\}:\$\{APP_PORT:-3100\}:3000"/,
+    "the default app publication must be exactly 10.18.0.201:3100",
+  );
+  assert.doesNotMatch(
+    app,
+    /ports:[\s\S]*0\.0\.0\.0/,
+    "the app must not publish on every host interface",
+  );
   const database = compose.slice(
     compose.indexOf("  database:"),
     compose.indexOf("  migrator:"),
