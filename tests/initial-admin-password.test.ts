@@ -33,6 +33,20 @@ test("prepares a private strong password and is idempotent without printing it",
   assert.equal(readFileSync(file, "utf8"), firstPassword);
 });
 
+test("fills an existing private empty password file without printing it", () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "watch-tracker-admin-"));
+  const file = path.join(directory, "initial_admin_password");
+  writeFileSync(file, "", { mode: 0o600 });
+
+  const output = run(file);
+  const password = readFileSync(file, "utf8");
+  const mode = statSync(file).mode & 0o777;
+
+  assert.equal(output, "");
+  assert.equal(mode, 0o600);
+  assert.match(password, /^[A-Za-z0-9+/]{64}\n$/);
+});
+
 test("fails closed when the password parent is group-readable or group-writable", () => {
   const directory = mkdtempSync(path.join(tmpdir(), "watch-tracker-admin-"));
   const unsafe = path.join(directory, "unsafe");

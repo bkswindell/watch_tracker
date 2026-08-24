@@ -66,16 +66,32 @@ fi
   exit 1
 }
 
-# Link instead of rename so a concurrent creator cannot be overwritten.
-if ! ln -- "$temporary" "$password_file" 2>/dev/null; then
-  [[ -f "$password_file" ]] || {
-    printf 'password file could not be created safely\n' >&2
+if [[ -e "$password_file" ]]; then
+  # Replace a pre-existing empty file with an atomic rename after rechecking
+  # its type, ownership, mode, and emptiness. Never repair an unsafe file.
+  [[ -f "$password_file" && ! -L "$password_file" ]] || {
+    printf 'password file is not a regular file\n' >&2
     exit 1
   }
   mode=$(stat -c '%a' -- "$password_file")
   owner=$(stat -c '%u' -- "$password_file")
-  [[ "$owner" == "$(id -u)" && "$mode" == "600" && -s "$password_file" ]] || {
-    printf 'concurrent password file has unsafe owner, permissions, or contents\n' >&2
+  [[ "$owner" == "$(id -u)" && "$mode" == "600" && ! -s "$password_file" ]] || {
+    printf 'password file changed before safe replacement\n' >&2
     exit 1
   }
+  mv -T -- "$temporary" "$password_file"
+else
+  # Link instead of rename so a concurrent creator cannot be overwritten.
+  if ! ln -- "$temporary" "$password_file" 2>/dev/null; then
+    [[ -f "$password_file" ]] || {
+      printf 'password file could not be created safely\n' >&2
+      exit 1
+    }
+    mode=$(stat -c '%a' -- "$password_file")
+    owner=$(stat -c '%u' -- "$password_file")
+    [[ "$owner" == "$(id -u)" && "$mode" == "600" && -s "$password_file" ]] || {
+      printf 'concurrent password file has unsafe owner, permissions, or contents\n' >&2
+      exit 1
+    }
+  fi
 fi
