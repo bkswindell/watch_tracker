@@ -24,6 +24,7 @@ async function configuredApp(
     loginThrottle,
   });
   const bootstrap = await app.inject({ method: "GET", url: "/api/bootstrap" });
+  assert.equal(bootstrap.headers["cache-control"], "no-store");
   const csrf = bootstrap.json().csrfToken as string;
   const setup = await app.inject({
     method: "POST",
@@ -136,6 +137,7 @@ test("logout invalidates the server session and clears the browser cookie", asyn
     payload: { password: "correct-password" },
     headers: { "x-csrf-token": csrf },
   });
+  assert.equal(login.headers["cache-control"], "no-store");
   const cookie = String(login.headers["set-cookie"]).split(";")[0] ?? "";
   const sessionCsrf = String(login.headers["x-csrf-token"]);
   assert.match(
@@ -148,6 +150,7 @@ test("logout invalidates the server session and clears the browser cookie", asyn
     headers: { cookie, "x-csrf-token": sessionCsrf },
   });
   assert.equal(logout.statusCode, 204);
+  assert.equal(logout.headers["cache-control"], "no-store");
   assert.match(String(logout.headers["set-cookie"]), /Max-Age=0/);
 
   const workspace = await app.inject({

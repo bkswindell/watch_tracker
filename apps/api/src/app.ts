@@ -342,8 +342,11 @@ export async function buildApp(
       },
     );
 
-    app.get("/api/bootstrap", async (request) => {
+    app.get("/api/bootstrap", async (request, reply) => {
       const found = await session(request);
+      // The response carries a setup or session CSRF token, so it must never
+      // be retained by a browser or intermediary cache.
+      void reply.header("cache-control", "no-store");
       return {
         setupRequired: await store.needsSetup(),
         authenticated: Boolean(found?.value),
@@ -376,6 +379,7 @@ export async function buildApp(
     app.post<{ Body: { password?: unknown } }>(
       "/api/login",
       async (request, reply) => {
+        void reply.header("cache-control", "no-store");
         if (!sameOrigin(request) || readCsrf(request) !== setupCsrf) {
           sendError(
             reply,
@@ -426,6 +430,7 @@ export async function buildApp(
       },
     );
     app.post("/api/logout", async (request, reply) => {
+      void reply.header("cache-control", "no-store");
       const found = await requireCsrf(request, reply);
       if (!found) return;
       await store.invalidateSession(found.token);
