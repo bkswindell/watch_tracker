@@ -95,6 +95,63 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   assert.equal(imported.statusCode, 201);
   assert.equal(imported.json().pack.version, "0.2.0");
 
+  const unauthenticatedWorkspace = await request(app, {
+    method: "GET",
+    url: "/api/workspace",
+  });
+  assert.equal(unauthenticatedWorkspace.statusCode, 401);
+
+  const workspace = await request(app, {
+    method: "GET",
+    url: "/api/workspace",
+    cookies: sessionCookie,
+  });
+  assert.equal(workspace.statusCode, 200);
+  assert.equal(workspace.json().pack.version, "0.2.0");
+  assert.equal(workspace.json().items.length, 5);
+  assert.equal(workspace.json().items[0].media, null);
+  const relationshipKey = (relationship: {
+    fromSlug: string;
+    toSlug: string;
+    type: string;
+  }) => `${relationship.fromSlug}:${relationship.toSlug}:${relationship.type}`;
+  assert.deepEqual(
+    [...workspace.json().relationships].sort((left, right) =>
+      relationshipKey(left).localeCompare(relationshipKey(right)),
+    ),
+    [
+      {
+        fromSlug: "midwinter-signal",
+        toSlug: "lantern-vale-first-light",
+        type: "required",
+        summary:
+          "First Light establishes the restored beacon network used by the Special.",
+      },
+      {
+        fromSlug: "the-echo-line",
+        toSlug: "the-quiet-beacon",
+        type: "sequence",
+        summary:
+          "The Quiet Beacon precedes The Echo Line in the episode sequence.",
+      },
+      {
+        fromSlug: "the-quiet-beacon",
+        toSlug: "a-light-between",
+        type: "recommended",
+        summary: "The Short introduces the lantern exchanged in the Episode.",
+      },
+      {
+        fromSlug: "a-light-between",
+        toSlug: "midwinter-signal",
+        type: "optional",
+        summary:
+          "A background signal in the Short echoes the Special's relay pattern.",
+      },
+    ].sort((left, right) =>
+      relationshipKey(left).localeCompare(relationshipKey(right)),
+    ),
+  );
+
   const detail = await request(app, {
     method: "GET",
     url: "/api/catalog/midwinter-signal",
