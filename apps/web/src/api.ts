@@ -48,6 +48,7 @@ export function requestOptions(
 ): RequestInit {
   const options: RequestInit = { credentials: "same-origin" };
   if (method === "GET") return options;
+  options.method = method;
   options.headers = {
     "content-type": "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),

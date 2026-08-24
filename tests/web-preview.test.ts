@@ -9,6 +9,7 @@ test("browser API requests keep same-origin credentials and protect unsafe calls
     requestOptions("POST", "csrf-123", { password: "not asserted" }),
     {
       credentials: "same-origin",
+      method: "POST",
       headers: {
         "content-type": "application/json",
         "x-csrf-token": "csrf-123",
