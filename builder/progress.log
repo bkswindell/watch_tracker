@@ -58,3 +58,14 @@
 - Live API proof using only the public bootstrap CSRF token returned `403 csrf.invalid` for `Origin: https://10.18.0.201:3100` and reached the existing setup guard (`409 setup.unavailable`) for exact `Origin: http://10.18.0.201:3100`. No credential was read or changed. The previously accepted browser matrix remains unchanged because this slice is API-only.
 - Host-controlled recovery remains blocked on provider/UX delivery details. Historical audit remains **FAIL** pending that accepted gate.
 - Branch, origin, and PR #4 head were verified at progress parent `5a8d50b62931825dcbe785a8b4a6b9175a975eda`; Validate Core run `32788468069` completed successfully with every required step green.
+
+## 2026-08-24 — authentication/session hardening slice 5
+
+- Confirmed the historical watched-feedback Validate Core run `32784974478` is successful. Template PR #10 remains green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.
+- Delivered a cookie/session-lifetime conformance correction: a successful login now issues the strict, HttpOnly session cookie with `Max-Age=2592000` (30 days), matching the server-enforced sliding idle lifetime. The immutable 90-day server-side absolute cap remains unchanged.
+- Added focused regression coverage for the issued cookie lifetime, alongside logout invalidation coverage.
+- Validation: focused auth/SQL suite passed (9 tests); `npm run check` passed (105 portable tests); deterministic build passed (25 artifacts); `npm audit --omit=dev --audit-level=high` reported 0 vulnerabilities; production image build passed.
+- Host PostgreSQL integration correctly failed closed because `TEST_DATABASE_URL` is absent. The live database remains intentionally not host-published; neither its container, volume, nor credentials were changed. CI will run the isolated PostgreSQL gate.
+- App-only deployment rebuilt `watch-tracker:verify` and recreated only `watch-tracker-lan-foundation-app-1` with `--no-deps`, image `sha256:04686d7d2b73e07455bc949079c59342ba7cba83021b113d1c47d3058bb79519`. App and database are healthy; `/ready` returned ready.
+- No deployment credential was accessed. Authenticated browser proof is unavailable and was not fabricated; this bounded API cookie attribute correction has focused API proof.
+- Implementation and progress commits/remote SHA/CI are pending this run's push. Host-controlled recovery remains blocked on a host delivery channel and UX decision. Historical audit remains **FAIL** pending that accepted gate.

@@ -15,7 +15,7 @@ import {
 } from "../../../packages/contracts/src/catalog.js";
 import { parseWatchableFeedbackInput } from "../../../packages/contracts/src/feedback.js";
 import { WATCH_TRACKER_API_SERVICE } from "../../../packages/contracts/src/health.js";
-import type { SliceStore } from "./slice.js";
+import { SESSION_IDLE_LIFETIME_MS, type SliceStore } from "./slice.js";
 
 export interface ReadinessResult {
   ready: boolean;
@@ -45,6 +45,7 @@ const APPROVED_POSTER_HOSTS = new Set([
   "media.themoviedb.org",
 ]);
 const POSTER_MAX_BYTES = 5 * 1024 * 1024;
+const SESSION_COOKIE_MAX_AGE_SECONDS = SESSION_IDLE_LIFETIME_MS / 1_000;
 
 export function approvedPosterUrl(value: unknown): URL | undefined {
   if (typeof value !== "string") return undefined;
@@ -399,7 +400,7 @@ export async function buildApp(
         void reply
           .header(
             "set-cookie",
-            `watch_tracker_session=${created.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800`,
+            `watch_tracker_session=${created.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}`,
           )
           .header("x-csrf-token", created.csrfToken)
           .status(204)

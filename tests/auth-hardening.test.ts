@@ -112,6 +112,10 @@ test("logout invalidates the server session and clears the browser cookie", asyn
   });
   const cookie = String(login.headers["set-cookie"]).split(";")[0] ?? "";
   const sessionCsrf = String(login.headers["x-csrf-token"]);
+  assert.match(
+    String(login.headers["set-cookie"]),
+    new RegExp(`Max-Age=${SESSION_IDLE_LIFETIME_MS / 1_000}`),
+  );
   const logout = await app.inject({
     method: "POST",
     url: "/api/logout",
