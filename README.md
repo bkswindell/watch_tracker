@@ -53,13 +53,16 @@ This deployment path is for local development and verification only. It does not
 
 1. Copy `.env.example` to `.env`.
 2. Replace the password placeholder with a long random local PostgreSQL password.
-3. Start the stack:
+3. Create `.secrets/initial_admin_password` with a random deployment password,
+   owned by the local user and mode `0600`. Compose mounts it read-only for the
+   non-root application container; it is not committed or logged.
+4. Start the stack:
 
    ```bash
    docker compose up --build -d
    ```
 
-4. Open <http://127.0.0.1:3100/>. API liveness and readiness are available at `/health` and `/ready`.
+5. Open <http://127.0.0.1:3100/>. API liveness and readiness are available at `/health` and `/ready`.
 
 PostgreSQL is not published to the host. The application is loopback-only by default. To make an explicitly approved local deployment available on a trusted LAN, set `APP_BIND_ADDRESS` to the host's LAN address and use that address in the URL; do not use `0.0.0.0` unless exposure on every host interface is intentional. This changes the deployment's access boundary, so use authentication before treating LAN exposure as an MVP deployment.
 

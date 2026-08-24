@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.01";
+export const EXPECTED_SCHEMA_VERSION = "0.02";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -87,6 +87,60 @@ const REQUIRED_FOUNDATION_CONSTRAINTS = [
     "c",
     "CHECK (updated_at >= created_at)",
   ],
+] as const;
+
+const REQUIRED_CORE_SLICE_COLUMNS = [
+  ["installation_setup", "singleton", "bool", "NO"],
+  ["installation_setup", "tracker_instance_id", "uuid", "NO"],
+  ["app_session", "token_sha256", "bpchar", "NO"],
+  ["app_session", "csrf_token", "bpchar", "NO"],
+  ["app_session", "csrf_sha256", "bpchar", "NO"],
+  ["app_session", "expires_at", "timestamptz", "NO"],
+  ["app_session", "created_at", "timestamptz", "NO"],
+  ["active_canon_pack", "singleton", "bool", "NO"],
+  ["active_canon_pack", "title", "text", "NO"],
+  ["active_canon_pack", "version", "varchar", "NO"],
+  ["active_canon_pack", "imported_at", "timestamptz", "NO"],
+  ["catalog_item", "slug", "varchar", "NO"],
+  ["catalog_item", "title", "text", "NO"],
+  ["catalog_item", "type", "varchar", "NO"],
+  ["catalog_item", "summary", "text", "NO"],
+  ["catalog_item", "release_order", "int4", "NO"],
+  ["watch_focus", "singleton", "bool", "NO"],
+  ["watch_focus", "target_slug", "varchar", "NO"],
+  ["watch_focus", "updated_at", "timestamptz", "NO"],
+  ["viewing_attempt", "viewing_attempt_id", "uuid", "NO"],
+  ["viewing_attempt", "catalog_slug", "varchar", "NO"],
+  ["viewing_attempt", "status", "varchar", "NO"],
+  ["viewing_attempt", "created_at", "timestamptz", "NO"],
+] as const;
+
+const REQUIRED_CORE_SLICE_CONSTRAINTS = [
+  ["installation_setup", "installation_setup_pkey", "p"],
+  ["installation_setup", "installation_setup_tracker_instance_id_key", "u"],
+  ["installation_setup", "installation_setup_tracker_instance_id_fkey", "f"],
+  ["installation_setup", "installation_setup_singleton_true", "c"],
+  ["app_session", "app_session_pkey", "p"],
+  ["app_session", "app_session_token_sha256_format", "c"],
+  ["app_session", "app_session_csrf_token_format", "c"],
+  ["app_session", "app_session_csrf_sha256_format", "c"],
+  ["active_canon_pack", "active_canon_pack_pkey", "p"],
+  ["active_canon_pack", "active_canon_pack_singleton_true", "c"],
+  ["active_canon_pack", "active_canon_pack_title_not_blank", "c"],
+  ["active_canon_pack", "active_canon_pack_version_not_blank", "c"],
+  ["catalog_item", "catalog_item_pkey", "p"],
+  ["catalog_item", "catalog_item_release_order_key", "u"],
+  ["catalog_item", "catalog_item_slug_not_blank", "c"],
+  ["catalog_item", "catalog_item_title_not_blank", "c"],
+  ["catalog_item", "catalog_item_type_valid", "c"],
+  ["catalog_item", "catalog_item_summary_not_blank", "c"],
+  ["catalog_item", "catalog_item_release_order_positive", "c"],
+  ["watch_focus", "watch_focus_pkey", "p"],
+  ["watch_focus", "watch_focus_target_slug_fkey", "f"],
+  ["watch_focus", "watch_focus_singleton_true", "c"],
+  ["viewing_attempt", "viewing_attempt_pkey", "p"],
+  ["viewing_attempt", "viewing_attempt_catalog_slug_fkey", "f"],
+  ["viewing_attempt", "viewing_attempt_status_valid", "c"],
 ] as const;
 
 export interface Migration {
@@ -258,6 +312,50 @@ async function verifyFoundationIntegrity(
   );
 }
 
+async function verifyCoreSliceIntegrity(database: Queryable): Promise<boolean> {
+  const tables = [
+    "installation_setup",
+    "app_session",
+    "active_canon_pack",
+    "catalog_item",
+    "watch_focus",
+    "viewing_attempt",
+  ];
+  const columns = await database.query(
+    `SELECT table_name, column_name, udt_name, is_nullable
+       FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = ANY($1::text[])`,
+    [tables],
+  );
+  if (
+    !rowsMatchExactly(
+      columns.rows as Record<string, unknown>[],
+      ["table_name", "column_name", "udt_name", "is_nullable"],
+      REQUIRED_CORE_SLICE_COLUMNS,
+    )
+  ) {
+    return false;
+  }
+
+  const constraints = await database.query(
+    `SELECT relation.relname AS table_name,
+            constraint_record.conname AS constraint_name,
+            constraint_record.contype AS constraint_type
+       FROM pg_constraint AS constraint_record
+       JOIN pg_class AS relation ON relation.oid = constraint_record.conrelid
+       JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+      WHERE namespace.nspname = 'public'
+        AND relation.relname = ANY($1::text[])`,
+    [tables],
+  );
+  return rowsMatchExactly(
+    constraints.rows as Record<string, unknown>[],
+    ["table_name", "constraint_name", "constraint_type"],
+    REQUIRED_CORE_SLICE_CONSTRAINTS,
+  );
+}
+
 function validateMigrationInventory(migrations: readonly Migration[]): void {
   if (migrations.length === 0) throw new Error("Migration inventory is empty");
 
@@ -329,7 +427,10 @@ export async function verifySchema(
   if (assessment.appliedCount !== migrations.length) {
     return { ready: false, reason: "database schema is not current" };
   }
-  if (!(await verifyFoundationIntegrity(database))) {
+  if (
+    !(await verifyFoundationIntegrity(database)) ||
+    !(await verifyCoreSliceIntegrity(database))
+  ) {
     return { ready: false, reason: "database schema integrity mismatch" };
   }
   return { ready: true };

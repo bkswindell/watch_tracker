@@ -31,17 +31,28 @@ async function migrationDirectory(
   return directory;
 }
 
-function migration(version = "0.01", sha256 = "a".repeat(64)): Migration {
-  return { version, name: "foundation", sha256, sql: "SELECT 1" };
+function migration(
+  version = EXPECTED_SCHEMA_VERSION,
+  sha256 = "a".repeat(64),
+): Migration {
+  return {
+    version,
+    name: version === "0.01" ? "foundation" : "core-slice",
+    sha256,
+    sql: "SELECT 1",
+  };
 }
 
-test("loads the ordered foundation migration with a deterministic SHA-256 identity", async () => {
+test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 1);
+  assert.equal(migrations.length, 2);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.01");
+  assert.equal(migrations[1]?.version, "0.02");
+  assert.equal(migrations[1]?.name, "core-slice");
+  assert.match(migrations[1]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.02");
 });
 
 test("migration discovery rejects an empty inventory", async (t) => {
@@ -86,11 +97,11 @@ test("migration discovery rejects duplicate versions", async (t) => {
 test("migration discovery rejects a terminal version that differs from the application contract", async (t) => {
   const directory = await migrationDirectory(t, {
     "0.01_foundation.sql": "SELECT 1;",
-    "0.02_next.sql": "SELECT 2;",
+    "0.03_next.sql": "SELECT 2;",
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.02 does not match expected schema version 0\.01/,
+    /Migration terminal version 0\.03 does not match expected schema version 0\.02/,
   );
 });
 
@@ -148,8 +159,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.01",
-          migration_name: "foundation",
+          migration_version: "0.02",
+          migration_name: "core-slice",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -167,8 +178,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.01",
-          migration_name: "renamed-foundation",
+          migration_version: "0.02",
+          migration_name: "renamed-core-slice",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -181,21 +192,136 @@ test("schema verification fails closed when a recorded migration name differs", 
   });
 });
 
-test("schema verification fails closed when the migration ledger is current but a required table is missing", async () => {
+test("schema verification fails closed when the migration ledger and foundation are current but a Core slice table is missing", async () => {
+  const foundationColumns = [
+    [
+      "schema_migration",
+      "schema_migration_id",
+      "uuid",
+      "NO",
+      "gen_random_uuid()",
+    ],
+    ["schema_migration", "migration_version", "varchar", "NO", "<none>"],
+    ["schema_migration", "migration_name", "varchar", "NO", "<none>"],
+    ["schema_migration", "migration_sha256", "bpchar", "NO", "<none>"],
+    [
+      "schema_migration",
+      "applied_at",
+      "timestamptz",
+      "NO",
+      "CURRENT_TIMESTAMP",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_id",
+      "uuid",
+      "NO",
+      "gen_random_uuid()",
+    ],
+    ["tracker_instance", "display_name", "text", "NO", "<none>"],
+    ["tracker_instance", "credential_hash", "text", "YES", "<none>"],
+    ["tracker_instance", "setup_completed_at", "timestamptz", "YES", "<none>"],
+    [
+      "tracker_instance",
+      "created_at",
+      "timestamptz",
+      "NO",
+      "CURRENT_TIMESTAMP",
+    ],
+    [
+      "tracker_instance",
+      "updated_at",
+      "timestamptz",
+      "NO",
+      "CURRENT_TIMESTAMP",
+    ],
+  ].map(([table_name, column_name, udt_name, is_nullable, column_default]) => ({
+    table_name,
+    column_name,
+    udt_name,
+    is_nullable,
+    column_default,
+  }));
+  const foundationConstraints = [
+    [
+      "schema_migration",
+      "schema_migration_migration_version_key",
+      "u",
+      "UNIQUE (migration_version)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_name_not_blank",
+      "c",
+      "CHECK (btrim(migration_name::text) <> ''::text)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_pkey",
+      "p",
+      "PRIMARY KEY (schema_migration_id)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_sha256_format",
+      "c",
+      "CHECK (migration_sha256 ~ '^[0-9a-f]{64}$'::text)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_version_not_blank",
+      "c",
+      "CHECK (btrim(migration_version::text) <> ''::text)",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_display_name_not_blank",
+      "c",
+      "CHECK (btrim(display_name) <> ''::text)",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_pkey",
+      "p",
+      "PRIMARY KEY (tracker_instance_id)",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_updated_after_created",
+      "c",
+      "CHECK (updated_at >= created_at)",
+    ],
+  ].map(
+    ([
+      table_name,
+      constraint_name,
+      constraint_type,
+      constraint_definition,
+    ]) => ({
+      table_name,
+      constraint_name,
+      constraint_type,
+      constraint_definition,
+    }),
+  );
   const database: Queryable = {
     query: async (text) => {
       if (text.includes("ORDER BY migration_version")) {
         return {
           rows: [
             {
-              migration_version: "0.01",
-              migration_name: "foundation",
+              migration_version: "0.02",
+              migration_name: "core-slice",
               migration_sha256: "a".repeat(64),
             },
           ],
         };
       }
-      return { rows: [] };
+      if (text.includes("information_schema.columns"))
+        return { rows: foundationColumns };
+      if (text.includes("pg_constraint"))
+        return { rows: foundationConstraints };
+      throw new Error(`Unexpected query: ${text}`);
     },
   };
 
@@ -219,7 +345,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.02",
+              migration_version: "0.03",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },

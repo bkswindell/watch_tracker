@@ -104,18 +104,28 @@ test("server environment validation fails closed for missing or malformed values
       }),
     /MIGRATIONS_DIR is invalid/,
   );
+  assert.throws(
+    () =>
+      parseServerEnvironment({
+        DATABASE_URL: "postgresql://user:password@database:5432/watch_tracker",
+        INITIAL_ADMIN_PASSWORD_FILE: " ",
+      }),
+    /INITIAL_ADMIN_PASSWORD_FILE is invalid/,
+  );
   assert.deepEqual(
     parseServerEnvironment({
       DATABASE_URL: "postgresql://user:password@database:5432/watch_tracker",
       HOST: "0.0.0.0",
       PORT: "3100",
       MIGRATIONS_DIR: "db/migrations",
+      INITIAL_ADMIN_PASSWORD_FILE: "/run/secrets/initial_admin_password",
     }),
     {
       databaseUrl: "postgresql://user:password@database:5432/watch_tracker",
       host: "0.0.0.0",
       port: 3100,
       migrationsDirectory: "db/migrations",
+      initialAdminPasswordFile: "/run/secrets/initial_admin_password",
     },
   );
 });
