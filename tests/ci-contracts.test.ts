@@ -45,21 +45,16 @@ test("CI smoke uses the built production images with disposable loopback Compose
   );
   assert.match(smoke, /WATCH_TRACKER_IMAGE/);
   assert.match(smoke, /docker image inspect "\$WATCH_TRACKER_IMAGE"/);
+  assert.match(smoke, /for endpoint in \/ \/health \/ready; do/);
   assert.match(
     smoke,
-    /for \(const endpoint of \['\/', '\/health', '\/ready'\]\)/,
+    /for endpoint in \/ \/health \/ready; do[\s\S]*curl --fail --silent --show-error --max-time 10\s+"\$base\$endpoint"/,
+    "every runtime smoke request must use a bounded curl probe",
   );
-  const smokeRequests =
-    smoke.match(/fetch\(`\$\{base\}\$\{endpoint\}`[^;]*\)/g) ?? [];
-  assert.equal(
-    smokeRequests.length,
-    1,
-    "runtime smoke must make one bounded request loop",
-  );
-  assert.match(
-    smokeRequests[0] ?? "",
-    /signal: AbortSignal\.timeout\(10_000\)/,
-    "every runtime smoke request must have a finite explicit timeout",
+  assert.doesNotMatch(
+    smoke,
+    /fetch\(/,
+    "runtime smoke must not depend on Node fetch behavior",
   );
   assert.match(smoke, /Compose runtime diagnostics/);
   assert.match(
