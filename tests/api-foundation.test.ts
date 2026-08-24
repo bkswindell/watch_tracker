@@ -10,6 +10,7 @@ import {
   type ReadinessProbe,
 } from "../apps/api/src/app.js";
 import {
+  assertNonRootRuntime,
   closeApiResources,
   parseServerEnvironment,
   SHUTDOWN_DEADLINE_MS,
@@ -128,6 +129,11 @@ test("server environment validation fails closed for missing or malformed values
       initialAdminPasswordFile: "/run/secrets/initial_admin_password",
     },
   );
+});
+
+test("API startup refuses effective UID zero before loading configuration or secrets", () => {
+  assert.throws(() => assertNonRootRuntime(0), /refuses to start API as root/);
+  assert.doesNotThrow(() => assertNonRootRuntime(1000));
 });
 
 test("shutdown always ends the database pool when app close fails", async () => {

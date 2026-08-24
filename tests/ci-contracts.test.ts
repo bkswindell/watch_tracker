@@ -7,6 +7,7 @@ const packageJson = JSON.parse(await readFile("package.json", "utf8")) as {
 };
 const workflow = await readFile(".github/workflows/core-validate.yml", "utf8");
 const compose = await readFile("compose.yaml", "utf8");
+const readme = await readFile("README.md", "utf8");
 
 test("portable test command excludes the PostgreSQL integration file", () => {
   assert.match(packageJson.scripts.test ?? "", /run-portable-tests\.mjs/);
@@ -119,4 +120,16 @@ test("Compose file secrets use the app's non-root UID and CI provides the runner
   );
   assert.match(smoke, /test "\$effective_app_uid" -ne 0/);
   assert.match(smoke, /test "\$mounted_secret_uid" = "\$source_secret_uid"/);
+});
+
+test("local-run documentation distinguishes the Compose LAN default from the loopback template override", () => {
+  assert.match(
+    readme,
+    /Compose defaults to the approved\s+trusted-LAN publication `10\.18\.0\.201:3100`/,
+  );
+  assert.match(
+    readme,
+    /`\.env\.example` deliberately overrides that default with\s+`APP_BIND_ADDRESS=127\.0\.0\.1`/,
+  );
+  assert.doesNotMatch(readme, /application is loopback-only by default/);
 });

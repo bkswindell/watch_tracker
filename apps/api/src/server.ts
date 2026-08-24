@@ -12,6 +12,15 @@ import { SqlSliceStore } from "./slice.js";
 
 export const SHUTDOWN_DEADLINE_MS = 10_000;
 
+/**
+ * Refuse to run the API with root privileges, even if Compose is misconfigured.
+ */
+export function assertNonRootRuntime(effectiveUid = process.getuid?.()): void {
+  if (effectiveUid === 0) {
+    throw new Error("refuses to start API as root");
+  }
+}
+
 export interface ServerEnvironment {
   databaseUrl: string;
   host: string;
@@ -161,6 +170,7 @@ export async function closeApiResources(
 }
 
 export async function startServer(): Promise<void> {
+  assertNonRootRuntime();
   const environment = parseServerEnvironment(process.env);
   const pool = new Pool({
     connectionString: environment.databaseUrl,
