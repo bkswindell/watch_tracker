@@ -57,3 +57,4 @@
 - App-only deployment recreated `watch-tracker-lan-foundation-app-1` from `watch-tracker:verify` image `sha256:7c458537e267d14d1521e4bd92dd9e5a7ce0005261a7d65cffcc921a1064db41`. The database container remained healthy and untouched; `/ready` returned ready.
 - Live API proof using only the public bootstrap CSRF token returned `403 csrf.invalid` for `Origin: https://10.18.0.201:3100` and reached the existing setup guard (`409 setup.unavailable`) for exact `Origin: http://10.18.0.201:3100`. No credential was read or changed. The previously accepted browser matrix remains unchanged because this slice is API-only.
 - Host-controlled recovery remains blocked on provider/UX delivery details. Historical audit remains **FAIL** pending that accepted gate.
+- Branch, origin, and PR #4 head were verified at progress parent `5a8d50b62931825dcbe785a8b4a6b9175a975eda`; Validate Core run `32788468069` completed successfully with every required step green.
