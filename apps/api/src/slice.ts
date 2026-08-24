@@ -280,6 +280,9 @@ function newSession(trackerInstanceId: string): SliceSession {
   };
 }
 
+export const SESSION_IDLE_LIFETIME_MS = 30 * 24 * 60 * 60_000;
+export const SESSION_ABSOLUTE_LIFETIME_MS = 90 * 24 * 60 * 60_000;
+
 function stateFor(status?: string): ViewingState {
   if (status === "active") return "in-progress";
   if (status === "completed") return "watched";
@@ -397,7 +400,12 @@ export class MemorySliceStore implements SliceStore {
   #trackerInstanceId = randomUUID();
   #sessions = new Map<
     string,
-    { csrfToken: string; trackerInstanceId: string }
+    {
+      csrfToken: string;
+      trackerInstanceId: string;
+      idleExpiresAt: number;
+      absoluteExpiresAt: number;
+    }
   >();
   #additions = new Map<string, CatalogAddition>();
   #items = new Map<string, ImportedItem>();
@@ -409,18 +417,21 @@ export class MemorySliceStore implements SliceStore {
   #pack: WorkspacePack | null = null;
   #packPath: string;
   #faultAfterStage: (() => boolean) | undefined;
+  #now: () => number;
 
   constructor(
     options: {
       initialPassword?: string;
       packPath?: string;
       faultAfterStage?: () => boolean;
+      now?: () => number;
     } = {},
   ) {
     if (options.initialPassword !== undefined)
       this.#configuredPassword = options.initialPassword;
     this.#packPath = options.packPath ?? defaultCanonPackPath();
     this.#faultAfterStage = options.faultAfterStage;
+    this.#now = options.now ?? Date.now;
   }
 
   async needsSetup(): Promise<boolean> {
@@ -441,9 +452,12 @@ export class MemorySliceStore implements SliceStore {
   }
   async createSession(): Promise<SliceSession> {
     const session = newSession(this.#trackerInstanceId);
+    const now = this.#now();
     this.#sessions.set(session.token, {
       csrfToken: session.csrfToken,
       trackerInstanceId: session.trackerInstanceId,
+      idleExpiresAt: now + SESSION_IDLE_LIFETIME_MS,
+      absoluteExpiresAt: now + SESSION_ABSOLUTE_LIFETIME_MS,
     });
     return session;
   }
@@ -453,10 +467,31 @@ export class MemorySliceStore implements SliceStore {
   async getSession(
     token: string,
   ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined> {
-    return this.#sessions.get(token);
+    const session = this.#sessions.get(token);
+    if (!session) return undefined;
+    const now = this.#now();
+    if (session.idleExpiresAt <= now || session.absoluteExpiresAt <= now) {
+      this.#sessions.delete(token);
+      return undefined;
+    }
+    session.idleExpiresAt = Math.min(
+      now + SESSION_IDLE_LIFETIME_MS,
+      session.absoluteExpiresAt,
+    );
+    return {
+      csrfToken: session.csrfToken,
+      trackerInstanceId: session.trackerInstanceId,
+    };
   }
   async validateCsrf(token: string, csrfToken: string): Promise<boolean> {
-    return this.#sessions.get(token)?.csrfToken === csrfToken;
+    const session = this.#sessions.get(token);
+    const now = this.#now();
+    return (
+      session !== undefined &&
+      session.idleExpiresAt > now &&
+      session.absoluteExpiresAt > now &&
+      session.csrfToken === csrfToken
+    );
   }
   async importLanternVale(): Promise<{ title: string; version: string }> {
     const pack = await importAcceptedLanternVale(this.#packPath);
@@ -729,7 +764,7 @@ export class SqlSliceStore implements SliceStore {
     if (!trackerInstanceId) throw new Error("setup is not complete");
     const session = newSession(trackerInstanceId);
     await this.pool.query(
-      "INSERT INTO app_session (token_sha256, csrf_token, csrf_sha256, tracker_instance_id, expires_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP + INTERVAL '7 days')",
+      "INSERT INTO app_session (token_sha256, csrf_token, csrf_sha256, tracker_instance_id, expires_at, last_seen_at, absolute_expires_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP + INTERVAL '30 days', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '90 days')",
       [
         digest(session.token),
         session.csrfToken,
@@ -751,14 +786,20 @@ export class SqlSliceStore implements SliceStore {
       csrfToken: string;
       trackerInstanceId: string;
     }>(
-      'SELECT csrf_token AS "csrfToken", tracker_instance_id AS "trackerInstanceId" FROM app_session WHERE token_sha256 = $1 AND expires_at > CURRENT_TIMESTAMP',
+      `UPDATE app_session
+          SET last_seen_at = CURRENT_TIMESTAMP,
+              expires_at = LEAST(CURRENT_TIMESTAMP + INTERVAL '30 days', absolute_expires_at)
+        WHERE token_sha256 = $1
+          AND expires_at > CURRENT_TIMESTAMP
+          AND absolute_expires_at > CURRENT_TIMESTAMP
+      RETURNING csrf_token AS "csrfToken", tracker_instance_id AS "trackerInstanceId"`,
       [digest(token)],
     );
     return result.rows[0];
   }
   async validateCsrf(token: string, csrfToken: string): Promise<boolean> {
     const result = await this.pool.query(
-      "SELECT 1 FROM app_session WHERE token_sha256 = $1 AND csrf_sha256 = $2 AND expires_at > CURRENT_TIMESTAMP",
+      "SELECT 1 FROM app_session WHERE token_sha256 = $1 AND csrf_sha256 = $2 AND expires_at > CURRENT_TIMESTAMP AND absolute_expires_at > CURRENT_TIMESTAMP",
       [digest(token), digest(csrfToken)],
     );
     return result.rowCount === 1;

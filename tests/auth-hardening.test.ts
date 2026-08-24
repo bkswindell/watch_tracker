@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { buildApp } from "../apps/api/src/app.js";
-import { MemorySliceStore } from "../apps/api/src/slice.js";
+import {
+  MemorySliceStore,
+  SESSION_ABSOLUTE_LIFETIME_MS,
+  SESSION_IDLE_LIFETIME_MS,
+} from "../apps/api/src/slice.js";
 
 async function configuredApp(
   loginThrottle = { maxFailures: 5, windowMs: 60_000 },
@@ -89,4 +93,34 @@ test("logout invalidates the server session and clears the browser cookie", asyn
     headers: { cookie },
   });
   assert.equal(workspace.statusCode, 401);
+});
+
+test("sessions expire after 30 days without activity", async () => {
+  let now = 0;
+  const store = new MemorySliceStore({
+    initialPassword: "correct-password",
+    now: () => now,
+  });
+  assert.equal(await store.setup(), true);
+  const session = await store.createSession();
+
+  now = SESSION_IDLE_LIFETIME_MS;
+  assert.equal(await store.getSession(session.token), undefined);
+});
+
+test("session activity slides idle expiry but never beyond 90 days", async () => {
+  let now = 0;
+  const store = new MemorySliceStore({
+    initialPassword: "correct-password",
+    now: () => now,
+  });
+  assert.equal(await store.setup(), true);
+  const session = await store.createSession();
+
+  for (const elapsed of [29, 58, 87]) {
+    now = elapsed * 24 * 60 * 60_000;
+    assert.ok(await store.getSession(session.token));
+  }
+  now = SESSION_ABSOLUTE_LIFETIME_MS;
+  assert.equal(await store.getSession(session.token), undefined);
 });

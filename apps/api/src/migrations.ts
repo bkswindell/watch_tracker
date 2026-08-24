@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.07";
+export const EXPECTED_SCHEMA_VERSION = "0.08";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -98,6 +98,8 @@ const REQUIRED_CORE_SLICE_COLUMNS = [
   ["app_session", "expires_at", "timestamptz", "NO"],
   ["app_session", "created_at", "timestamptz", "NO"],
   ["app_session", "tracker_instance_id", "uuid", "NO"],
+  ["app_session", "last_seen_at", "timestamptz", "NO"],
+  ["app_session", "absolute_expires_at", "timestamptz", "NO"],
   ["active_canon_pack", "singleton", "bool", "NO"],
   ["active_canon_pack", "title", "text", "NO"],
   ["active_canon_pack", "version", "varchar", "NO"],
@@ -143,6 +145,9 @@ const REQUIRED_CORE_SLICE_CONSTRAINTS = [
   ["app_session", "app_session_csrf_token_format", "c"],
   ["app_session", "app_session_csrf_sha256_format", "c"],
   ["app_session", "app_session_tracker_instance_id_fkey", "f"],
+  ["app_session", "app_session_idle_expiry_within_absolute", "c"],
+  ["app_session", "app_session_last_seen_after_created", "c"],
+  ["app_session", "app_session_absolute_expiry_after_created", "c"],
   ["active_canon_pack", "active_canon_pack_pkey", "p"],
   ["active_canon_pack", "active_canon_pack_singleton_true", "c"],
   ["active_canon_pack", "active_canon_pack_title_not_blank", "c"],
