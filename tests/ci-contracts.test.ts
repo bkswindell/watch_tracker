@@ -49,6 +49,18 @@ test("CI smoke uses the built production images with disposable loopback Compose
     smoke,
     /for \(const endpoint of \['\/', '\/health', '\/ready'\]\)/,
   );
+  const smokeRequests =
+    smoke.match(/fetch\(`\$\{base\}\$\{endpoint\}`[^;]*\)/g) ?? [];
+  assert.equal(
+    smokeRequests.length,
+    1,
+    "runtime smoke must make one bounded request loop",
+  );
+  assert.match(
+    smokeRequests[0] ?? "",
+    /signal: AbortSignal\.timeout\(10_000\)/,
+    "every runtime smoke request must have a finite explicit timeout",
+  );
   assert.match(smoke, /Compose runtime diagnostics/);
   assert.match(
     smoke,
