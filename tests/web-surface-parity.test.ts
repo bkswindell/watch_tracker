@@ -29,22 +29,24 @@ test("Canon Pack presents unavailable evidence honestly", async () => {
   assert.doesNotMatch(app, /<small>Loaded<\/small>/);
 });
 
-test("approved shell parity exposes complete Catalog controls with truthful unavailable behavior", async () => {
+test("Catalog CRUD connects personal records while preserving Canon Pack immutability", async () => {
   const app = await source();
   const catalogDialog = await readFile(
     "apps/web/src/CatalogDialog.tsx",
     "utf8",
   );
-  assert.match(app, /const navigate = \(nextView\) =>/);
-  assert.match(app, /The Lantern Vale story/);
-  assert.match(app, /Columns/);
-  assert.match(app, /Clear filters/);
-  assert.match(app, /Export CSV/);
-  assert.match(app, /onCellContextMenu/);
-  assert.match(catalogDialog, /Add watchable/);
-  assert.match(catalogDialog, /Edit catalog record/);
-  assert.match(catalogDialog, /Delete watchable/);
-  assert.match(catalogDialog, /Not Implemented/);
+  const frontendApi = await readFile("apps/web/src/api.ts", "utf8");
+  assert.match(app, /api\.catalogAdditions\(\)/);
+  assert.match(app, /normalizeAddition/);
+  assert.match(app, /api\.createCatalogAddition/);
+  assert.match(app, /api\.updateCatalogAddition/);
+  assert.match(app, /api\.deleteCatalogAddition/);
+  assert.match(app, /Canon Pack records are immutable/);
+  assert.match(app, /disabled=\{!selected\?\.personal\}/);
+  assert.match(catalogDialog, /personal catalog record/);
+  assert.doesNotMatch(catalogDialog, /Not Implemented/);
+  assert.match(frontendApi, /"PUT" \| "DELETE"/);
+  assert.match(frontendApi, /catalog-additions/);
 });
 
 test("cinematic details keep unavailable enrichment visible without fabricated content", async () => {

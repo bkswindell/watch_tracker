@@ -47,7 +47,13 @@ export default function WatchableActionMenu({
       </small>
       <b>{item.title}</b>
       <hr />
-      {onTarget && (
+      {item.personal && (
+        <small>
+          Personal Catalog record · viewing lifecycle is not part of the Canon
+          Pack.
+        </small>
+      )}
+      {!item.personal && onTarget && (
         <button
           role="menuitem"
           disabled={item.id === targetId}
@@ -57,15 +63,16 @@ export default function WatchableActionMenu({
           ◎ Mark as target
         </button>
       )}
-      {viewingActionsFor(item).map((action) => (
-        <button
-          role="menuitem"
-          key={action.key}
-          onClick={() => run(() => onViewingAction(item, action.state))}
-        >
-          {action.label}
-        </button>
-      ))}
+      {!item.personal &&
+        viewingActionsFor(item).map((action) => (
+          <button
+            role="menuitem"
+            key={action.key}
+            onClick={() => run(() => onViewingAction(item, action.state))}
+          >
+            {action.label}
+          </button>
+        ))}
       {onInspect && (
         <>
           <hr />

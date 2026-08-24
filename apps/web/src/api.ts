@@ -1,4 +1,22 @@
 export type ViewingState = "not-started" | "in-progress" | "watched";
+export type CatalogAdditionType =
+  "movie" | "episode" | "special" | "short" | "lantern-signal";
+export type CatalogAdditionInput = {
+  slug: string;
+  title: string;
+  type: CatalogAdditionType;
+  summary: string;
+  releaseDate: string;
+  runtime: number;
+  series: string;
+  aliases: string[];
+  why: string;
+};
+export type CatalogAddition = CatalogAdditionInput & {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+};
 export type CatalogRelationship = {
   type: string;
   direction: "requires" | "required-by";
@@ -41,7 +59,7 @@ export type WorkspaceResponse = {
   pack?: Record<string, unknown>;
 };
 
-type Method = "GET" | "POST";
+type Method = "GET" | "POST" | "PUT" | "DELETE";
 export function requestOptions(
   method: Method,
   csrfToken?: string,
@@ -109,6 +127,32 @@ export const api = {
       csrf,
     ),
   workspace: () => call<WorkspaceResponse>("/api/workspace", "GET"),
+  catalogAdditions: () =>
+    call<{ items: CatalogAddition[] }>("/api/catalog-additions", "GET"),
+  createCatalogAddition: (input: CatalogAdditionInput, csrf: string) =>
+    call<{ item: CatalogAddition }>(
+      "/api/catalog-additions",
+      "POST",
+      csrf,
+      input,
+    ),
+  updateCatalogAddition: (
+    id: string,
+    input: CatalogAdditionInput,
+    csrf: string,
+  ) =>
+    call<{ item: CatalogAddition }>(
+      `/api/catalog-additions/${encodeURIComponent(id)}`,
+      "PUT",
+      csrf,
+      input,
+    ),
+  deleteCatalogAddition: (id: string, csrf: string) =>
+    call<void>(
+      `/api/catalog-additions/${encodeURIComponent(id)}`,
+      "DELETE",
+      csrf,
+    ),
   catalog: (filters: { search?: string; type?: string } = {}) => {
     const params = new URLSearchParams();
     if (filters.search?.trim()) params.set("search", filters.search.trim());

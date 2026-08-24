@@ -11,6 +11,7 @@ import CatalogDialog from "./CatalogDialog";
 import WatchableActionMenu from "./WatchableActions";
 import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
 import { api, recommendedNext } from "./api";
+import type { CatalogAdditionInput } from "./api";
 import { artworkUrl } from "./mediaUrls";
 import { createInfiniteDatasource } from "./infiniteGrid";
 
@@ -67,6 +68,21 @@ function normalize(item) {
     why: item.why || item.summary,
     poster: item.poster === true,
     posterUrl: item.posterUrl || item.poster_url,
+  };
+}
+function normalizeAddition(item) {
+  return {
+    ...normalize({
+      ...item,
+      releaseOrder: Number.MAX_SAFE_INTEGER,
+      release: item.releaseDate,
+      state: "not-started",
+      relationships: [],
+    }),
+    id: `addition-${item.id}`,
+    additionId: item.id,
+    personal: true,
+    relationships: [],
   };
 }
 export function queuePresentation(nextUp) {
@@ -198,8 +214,13 @@ function App() {
   };
   const notImplemented = (feature) => notify(`${feature} · Not Implemented`);
   const loadWorkspace = async () => {
-    const { data } = await api.workspace();
-    setItems(data.items.map(normalize));
+    const [{ data }, { data: additions }] = await Promise.all([
+      api.workspace(),
+      api.catalogAdditions(),
+    ]);
+    const packItems = data.items.map(normalize);
+    const personalItems = additions.items.map(normalizeAddition);
+    setItems([...packItems, ...personalItems]);
     setRelations(data.relationships.map((r) => [r.fromSlug, r.toSlug, r.type]));
     setTarget(data.targetSlug);
     setNextUp(data.nextUp.map(normalize));
@@ -253,21 +274,66 @@ function App() {
     setCatalogDialog({
       mode,
       draft: item
-        ? { ...item }
+        ? {
+            additionId: item.additionId,
+            personal: item.personal,
+            title: item.title,
+            slug: item.slug,
+            type: item.type.toLowerCase(),
+            series: item.series,
+            release: item.release || "",
+            runtime: item.runtime || 30,
+            summary: item.summary || "",
+            aliases: (item.aliases || []).join(", "),
+            why: item.why || "",
+          }
         : {
             title: "",
-            type: "Episode",
+            slug: "",
+            type: "episode",
             series: "",
-            season: 1,
-            episode: 1,
             release: "",
             runtime: 30,
-            state: "Not Started",
-            rating: "",
+            summary: "",
+            aliases: "",
             why: "",
-            order: items.length + 1,
           },
     });
+  const catalogInput = (draft): CatalogAdditionInput => ({
+    slug: draft.slug.trim(),
+    title: draft.title.trim(),
+    type: draft.type,
+    summary: draft.summary.trim(),
+    releaseDate: draft.release,
+    runtime: Number(draft.runtime),
+    series: draft.series.trim(),
+    aliases: draft.aliases
+      .split(",")
+      .map((alias) => alias.trim())
+      .filter(Boolean),
+    why: draft.why.trim(),
+  });
+  const saveCatalog = async (dialog) => {
+    await perform(async () => {
+      const input = catalogInput(dialog.draft);
+      if (dialog.mode === "create") {
+        await api.createCatalogAddition(input, csrf);
+        notify(`${input.title} · added to your personal Catalog`);
+      } else if (dialog.mode === "edit" && dialog.draft.additionId) {
+        await api.updateCatalogAddition(dialog.draft.additionId, input, csrf);
+        notify(`${input.title} · personal Catalog record saved`);
+      } else if (dialog.mode === "delete" && dialog.draft.additionId) {
+        await api.deleteCatalogAddition(dialog.draft.additionId, csrf);
+        notify(`${dialog.draft.title} · removed from your personal Catalog`);
+      } else {
+        throw new Error("Canon Pack records are immutable");
+      }
+      setCatalogDialog(undefined);
+      setSelected(undefined);
+      await loadWorkspace();
+      gridApi?.refreshInfiniteCache();
+    });
+  };
   const openGridMenu = (params, surface) => {
     if (!params.data || !params.event) return;
     params.event.preventDefault();
@@ -507,17 +573,27 @@ function App() {
                   View details
                 </button>
                 <button
-                  disabled={!selected}
+                  disabled={!selected?.personal}
+                  title={
+                    selected && !selected.personal
+                      ? "Canon Pack records are immutable"
+                      : undefined
+                  }
                   onClick={() => openCatalog("edit", selected)}
                 >
-                  Edit
+                  Edit personal record
                 </button>
                 <button
                   className="danger"
-                  disabled={!selected}
+                  disabled={!selected?.personal}
+                  title={
+                    selected && !selected.personal
+                      ? "Canon Pack records are immutable"
+                      : undefined
+                  }
                   onClick={() => openCatalog("delete", selected)}
                 >
-                  Delete
+                  Delete personal record
                 </button>
                 <button onClick={() => setColsOpen(!colsOpen)}>
                   ⚙ Columns
@@ -606,11 +682,7 @@ function App() {
           )}
           {view === "pack" && (
             <PackPage
-              pack={{
-                ...pack,
-                watchableCount: items.length,
-                relationshipCount: relations.length,
-              }}
+              pack={pack}
               onImport={importPack}
               onNotImplemented={notImplemented}
             />
@@ -659,7 +731,9 @@ function App() {
         <CatalogDialog
           dialog={catalogDialog}
           setDialog={setCatalogDialog}
-          notify={notify}
+          onSubmit={saveCatalog}
+          busy={busy}
+          error={error}
         />
       )}
       {gridContextMenu && (
