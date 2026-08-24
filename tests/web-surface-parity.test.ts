@@ -67,6 +67,12 @@ test("Watched feedback controls use durable typed APIs and truthful gating", asy
   assert.match(details, /api\.saveFeedback/);
   assert.match(details, /authoritative state is Watched/);
   assert.match(details, /Loading personal feedback/);
+  assert.match(
+    details,
+    /Array\.from\(\{ length: 10 \}, \(_, index\) => \(index \+ 1\) \/ 2\)/,
+  );
+  assert.match(details, /aria-label=\{`Rate \$\{rating\} out of 5`\}/);
+  assert.match(details, /Clear rating/);
   assert.match(details, /saving \? "Saving…" : "Save feedback"/);
   assert.doesNotMatch(details, /Feedback saved in mockup/);
   assert.match(frontendApi, /WatchableFeedbackInput/);

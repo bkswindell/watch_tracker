@@ -308,19 +308,34 @@ function Feedback({ item, notify, id, csrf }) {
     <section id={id} className="detailSection">
       <h3>Your rating & review</h3>
       {loading && <p className="muted">Loading personal feedback…</p>}
-      <div className="rating">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            aria-label={`Rate ${n} out of 5`}
-            aria-pressed={draft.rating === n}
-            disabled={loading || saving}
-            onClick={() => setDraft({ ...draft, rating: n })}
-          >
-            {draft.rating != null && n <= draft.rating ? "★" : "☆"}
-          </button>
-        ))}
+      <div className="rating" role="group" aria-label="Your rating">
+        {Array.from({ length: 10 }, (_, index) => (index + 1) / 2).map(
+          (rating) => (
+            <button
+              key={rating}
+              type="button"
+              aria-label={`Rate ${rating} out of 5`}
+              title={`${rating} out of 5`}
+              aria-pressed={draft.rating === rating}
+              disabled={loading || saving}
+              onClick={() => setDraft({ ...draft, rating })}
+            >
+              {rating % 1
+                ? "½"
+                : draft.rating != null && rating <= draft.rating
+                  ? "★"
+                  : "☆"}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          className="clearRating"
+          disabled={loading || saving || draft.rating === null}
+          onClick={() => setDraft({ ...draft, rating: null })}
+        >
+          Clear rating
+        </button>
       </div>
       <div className="feedbackChecks">
         <label className="check">
