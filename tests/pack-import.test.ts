@@ -19,6 +19,7 @@ import {
 } from "../apps/api/src/slice.js";
 
 const LANTERN_VALE_022 = path.resolve("canon-packs/lantern-vale-0.2.2");
+const LANTERN_VALE_023 = path.resolve("canon-packs/lantern-vale-0.2.3");
 const REQUIRED_DATA = [
   "data/pack.json",
   "data/sources.json",
@@ -240,15 +241,7 @@ async function packFixture(
   return directory;
 }
 
-test("imports the verified Lantern Vale 0.2.2 directory fixture", async () => {
-  assert.deepEqual(ACCEPTED_LANTERN_VALE_RELEASE, {
-    id: "01954123-0000-7000-8000-000000000001",
-    slug: "lantern-vale",
-    title: "Lantern Vale Stories",
-    version: "0.2.2",
-    manifestSha256:
-      "e1d707fee9974af8e055cd6d674029bc850ac32239b418d8f1e5aec762ebbc57",
-  });
+test("historical Lantern Vale 0.2.2 remains importable and unchanged", async () => {
   const pack = await importCanonPackDirectory(LANTERN_VALE_022);
   assert.deepEqual(pack.identity, {
     id: "01954123-0000-7000-8000-000000000001",
@@ -258,11 +251,8 @@ test("imports the verified Lantern Vale 0.2.2 directory fixture", async () => {
   });
   assert.equal(
     pack.manifestSha256,
-    ACCEPTED_LANTERN_VALE_RELEASE.manifestSha256,
+    "e1d707fee9974af8e055cd6d674029bc850ac32239b418d8f1e5aec762ebbc57",
   );
-  // The accepted MVP pack must match the approved Focus Map specification.
-  // The old five-item foundation fixture produced disconnected type-based groups
-  // and could never render the 31-item dependency journey approved in the mockup.
   assert.equal(pack.watchables.length, 31);
   assert.equal(pack.relationships.length, 32);
   assert.equal(pack.memberships.length, 31);
@@ -270,6 +260,76 @@ test("imports the verified Lantern Vale 0.2.2 directory fixture", async () => {
     new Set(pack.memberships.map((membership) => membership.position)).size,
     31,
   );
+});
+
+test("accepted Lantern Vale 0.2.3 pins the signed artifact and approved metadata", async () => {
+  assert.deepEqual(ACCEPTED_LANTERN_VALE_RELEASE, {
+    id: "01954123-0000-7000-8000-000000000001",
+    slug: "lantern-vale",
+    title: "Lantern Vale Stories",
+    version: "0.2.3",
+    manifestSha256:
+      "46db676c02d19980ac633c3e01e4c803f610c5d000b672d93c02751aac09d11c",
+    checksumsSha256:
+      "c97ba7b2deb02a4c22dace31178dd3411aebd0cd45ad90bc50d68df1327ce620",
+  });
+  const pack = await importCanonPackDirectory(LANTERN_VALE_023);
+  assert.equal(pack.identity.version, "0.2.3");
+  assert.equal(
+    pack.manifestSha256,
+    ACCEPTED_LANTERN_VALE_RELEASE.manifestSha256,
+  );
+  assert.equal(
+    pack.checksumsSha256,
+    ACCEPTED_LANTERN_VALE_RELEASE.checksumsSha256,
+  );
+  assert.equal(pack.watchables.length, 31);
+  assert.equal(pack.relationships.length, 32);
+  assert.equal(pack.watchables.filter((item) => item.queueReason).length, 31);
+  assert.equal(
+    pack.watchables.filter(
+      (item) =>
+        item.seasonNumber !== undefined && item.episodeNumber !== undefined,
+    ).length,
+    24,
+  );
+  assert.deepEqual(
+    pack.watchables
+      .filter((item) => item.generatedPoster)
+      .map((item) => item.slug),
+    ["lamp", "lowwater-film", "bell", "final-film"],
+  );
+  assert.deepEqual(
+    pack.watchables.filter((item) => item.posterUrl).map((item) => item.slug),
+    ["green-lantern-2011"],
+  );
+});
+
+test("workspace Next Up is the seven-item Ember route with completed steps retained", async () => {
+  const store = new MemorySliceStore({ packPath: LANTERN_VALE_023 });
+  await store.importLanternVale();
+  await store.setFocus("ember");
+  for (const slug of ["lamp", "lowwater-film", "green-lantern-2011", "bell"]) {
+    await store.viewingAction(slug, "complete");
+  }
+  const workspace = await store.workspace();
+  assert.deepEqual(
+    workspace.nextUp.map((item) => item.slug),
+    [
+      "lamp",
+      "rain",
+      "orchard",
+      "lowwater-film",
+      "green-lantern-2011",
+      "bell",
+      "ember",
+    ],
+  );
+  assert.equal(
+    workspace.nextUp.filter((item) => item.state !== "watched").length,
+    3,
+  );
+  assert.equal((await store.nextUp())?.slug, "rain");
 });
 
 test("an outside trusted-pack-root metadata change does not interrupt an import", async (t) => {
@@ -617,7 +677,7 @@ test("the Lantern Vale import entry point rejects a self-attested replacement re
 test("an injected activation fault preserves the active pack and personal viewing and focus state", async () => {
   let failActivation = false;
   const store = new MemorySliceStore({
-    packPath: LANTERN_VALE_022,
+    packPath: LANTERN_VALE_023,
     faultAfterStage: () => failActivation,
   });
   await store.importLanternVale();

@@ -1,0 +1,418 @@
+[
+  {
+    "id": "01954123-0000-7000-8000-000000000401",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000201",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Cartographer’s Lamp is required before A Map Made of Rain.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000202"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000402",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000202",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "A Map Made of Rain precedes The Orchard Door.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000203"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000403",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000203",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Orchard Door is required before The Lowwater Pact.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000204"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000404",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000204",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Lowwater Pact is required before Green Lantern.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000205"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000405",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000205",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Green Lantern is required before The Bell at Lowwater.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000206"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000406",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000206",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Bell at Lowwater is required before The Ember Archive.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000207"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000407",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000207",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Ember Archive precedes The Road Under Starlight.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000208"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000408",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000208",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Road Under Starlight is required before Winter Meridian.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000209"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000409",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000209",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Winter Meridian precedes A Letter Without Ink.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000210"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000410",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000209",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Winter Meridian is required before Ash on the Compass.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000212"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000411",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000210",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "A Letter Without Ink precedes The Hollow Postmark.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000211"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000412",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000211",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Hollow Postmark is required before The Witness at Mile Nine.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000213"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000413",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000212",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Ash on the Compass precedes A Crown of Cinders.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000214"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000414",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000214",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "A Crown of Cinders is required before When the Lanterns Cross.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000215"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000415",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000213",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Witness at Mile Nine is required before When the Lanterns Cross.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000215"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000416",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000215",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "When the Lanterns Cross is required before The Vale Case.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000216"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000417",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000215",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "When the Lanterns Cross precedes The House of Returning.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000217"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000418",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000216",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Vale Case precedes Names in the Fog.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000218"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000419",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000218",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Names in the Fog is required before The Last File in Greymoor.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000220"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000420",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000217",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The House of Returning is required before Roads Beyond the Vale.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000219"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000421",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000219",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Roads Beyond the Vale is required before Beyond the Milestone.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000221"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000422",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000221",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Beyond the Milestone precedes The Two Horizons.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000222"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000423",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000220",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Last File in Greymoor is required before Convergence at Lowwater.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000223"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000424",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000222",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Two Horizons is required before Convergence at Lowwater.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000223"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000425",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000223",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Convergence at Lowwater is required before Dawn at the Broken Gate.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000224"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000426",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000224",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Dawn at the Broken Gate precedes The River Remembers.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000225"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000427",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000225",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The River Remembers is required before Six Lanterns Burning.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000226"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000428",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000226",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "Six Lanterns Burning is required before The Glass Horizon.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000227"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000429",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000227",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Glass Horizon is required before A Door Made of Morning.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000228"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000430",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000228",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "A Door Made of Morning precedes The Archive Unbound.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000229"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000431",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000229",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Archive Unbound is required before All Roads Home.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000230"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000432",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000230",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "All Roads Home is required before The Last Cartographer.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000231"
+  }
+]

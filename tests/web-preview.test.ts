@@ -52,10 +52,27 @@ test("Core loads the official XYFlow structural stylesheet", async () => {
 test("Focus Map refits settled top-level series bounds rather than child-local bounds", async () => {
   const source = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
   assert.match(source, /flowInstance\.current = instance/);
-  assert.match(source, /graph\.nodes\.filter\(\(node\) => !node\.parentId\)/);
-  assert.match(source, /window\.setTimeout\(\(\) => \{/);
+  assert.match(
+    source,
+    /instance\.getNodes\(\)\.filter\(\(node\) => !node\.parentId\)/,
+  );
+  assert.match(source, /instance\.getNodesBounds\(roots\)/);
+  assert.match(source, /window\.requestAnimationFrame\(\(\) => \{/);
   assert.match(source, /instance\.fitBounds\(/);
   assert.doesNotMatch(source, /^\s+fitView$/m);
+});
+
+test("Focus Map keeps Core imports extensionless and preserves graph interactions", async () => {
+  const source = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
+  const details = await readFile("apps/web/src/WatchableDetails.tsx", "utf8");
+  assert.match(source, /from "\.\/WatchableActions"/);
+  assert.match(source, /from "\.\/mediaUrls"/);
+  assert.match(details, /from "\.\/WatchableActions"/);
+  assert.match(details, /from "\.\/mediaUrls"/);
+  assert.match(source, /onNodeDragStop=\{tightenGroups\}/);
+  assert.match(source, /onNodeContextMenu=/);
+  assert.match(source, /<MiniMap[\s\S]*pannable[\s\S]*zoomable/);
+  assert.match(source, /onClick=\{\(\) => setFlowNodes\(graph\.nodes\)\}/);
 });
 
 test("approved workspace grids use bounded Infinite Row Model datasources", async () => {
@@ -66,8 +83,9 @@ test("approved workspace grids use bounded Infinite Row Model datasources", asyn
   assert.match(source, /datasource=\{historyDatasource\}/);
   assert.match(
     source,
-    /createInfiniteDatasource\(nextUp, \{ allowSort: false \}\)/,
+    /createInfiniteDatasource\(filtered, \{ allowSort: false \}\)/,
   );
+  assert.match(source, /queuePresentation\(nextUp\)/);
   assert.doesNotMatch(
     source,
     /rowData=\{filtered\}|rowData=\{items\}|rowData=\{history\}/,

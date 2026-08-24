@@ -93,7 +93,7 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
     headers: { "x-csrf-token": authenticated.json().csrfToken },
   });
   assert.equal(imported.statusCode, 201);
-  assert.equal(imported.json().pack.version, "0.2.2");
+  assert.equal(imported.json().pack.version, "0.2.3");
 
   const unauthenticatedWorkspace = await request(app, {
     method: "GET",
@@ -107,7 +107,7 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
     cookies: sessionCookie,
   });
   assert.equal(workspace.statusCode, 200);
-  assert.equal(workspace.json().pack.version, "0.2.2");
+  assert.equal(workspace.json().pack.version, "0.2.3");
   assert.equal(workspace.json().items.length, 31);
   assert.equal(workspace.json().relationships.length, 32);
   assert.equal(workspace.json().items[0].series, "Lantern Vale");
@@ -296,16 +296,21 @@ test("catalog search and type filters compose and reject unknown types", async (
   const all = await catalog("/api/catalog");
   assert.equal(all.json().items.length, 31);
   assert.deepEqual(Object.keys(all.json().items[0]).sort(), [
+    "aliases",
+    "episodeNumber",
+    "poster",
     "relationships",
     "releaseDate",
     "releaseOrder",
     "runtime",
+    "seasonNumber",
     "series",
     "slug",
     "state",
     "summary",
     "title",
     "type",
+    "why",
   ]);
   assert.equal(
     (await catalog("/api/catalog?search=%20%20&type=%20%20")).json().items

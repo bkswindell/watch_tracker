@@ -29,6 +29,12 @@ export interface CatalogItem {
   releaseDate: string;
   runtime: number;
   series: string;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  aliases: string[];
+  why: string;
+  poster: boolean;
+  posterUrl?: string;
   state: ViewingState;
   relationships: CatalogRelationship[];
 }
@@ -50,6 +56,18 @@ export interface WorkspaceHistory {
   title: string;
   completedAt: string;
   action: "completed" | "discarded";
+  duration: number | null;
+  rating: number | null;
+}
+
+export interface WorkspacePack {
+  title: string;
+  version: string;
+  manifestSha256: string;
+  checksumsSha256: string;
+  inventoryFileCount: number | null;
+  inventoryTotalBytes: number | null;
+  verificationStatus: "verified" | "rejected" | null;
 }
 
 export interface WorkspaceAggregate {
@@ -62,7 +80,7 @@ export interface WorkspaceAggregate {
   targetSlug: string | null;
   nextUp: WorkspaceNextUp[];
   history: WorkspaceHistory[];
-  pack: { title: string; version: string } | null;
+  pack: WorkspacePack | null;
 }
 
 export interface SliceSession {
@@ -97,11 +115,11 @@ type ImportedItem = Omit<CatalogItem, "state">;
 
 export { importCanonPackDirectory } from "./canon-pack.js";
 
-export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.2";
+export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.3";
 
 function defaultCanonPackPath(): string {
   return process.env.NODE_TEST_CONTEXT !== undefined
-    ? path.resolve("canon-packs/lantern-vale-0.2.2")
+    ? path.resolve("canon-packs/lantern-vale-0.2.3")
     : DEFAULT_CANON_PACK_PATH;
 }
 
@@ -110,9 +128,11 @@ export const ACCEPTED_LANTERN_VALE_RELEASE = Object.freeze({
   id: "01954123-0000-7000-8000-000000000001",
   slug: "lantern-vale",
   title: "Lantern Vale Stories",
-  version: "0.2.2",
+  version: "0.2.3",
   manifestSha256:
-    "e1d707fee9974af8e055cd6d674029bc850ac32239b418d8f1e5aec762ebbc57",
+    "46db676c02d19980ac633c3e01e4c803f610c5d000b672d93c02751aac09d11c",
+  checksumsSha256:
+    "c97ba7b2deb02a4c22dace31178dd3411aebd0cd45ad90bc50d68df1327ce620",
 });
 
 async function importAcceptedLanternVale(
@@ -125,7 +145,8 @@ async function importAcceptedLanternVale(
     pack.identity.slug !== accepted.slug ||
     pack.identity.title !== accepted.title ||
     pack.identity.version !== accepted.version ||
-    pack.manifestSha256 !== accepted.manifestSha256
+    pack.manifestSha256 !== accepted.manifestSha256 ||
+    pack.checksumsSha256 !== accepted.checksumsSha256
   ) {
     throw new Error("Canon Pack is not an accepted Canon Pack release");
   }
@@ -147,6 +168,18 @@ function projection(pack: CanonPack): ImportedItem[] {
     releaseDate: watchable.releaseDate,
     runtime: watchable.runtimeMinutes,
     series: watchable.series,
+    ...(watchable.seasonNumber === undefined
+      ? {}
+      : {
+          seasonNumber: watchable.seasonNumber,
+          episodeNumber: watchable.episodeNumber,
+        }),
+    aliases: watchable.aliases,
+    why: watchable.queueReason,
+    poster: watchable.generatedPoster,
+    ...(watchable.posterUrl === undefined
+      ? {}
+      : { posterUrl: watchable.posterUrl }),
     relationships: pack.relationships
       .filter(
         (relationship) =>
@@ -217,7 +250,7 @@ function relationshipType(type: string): WorkspaceRelationship["type"] {
 function workspaceFromCatalog(
   items: CatalogItem[],
   targetSlug: string | null,
-  pack: { title: string; version: string } | null,
+  pack: WorkspacePack | null,
   history: WorkspaceHistory[],
   projectedRelationships?: WorkspaceRelationship[],
 ): WorkspaceAggregate {
@@ -254,8 +287,26 @@ function workspaceFromCatalog(
       ) === index,
   );
   const bySlug = new Map(items.map((item) => [item.slug, item]));
+  const resolvedTarget =
+    (targetSlug && bySlug.has(targetSlug) ? targetSlug : items.at(-1)?.slug) ??
+    null;
+  const route = new Set<string>(resolvedTarget ? [resolvedTarget] : []);
+  let expanded = true;
+  while (expanded) {
+    expanded = false;
+    for (const relationship of relationships) {
+      if (
+        relationship.type !== "optional" &&
+        route.has(relationship.toSlug) &&
+        !route.has(relationship.fromSlug)
+      ) {
+        route.add(relationship.fromSlug);
+        expanded = true;
+      }
+    }
+  }
   const nextUp: WorkspaceNextUp[] = items
-    .filter((item) => item.state !== "watched")
+    .filter((item) => route.has(item.slug))
     .map((item) => {
       const required = relationships.filter(
         (r) => r.toSlug === item.slug && r.type === "required",
@@ -265,7 +316,7 @@ function workspaceFromCatalog(
       );
       return {
         ...item,
-        reason: (item.slug === targetSlug
+        reason: (item.slug === resolvedTarget
           ? "focus"
           : blocked
             ? "unblocked"
@@ -304,6 +355,7 @@ export class MemorySliceStore implements SliceStore {
   #states = new Map<string, string>();
   #focus?: string;
   #history: WorkspaceHistory[] = [];
+  #pack: WorkspacePack | null = null;
   #packPath: string;
   #faultAfterStage: (() => boolean) | undefined;
 
@@ -354,6 +406,15 @@ export class MemorySliceStore implements SliceStore {
     if (this.#faultAfterStage?.()) throw new Error("injected activation fault");
     this.#items = staged;
     this.#types = pack.watchableTypes.map((type) => type.code);
+    this.#pack = {
+      title: pack.identity.title,
+      version: pack.identity.version,
+      manifestSha256: pack.manifestSha256,
+      checksumsSha256: pack.checksumsSha256,
+      inventoryFileCount: pack.verification.fileCount,
+      inventoryTotalBytes: pack.verification.totalBytes,
+      verificationStatus: pack.verification.verified ? "verified" : "rejected",
+    };
     return { title: pack.identity.title, version: pack.identity.version };
   }
   async catalog(
@@ -401,12 +462,7 @@ export class MemorySliceStore implements SliceStore {
     return workspaceFromCatalog(
       items.filter((item): item is CatalogItem => item !== undefined),
       this.#focus ?? null,
-      this.#types.length
-        ? {
-            title: ACCEPTED_LANTERN_VALE_RELEASE.title,
-            version: ACCEPTED_LANTERN_VALE_RELEASE.version,
-          }
-        : null,
+      this.#pack,
       this.#history.slice(0, 20),
     );
   }
@@ -431,6 +487,8 @@ export class MemorySliceStore implements SliceStore {
           title: item.title,
           completedAt: new Date().toISOString(),
           action: action === "complete" ? "completed" : "discarded",
+          duration: action === "complete" ? item.runtime : null,
+          rating: null,
         });
     }
     return this.item(slug);
@@ -533,28 +591,34 @@ export class SqlSliceStore implements SliceStore {
       const existing = await client.query<{
         canon_pack_release_id: string;
         manifest_sha256: string;
+        checksums_sha256: string | null;
       }>(
-        "SELECT canon_pack_release_id, manifest_sha256 FROM canon_pack_release WHERE pack_id = $1 AND pack_version = $2",
+        "SELECT canon_pack_release_id, manifest_sha256, checksums_sha256 FROM canon_pack_release WHERE pack_id = $1 AND pack_version = $2",
         [pack.identity.id, pack.identity.version],
       );
       let releaseId = existing.rows[0]?.canon_pack_release_id;
       if (
         existing.rows[0] &&
-        existing.rows[0].manifest_sha256 !== pack.manifestSha256
+        (existing.rows[0].manifest_sha256 !== pack.manifestSha256 ||
+          existing.rows[0].checksums_sha256 !== pack.checksumsSha256)
       )
         throw new Error(
           "immutable Canon Pack release identity has a different manifest",
         );
       if (!releaseId) {
         const created = await client.query<{ canon_pack_release_id: string }>(
-          "INSERT INTO canon_pack_release (pack_id, pack_slug, pack_title, pack_version, contract_version, manifest_sha256, source_path) VALUES ($1, $2, $3, $4, '0.2.0', $5, $6) RETURNING canon_pack_release_id",
+          "INSERT INTO canon_pack_release (pack_id, pack_slug, pack_title, pack_version, contract_version, manifest_sha256, checksums_sha256, source_path, inventory_file_count, inventory_total_bytes, verification_status) VALUES ($1, $2, $3, $4, '0.2.0', $5, $6, $7, $8, $9, $10) RETURNING canon_pack_release_id",
           [
             pack.identity.id,
             pack.identity.slug,
             pack.identity.title,
             pack.identity.version,
             pack.manifestSha256,
+            pack.checksumsSha256,
             pack.sourcePath,
+            pack.verification.fileCount,
+            pack.verification.totalBytes,
+            pack.verification.verified ? "verified" : "rejected",
           ],
         );
         releaseId = created.rows[0]?.canon_pack_release_id;
@@ -583,7 +647,7 @@ export class SqlSliceStore implements SliceStore {
           );
         for (const watchable of pack.watchables)
           await client.query(
-            "INSERT INTO canon_pack_watchable (canon_pack_release_id, watchable_id, slug, title, summary, watchable_type_id, release_date, release_order, runtime_minutes, primary_series) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+            "INSERT INTO canon_pack_watchable (canon_pack_release_id, watchable_id, slug, title, summary, watchable_type_id, release_date, release_order, runtime_minutes, primary_series, season_number, episode_number, aliases, generated_poster, queue_reason, poster_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)",
             [
               releaseId,
               watchable.id,
@@ -595,6 +659,12 @@ export class SqlSliceStore implements SliceStore {
               watchable.releaseOrder,
               watchable.runtimeMinutes,
               watchable.series,
+              watchable.seasonNumber ?? null,
+              watchable.episodeNumber ?? null,
+              watchable.aliases,
+              watchable.generatedPoster,
+              watchable.queueReason,
+              watchable.posterUrl ?? null,
             ],
           );
         for (const membership of pack.memberships)
@@ -663,6 +733,9 @@ export class SqlSliceStore implements SliceStore {
       `SELECT watchable.slug, watchable.title, type.code AS type, watchable.summary,
               watchable.release_order AS "releaseOrder", watchable.release_date::text AS "releaseDate",
               watchable.runtime_minutes AS runtime, watchable.primary_series AS series,
+              watchable.season_number AS "seasonNumber", watchable.episode_number AS "episodeNumber",
+              watchable.aliases, watchable.queue_reason AS why,
+              watchable.generated_poster AS poster, watchable.poster_url AS "posterUrl",
               CASE latest_attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
          FROM active_canon_pack_registry active
          JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
@@ -807,15 +880,22 @@ export class SqlSliceStore implements SliceStore {
           AND target.watchable_id = focus.watchable_id
         WHERE focus.singleton = true`,
     );
-    const pack = await this.pool.query<{ title: string; version: string }>(
-      `SELECT pack.pack_title AS title, pack.pack_version AS version
+    const pack = await this.pool.query<WorkspacePack>(
+      `SELECT pack.pack_title AS title, pack.pack_version AS version,
+              pack.manifest_sha256 AS "manifestSha256",
+              pack.checksums_sha256 AS "checksumsSha256",
+              pack.inventory_file_count AS "inventoryFileCount",
+              pack.inventory_total_bytes::integer AS "inventoryTotalBytes",
+              pack.verification_status AS "verificationStatus"
          FROM active_canon_pack_registry registry
          JOIN canon_pack_release pack
            ON pack.canon_pack_release_id = registry.canon_pack_release_id`,
     );
     const history = await this.pool.query<WorkspaceHistory>(
-      `SELECT watchable.slug, watchable.title, attempt.created_at::text AS "completedAt",
-              attempt.status AS action
+      `SELECT watchable.slug, watchable.title,
+              COALESCE(attempt.completed_at, attempt.created_at)::text AS "completedAt",
+              attempt.status AS action, attempt.watched_minutes AS duration,
+              NULL::integer AS rating
          FROM canon_pack_viewing_attempt attempt
          JOIN active_canon_pack_registry active
            ON active.canon_pack_release_id = attempt.canon_pack_release_id
@@ -840,8 +920,9 @@ export class SqlSliceStore implements SliceStore {
     const target = await this.pool.query<{
       canon_pack_release_id: string;
       watchable_id: string;
+      runtime_minutes: number;
     }>(
-      `SELECT watchable.canon_pack_release_id, watchable.watchable_id
+      `SELECT watchable.canon_pack_release_id, watchable.watchable_id, watchable.runtime_minutes
          FROM active_canon_pack_registry active
          JOIN canon_pack_watchable watchable ON watchable.canon_pack_release_id = active.canon_pack_release_id
         WHERE watchable.slug = $1`,
@@ -850,7 +931,7 @@ export class SqlSliceStore implements SliceStore {
     const watchable = target.rows[0];
     if (!watchable) return undefined;
     await this.pool.query(
-      "INSERT INTO canon_pack_viewing_attempt (viewing_attempt_id, canon_pack_release_id, watchable_id, status) VALUES ($1, $2, $3, $4)",
+      "INSERT INTO canon_pack_viewing_attempt (viewing_attempt_id, canon_pack_release_id, watchable_id, status, watched_minutes, completed_at) VALUES ($1, $2, $3, $4, $5, $6)",
       [
         randomUUID(),
         watchable.canon_pack_release_id,
@@ -860,6 +941,8 @@ export class SqlSliceStore implements SliceStore {
           : action === "discard"
             ? "discarded"
             : "active",
+        action === "complete" ? watchable.runtime_minutes : null,
+        action === "complete" ? new Date() : null,
       ],
     );
     return this.item(slug);

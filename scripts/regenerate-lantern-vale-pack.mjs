@@ -3,7 +3,9 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
 
-const root = path.resolve("canon-packs/lantern-vale-0.2.2");
+const root = path.resolve(
+  process.env.CANON_PACK_OUTPUT ?? "canon-packs/lantern-vale-0.2.2",
+);
 const mockup = await readFile(
   "/home/administrator/workspace/.scratch/watch-tracker-ui-mockup/src/App.jsx",
   "utf8",
@@ -65,6 +67,13 @@ const watchables = mockupItems.map((item, index) => ({
   provenance,
   runtimeMinutes: item.runtime,
   series: item.series,
+  aliases: [],
+  generatedPoster: item.poster === true,
+  queueReason: item.why,
+  ...(item.season === undefined
+    ? {}
+    : { seasonNumber: item.season, episodeNumber: item.episode }),
+  ...(item.posterUrl === undefined ? {} : { posterUrl: item.posterUrl }),
   slug: slugify(item.id),
   summary: item.description || item.why,
   title: item.title,

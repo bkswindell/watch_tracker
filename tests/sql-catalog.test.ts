@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import { SqlSliceStore } from "../apps/api/src/slice.js";
@@ -23,6 +24,24 @@ test("SQL catalog latest viewing state is correlated to the active release and w
     catalogQuery,
     /attempt\.watchable_id\s*=\s*watchable\.watchable_id/i,
   );
+  assert.match(catalogQuery, /watchable\.queue_reason AS why/i);
+  assert.match(catalogQuery, /watchable\.generated_poster AS poster/i);
+  assert.match(catalogQuery, /watchable\.poster_url AS "posterUrl"/i);
+});
+
+test("SQL import and lifecycle persist restart-critical parity metadata", async () => {
+  const source = await readFile("apps/api/src/slice.ts", "utf8");
+  assert.match(source, /INSERT INTO canon_pack_watchable[\s\S]*queue_reason/);
+  assert.match(source, /INSERT INTO canon_pack_watchable[\s\S]*poster_url/);
+  assert.match(
+    source,
+    /INSERT INTO canon_pack_watchable[\s\S]*generated_poster/,
+  );
+  assert.match(
+    source,
+    /INSERT INTO canon_pack_viewing_attempt[\s\S]*watched_minutes, completed_at/,
+  );
+  assert.match(source, /checksums_sha256/);
 });
 
 test("SQL catalog filters use parameterized case-insensitive predicates", async () => {

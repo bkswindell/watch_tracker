@@ -64,6 +64,12 @@ export interface CanonPackWatchable {
   releaseOrder: number;
   runtimeMinutes: number;
   series: string;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  aliases: string[];
+  generatedPoster: boolean;
+  queueReason: string;
+  posterUrl?: string;
 }
 export interface CanonPackMembership {
   id: string;
@@ -82,7 +88,9 @@ export interface CanonPackRelationship {
 export interface CanonPack {
   identity: CanonPackIdentity;
   manifestSha256: string;
+  checksumsSha256: string;
   sourcePath: string;
+  verification: { fileCount: number; totalBytes: number; verified: boolean };
   sources: CanonPackSource[];
   watchableTypes: CanonPackWatchableType[];
   containers: CanonPackContainer[];
@@ -1015,7 +1023,18 @@ export async function importCanonPackDirectory(
           "title",
           "watchableTypeId",
         ],
-        ["externalIdentifiers", "packOrder", "runtimeMinutes", "series"],
+        [
+          "aliases",
+          "episodeNumber",
+          "externalIdentifiers",
+          "generatedPoster",
+          "packOrder",
+          "posterUrl",
+          "queueReason",
+          "runtimeMinutes",
+          "seasonNumber",
+          "series",
+        ],
       );
       generatedUrn(record, identity.id, `watchables[${index}]`);
       sourceReferences(record, sourceIds, `watchables[${index}]`);
@@ -1069,6 +1088,49 @@ export async function importCanonPackDirectory(
         record.series === undefined
           ? "Unclassified"
           : string(record.series, `watchables[${index}].series`);
+      const summary = string(record.summary, `watchables[${index}].summary`);
+      const optionalIdentity = (field: "seasonNumber" | "episodeNumber") => {
+        if (record[field] === undefined) return undefined;
+        const value = integer(record[field], `watchables[${index}].${field}`);
+        if (value < 1)
+          throw new Error(`watchables[${index}].${field} must be positive`);
+        return value;
+      };
+      const aliases =
+        record.aliases === undefined
+          ? []
+          : array(record.aliases, `watchables[${index}].aliases`).map(
+              (alias, aliasIndex) =>
+                string(alias, `watchables[${index}].aliases[${aliasIndex}]`),
+            );
+      const generatedPoster =
+        record.generatedPoster === undefined ? false : record.generatedPoster;
+      if (typeof generatedPoster !== "boolean")
+        throw new Error(`watchables[${index}].generatedPoster must be boolean`);
+      const queueReason =
+        record.queueReason === undefined
+          ? summary
+          : string(record.queueReason, `watchables[${index}].queueReason`);
+      let posterUrl: string | undefined;
+      if (record.posterUrl !== undefined) {
+        posterUrl = string(record.posterUrl, `watchables[${index}].posterUrl`);
+        const parsed = new URL(posterUrl);
+        if (
+          parsed.protocol !== "https:" ||
+          !["image.tmdb.org", "media.themoviedb.org"].includes(parsed.hostname)
+        )
+          throw new Error(
+            `watchables[${index}].posterUrl must use an approved TMDB image host`,
+          );
+      }
+      const seasonNumber = optionalIdentity("seasonNumber");
+      const episodeNumber = optionalIdentity("episodeNumber");
+      if ((seasonNumber === undefined) !== (episodeNumber === undefined))
+        throw new Error(
+          `watchables[${index}] season and episode identity must be supplied together`,
+        );
+      if (new Set(aliases).size !== aliases.length)
+        throw new Error(`watchables[${index}] aliases must be unique`);
       const packOrder = optionalPositiveInteger(
         record.packOrder,
         `watchables[${index}].packOrder`,
@@ -1102,12 +1164,19 @@ export async function importCanonPackDirectory(
         id: uuid(record.id, `watchables[${index}].id`),
         slug: string(record.slug, `watchables[${index}].slug`),
         title: string(record.title, `watchables[${index}].title`),
-        summary: string(record.summary, `watchables[${index}].summary`),
+        summary,
         watchableTypeId,
         releaseDate,
         packOrder,
         runtimeMinutes,
         series,
+        ...(seasonNumber === undefined
+          ? {}
+          : { seasonNumber, episodeNumber: episodeNumber as number }),
+        aliases,
+        generatedPoster,
+        queueReason,
+        ...(posterUrl === undefined ? {} : { posterUrl }),
       };
     });
     const watchableIds = ids(watchables, "watchable");
@@ -1287,7 +1356,15 @@ export async function importCanonPackDirectory(
       manifestSha256: createHash("sha256")
         .update(raw.get("manifest.json") ?? Buffer.alloc(0))
         .digest("hex"),
+      checksumsSha256: createHash("sha256")
+        .update(raw.get("checksums.json") ?? Buffer.alloc(0))
+        .digest("hex"),
       sourcePath: rootPath,
+      verification: {
+        fileCount: members.length,
+        totalBytes: aggregateBytes,
+        verified: true,
+      },
       sources,
       watchableTypes,
       containers,

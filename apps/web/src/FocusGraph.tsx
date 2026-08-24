@@ -17,8 +17,8 @@ import {
   ReactFlow,
   useNodesState,
 } from "@xyflow/react";
-import WatchableActionMenu from "./WatchableActions.jsx";
-import { artworkUrl } from "./mediaUrls.js";
+import WatchableActionMenu from "./WatchableActions";
+import { artworkUrl } from "./mediaUrls";
 
 const edgeMeta = {
   required: { color: "#ff8b94", dash: "0", width: 3 },
@@ -650,6 +650,21 @@ export default function FocusGraph({
   const [flowNodes, setFlowNodes] = useNodesState(graph.nodes);
   const previousGraphKey = useRef(graph.key);
   const flowInstance = useRef(null);
+  const fitGraph = useCallback(() => {
+    const instance = flowInstance.current;
+    if (!instance) return;
+    // Child nodes use coordinates local to their Series frame. Fit only the
+    // measured top-level frames, whose bounds are in the flow coordinate space.
+    const roots = instance.getNodes().filter((node) => !node.parentId);
+    if (!roots.length) return;
+    const bounds = instance.getNodesBounds(roots);
+    if (!(bounds.width > 0 && bounds.height > 0)) return;
+    instance.fitBounds(bounds, {
+      padding: 0.18,
+      maxZoom: 1.15,
+      duration: 0,
+    });
+  }, []);
   useEffect(() => {
     setFlowNodes((current) => {
       if (previousGraphKey.current !== graph.key) {
@@ -678,30 +693,14 @@ export default function FocusGraph({
     () => setFlowNodes((nodes) => tightenSeriesGroups(nodes)),
     [setFlowNodes],
   );
-  // Parent frames have already been given deterministic dimensions by the layout.
-  // Refitting those top-level bounds after React Flow measures the child nodes avoids
-  // fitting transient child-local coordinates (and the resulting blank canvas).
   useEffect(() => {
-    const instance = flowInstance.current;
-    if (!instance) return undefined;
-    const timer = window.setTimeout(() => {
-      const roots = graph.nodes.filter((node) => !node.parentId);
-      if (!roots.length) return;
-      const minX = Math.min(...roots.map((node) => node.position.x));
-      const minY = Math.min(...roots.map((node) => node.position.y));
-      const maxX = Math.max(
-        ...roots.map((node) => node.position.x + (node.width || 0)),
-      );
-      const maxY = Math.max(
-        ...roots.map((node) => node.position.y + (node.height || 0)),
-      );
-      instance.fitBounds(
-        { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
-        { padding: 0.18, maxZoom: 1.15, duration: 0 },
-      );
+    const fitTimer = window.setTimeout(() => {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(fitGraph);
+      });
     }, 0);
-    return () => window.clearTimeout(timer);
-  }, [graph.key, graph.nodes]);
+    return () => window.clearTimeout(fitTimer);
+  }, [fitGraph, graph.key]);
   function toggleEdge(kind) {
     setEnabledEdges((old) => {
       const n = new Set(old);
@@ -847,6 +846,9 @@ export default function FocusGraph({
             key={graph.key}
             onInit={(instance) => {
               flowInstance.current = instance;
+              window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(fitGraph);
+              });
             }}
             nodes={flowNodes}
             edges={graph.edges}

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import WatchableActionMenu, { viewingActionsFor } from "./WatchableActions.jsx";
-import { artworkUrl, youtubeThumbnailUrl } from "./mediaUrls.js";
+import WatchableActionMenu, { viewingActionsFor } from "./WatchableActions";
+import { artworkUrl, youtubeThumbnailUrl } from "./mediaUrls";
 
 const fallbackPalettes = [
   [
@@ -142,14 +142,11 @@ function detailFields(item) {
       item.description ||
       item.why ||
       "No description is supplied by this Canon Pack release.",
-    cast: item.cast || ["Mara Venn", "Ilyan Roe", "The Lantern Keeper"],
-    genres: item.genres || ["Adventure", "Mystery"],
-    studio: item.studio || "Lantern Vale Storyworks",
-    contentRating: item.contentRating || "TV-14",
-    sources: item.sources || [
-      { name: "Plex", quality: "Item mapping required", provider: "plex" },
-      { name: "Lantern Vault", quality: "1080p" },
-    ],
+    cast: item.cast || [],
+    genres: item.genres || [],
+    studio: item.studio || null,
+    contentRating: item.contentRating || null,
+    sources: item.sources || [],
   };
 }
 function peopleFor(item, data) {
@@ -161,7 +158,7 @@ function peopleFor(item, data) {
   const crew = [
     ...(item.crew || []),
     ...(item.director ? [{ name: item.director, role: "Director" }] : []),
-    { name: data.studio, role: "Studio" },
+    ...(data.studio ? [{ name: data.studio, role: "Studio" }] : []),
   ];
   return [...cast, ...crew].filter(
     (person, index, array) =>
@@ -170,28 +167,7 @@ function peopleFor(item, data) {
   );
 }
 function reviewsFor(item) {
-  return (
-    item.communityReviews || [
-      {
-        author: "Vale watcher",
-        date: "Mock enrichment preview",
-        rating: 9,
-        text: `${item.title} rewards following the dependency path; the context makes the turning points land.`,
-      },
-      {
-        author: "Canon explorer",
-        date: "Mock enrichment preview",
-        rating: 8,
-        text: "Strong atmosphere and a clear place in the larger viewing order.",
-      },
-      {
-        author: "Archive guest",
-        date: "Mock enrichment preview",
-        rating: 8,
-        text: "A concise chapter with memorable visual storytelling.",
-      },
-    ]
-  );
+  return item.communityReviews || [];
 }
 function initials(name) {
   return name
@@ -200,6 +176,14 @@ function initials(name) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function NotImplemented({ children = "Not Implemented" }) {
+  return (
+    <span className="notImplementedBadge" aria-label="Not Implemented">
+      {children}
+    </span>
+  );
 }
 
 function ActionButton({
@@ -317,7 +301,9 @@ function TrailerPlayer({ item, cinematic = false }) {
     return (
       <div className={`previewFrame ${cinematic ? "cinematicPreview" : ""}`}>
         <span>▶</span>
-        <small>Preview video placeholder</small>
+        <small>
+          <NotImplemented /> Preview video provider unavailable
+        </small>
       </div>
     );
   const select = (index) => {
@@ -457,7 +443,7 @@ function SidecarDetail({
           <div className="chips">
             <span>{item.release || "Release unknown"}</span>
             <span>{formatRuntime(item.runtime)}</span>
-            <span>{data.contentRating}</span>
+            {data.contentRating && <span>{data.contentRating}</span>}
             <span
               className={"state " + item.state.toLowerCase().replace(" ", "-")}
             >
@@ -487,7 +473,7 @@ function SidecarDetail({
           </div>
           <div>
             <small>Studio</small>
-            <b>{data.studio}</b>
+            <b>{data.studio || "Unavailable"}</b>
           </div>
           <div>
             <small>Pack order</small>
@@ -562,6 +548,15 @@ function openSourceDetails(source, notify) {
   if (!opened) notify(`Allow popups to open ${source.name}`);
 }
 function SourceList({ sources, notify }) {
+  if (!sources?.length)
+    return (
+      <div className="sourceList">
+        <NotImplemented />
+        <small>
+          Watch-provider links are not available for this watchable.
+        </small>
+      </div>
+    );
   return (
     <div className="sourceList">
       {sources.map((source) => {
@@ -578,7 +573,7 @@ function SourceList({ sources, notify }) {
               <small>{source.quality || "Available"}</small>
             </div>
             <div>
-              {!isPlex && source.canWatch !== false && (
+              {!isPlex && source.canWatch !== false && !source.unavailable && (
                 <button
                   className="primary"
                   onClick={() => notify(`Watch on ${source.name}`)}
@@ -588,7 +583,7 @@ function SourceList({ sources, notify }) {
               )}
               <button
                 className={`${isPlex ? "plexOpenButton " : ""}${source.provider || ""}`}
-                disabled={requiresLink && !detailsUrl}
+                disabled={source.unavailable || (requiresLink && !detailsUrl)}
                 title={
                   isPlex && !detailsUrl
                     ? "Map this watchable to a Plex library item first"
@@ -596,7 +591,7 @@ function SourceList({ sources, notify }) {
                 }
                 onClick={() => openSourceDetails(source, notify)}
               >
-                {label}
+                {source.unavailable ? <NotImplemented /> : label}
               </button>
             </div>
           </div>
@@ -679,11 +674,11 @@ function CinematicDetail({
             {item.type} · {identity(item)}
           </span>
           <h1>{item.title}</h1>
-          <p className="cinematicByline">{data.studio}</p>
+          {data.studio && <p className="cinematicByline">{data.studio}</p>}
           <div className="cinematicFacts">
             <span>{year}</span>
             <span>{formatRuntime(item.runtime)}</span>
-            <span>{data.contentRating}</span>
+            {data.contentRating && <span>{data.contentRating}</span>}
             <span
               className={"state " + item.state.toLowerCase().replace(" ", "-")}
             >
@@ -704,12 +699,14 @@ function CinematicDetail({
               <b>
                 {provider
                   ? `${provider.displayName} reviews`
-                  : "Community preview"}
+                  : "Community reviews"}
               </b>
               <small>
-                {provider
-                  ? `${item.communityReviewCount || reviews.length} public reviews`
-                  : "Provider not configured"}
+                {provider ? (
+                  `${item.communityReviewCount || reviews.length} public reviews`
+                ) : (
+                  <NotImplemented>Provider not configured</NotImplemented>
+                )}
               </small>
             </span>
             <button
@@ -795,19 +792,27 @@ function CinematicDetail({
                 Data from {provider.displayName} ↗
               </a>
             ) : (
-              "Canon and mock profile data"
+              <>
+                <NotImplemented /> Cast provider not configured
+              </>
             )}
           </small>
         </div>
         <div className="peopleRail">
-          {people.map((person, index) => (
-            <PersonCard
-              key={`${person.name}-${person.role}`}
-              person={person}
-              index={index}
-              palette={palette}
-            />
-          ))}
+          {people.length ? (
+            people.map((person, index) => (
+              <PersonCard
+                key={`${person.name}-${person.role}`}
+                person={person}
+                index={index}
+                palette={palette}
+              />
+            ))
+          ) : (
+            <p className="muted">
+              <NotImplemented /> Cast and crew data unavailable
+            </p>
+          )}
         </div>
       </section>
       <section className="cinematicSection">
@@ -827,14 +832,22 @@ function CinematicDetail({
                 Reviews from {provider.displayName} ↗
               </a>
             ) : (
-              "Fictional preview · provider attribution will appear here"
+              <>
+                <NotImplemented /> Review provider not configured
+              </>
             )}
           </small>
         </div>
         <div className="reviewRail">
-          {reviews.map((review, index) => (
-            <ReviewCard key={`${review.author}-${index}`} review={review} />
-          ))}
+          {reviews.length ? (
+            reviews.map((review, index) => (
+              <ReviewCard key={`${review.author}-${index}`} review={review} />
+            ))
+          ) : (
+            <p className="muted">
+              <NotImplemented /> Community reviews unavailable
+            </p>
+          )}
         </div>
       </section>
       <section className="cinematicLowerGrid">
@@ -848,7 +861,7 @@ function CinematicDetail({
           <section className="cinematicSection compact">
             <h2>Ways to watch</h2>
             <SourceList sources={data.sources} notify={notify} />
-            {availabilityProvider && (
+            {availabilityProvider ? (
               <p className="providerAttribution">
                 Streaming availability powered by{" "}
                 <a
@@ -859,6 +872,10 @@ function CinematicDetail({
                   {availabilityProvider.displayName}
                 </a>
                 .
+              </p>
+            ) : (
+              <p className="providerAttribution">
+                <NotImplemented /> Availability provider not configured
               </p>
             )}
           </section>

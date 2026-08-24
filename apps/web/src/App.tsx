@@ -7,6 +7,7 @@ import {
   themeQuartz,
 } from "ag-grid-community";
 import FocusGraph from "./FocusGraph";
+import CatalogDialog from "./CatalogDialog";
 import WatchableActionMenu from "./WatchableActions";
 import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
 import { api, recommendedNext } from "./api";
@@ -50,6 +51,9 @@ function normalize(item) {
   return {
     ...item,
     id: item.slug,
+    type: item.type
+      ? `${item.type.charAt(0).toUpperCase()}${item.type.slice(1)}`
+      : item.type,
     order: item.releaseOrder,
     state:
       item.state === "watched"
@@ -64,6 +68,83 @@ function normalize(item) {
     poster: item.poster === true,
     posterUrl: item.posterUrl || item.poster_url,
   };
+}
+export function queuePresentation(nextUp) {
+  const rows = nextUp.map((item, index) => ({
+    ...item,
+    position: index + 1,
+    identity:
+      item.identity ||
+      `${item.series || item.type}${
+        item.seasonNumber && item.episodeNumber
+          ? ` S${String(item.seasonNumber).padStart(2, "0")}:E${String(item.episodeNumber).padStart(2, "0")}`
+          : ""
+      }`,
+    queueStatus: item.blockingSummary
+      ? "Blocked"
+      : index === 0
+        ? "Ready"
+        : "Queued",
+    reason:
+      item.blockingSummary ||
+      item.why ||
+      (item.reason === "focus" ? "Active target" : "Ready to watch"),
+  }));
+  rows.remainingCount = rows.filter((item) => item.state !== "Watched").length;
+  rows.remainingMinutes = rows
+    .filter((item) => item.state !== "Watched")
+    .reduce((total, item) => total + (Number(item.runtime) || 0), 0);
+  return rows;
+}
+export function historySummary(history) {
+  const completed = history.filter((item) => item.action === "completed");
+  const ratings = completed
+    .map((item) => Number(item.rating))
+    .filter(Number.isFinite);
+  return {
+    completed: completed.length,
+    watchedMinutes: completed.reduce(
+      (total, item) => total + (Number(item.duration) || 0),
+      0,
+    ),
+    averageRating: ratings.length
+      ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+      : null,
+    discarded: history.filter((item) => item.action === "discarded").length,
+  };
+}
+export function packEvidence(pack) {
+  return [
+    {
+      label: "Active release",
+      value: pack ? `${pack.title} ${pack.version}` : "No active release",
+      status: pack ? "available" : "unavailable",
+    },
+    {
+      label: "Inventory",
+      value:
+        pack?.inventoryFileCount == null
+          ? "Unavailable from workspace API"
+          : `${pack.inventoryFileCount} files · ${pack.inventoryTotalBytes ?? "unknown"} bytes`,
+      status: pack?.inventoryFileCount == null ? "unavailable" : "available",
+    },
+    {
+      label: "Manifest",
+      value: pack?.manifestSha256 || "Unavailable from workspace API",
+      status: pack?.manifestSha256 ? "available" : "unavailable",
+    },
+    {
+      label: "Checksums",
+      value: pack?.checksumsSha256 || "Unavailable from workspace API",
+      status: pack?.checksumsSha256 ? "available" : "unavailable",
+    },
+    {
+      label: "Validation",
+      value: pack?.verificationStatus || "Unavailable from workspace API",
+      status:
+        pack?.verificationStatus === "verified" ? "available" : "unavailable",
+    },
+  ];
 }
 function ErrorMessage({ message }) {
   return message ? (
@@ -100,11 +181,22 @@ function App() {
     [detailsModal, setDetailsModal] = useState(false),
     [sidecarWidth, setSidecarWidth] = useState(390),
     [query, setQuery] = useState(""),
-    [mode, setMode] = useState("Release Timeline");
+    [mode, setMode] = useState("Release Timeline"),
+    [gridApi, setGridApi] = useState(),
+    [colsOpen, setColsOpen] = useState(false),
+    [gridContextMenu, setGridContextMenu] = useState(),
+    [catalogDialog, setCatalogDialog] = useState();
+  const navigate = (nextView) => {
+    setView(nextView);
+    setDetailsOpen(false);
+    setDetailsModal(false);
+    setGridContextMenu(undefined);
+  };
   const notify = (text) => {
     setToast(text);
     window.setTimeout(() => setToast(""), 2300);
   };
+  const notImplemented = (feature) => notify(`${feature} · Not Implemented`);
   const loadWorkspace = async () => {
     const { data } = await api.workspace();
     setItems(data.items.map(normalize));
@@ -119,8 +211,12 @@ function App() {
       })),
     );
     setPack(data.pack);
-    const next = data.items.find((x) => x.slug === data.nextUp[0]?.slug);
-    if (next && !selected) setSelected(normalize(next));
+    const next =
+      data.items.find((x) => x.slug === data.nextUp[0]?.slug) || data.items[0];
+    if (next && !selected) {
+      setSelected(normalize(next));
+      setDetailsOpen(true);
+    }
   };
   useEffect(() => {
     api
@@ -152,6 +248,36 @@ function App() {
     if (!item) return;
     setSelected(item);
     setDetailsOpen(true);
+  };
+  const openCatalog = (mode, item) =>
+    setCatalogDialog({
+      mode,
+      draft: item
+        ? { ...item }
+        : {
+            title: "",
+            type: "Episode",
+            series: "",
+            season: 1,
+            episode: 1,
+            release: "",
+            runtime: 30,
+            state: "Not Started",
+            rating: "",
+            why: "",
+            order: items.length + 1,
+          },
+    });
+  const openGridMenu = (params, surface) => {
+    if (!params.data || !params.event) return;
+    params.event.preventDefault();
+    setSelected(params.data);
+    setGridContextMenu({
+      item: params.data,
+      surface,
+      x: params.event.clientX,
+      y: params.event.clientY,
+    });
   };
   const markTarget = (item) =>
     perform(async () => {
@@ -221,6 +347,12 @@ function App() {
         width: 140,
         cellRenderer: (p) => <StateBadge value={p.value} />,
       },
+      {
+        field: "rating",
+        headerName: "Rating",
+        width: 100,
+        valueFormatter: (p) => (p.value == null ? "—" : `${p.value}/10`),
+      },
     ],
     [],
   );
@@ -281,11 +413,7 @@ function App() {
             <button
               key={id}
               className={view === id ? "active" : ""}
-              onClick={() => {
-                setView(id);
-                setDetailsOpen(false);
-                setDetailsModal(false);
-              }}
+              onClick={() => navigate(id)}
             >
               <span className="navIcon">{icon}</span>
               {label}
@@ -309,9 +437,12 @@ function App() {
             <b>{current?.[2]}</b>
             <small>{pack?.title || "Workspace"} · Canon Pack</small>
           </div>
-          <button onClick={() => void importPack()} disabled={busy}>
-            Import pack
-          </button>
+          <div className="topActions">
+            <span className="mockBadge">MVP · POSTGRESQL</span>
+            <button onClick={() => void importPack()} disabled={busy}>
+              Import pack
+            </button>
+          </div>
         </header>
         <div
           className={`page ${view === "map" ? "mapPage" : `fullPage ${view}Page`}`}
@@ -322,13 +453,13 @@ function App() {
               <div className="pageTitle">
                 <div>
                   <span className="eyebrow">Active Watch Focus</span>
-                  <h1>Explore the story</h1>
+                  <h1>The Lantern Vale story</h1>
                   <p>
-                    Select a target and understand exactly why each title is
-                    included.
+                    Explore the dependency path, select a target, and understand
+                    exactly why each title is included.
                   </p>
                 </div>
-                <button className="primary" onClick={() => setView("next")}>
+                <button className="primary" onClick={() => navigate("next")}>
                   View Next Up →
                 </button>
               </div>
@@ -352,8 +483,16 @@ function App() {
                 <div>
                   <span className="eyebrow">Browse active Pack</span>
                   <h1>Catalog</h1>
-                  <p>All watchables from the authenticated workspace.</p>
+                  <p>
+                    Browse and inspect every watchable in the active Canon Pack.
+                  </p>
                 </div>
+                <button
+                  className="primary"
+                  onClick={() => openCatalog("create")}
+                >
+                  ＋ Add watchable
+                </button>
               </div>
               <div className="gridTools catalogCommands">
                 <input
@@ -367,6 +506,57 @@ function App() {
                 >
                   View details
                 </button>
+                <button
+                  disabled={!selected}
+                  onClick={() => openCatalog("edit", selected)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="danger"
+                  disabled={!selected}
+                  onClick={() => openCatalog("delete", selected)}
+                >
+                  Delete
+                </button>
+                <button onClick={() => setColsOpen(!colsOpen)}>
+                  ⚙ Columns
+                </button>
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    gridApi?.setFilterModel(null);
+                    gridApi?.refreshInfiniteCache();
+                  }}
+                >
+                  Clear filters
+                </button>
+                <button
+                  onClick={() =>
+                    gridApi?.exportDataAsCsv({ fileName: "watch-tracker.csv" })
+                  }
+                >
+                  Export CSV
+                </button>
+                {colsOpen && (
+                  <div className="columnMenu">
+                    {columns.map((column) => (
+                      <label key={column.field}>
+                        <input
+                          type="checkbox"
+                          defaultChecked
+                          onChange={(e) =>
+                            gridApi?.setColumnsVisible(
+                              [column.field],
+                              e.target.checked,
+                            )
+                          }
+                        />
+                        {column.headerName || column.field}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="agWrap">
                 <AgGridReact
@@ -382,7 +572,12 @@ function App() {
                     resizable: true,
                   }}
                   rowSelection="single"
+                  onGridReady={(event) => setGridApi(event.api)}
                   onRowClicked={(e) => openDetails(e.data)}
+                  preventDefaultOnContextMenu
+                  onCellContextMenu={(params) =>
+                    openGridMenu(params, "catalog")
+                  }
                   getRowId={(p) => p.data.id}
                 />
               </div>
@@ -396,12 +591,30 @@ function App() {
               onTarget={markTarget}
               onPick={openDetails}
               onAction={actItem}
+              onNotImplemented={notImplemented}
             />
           )}
           {view === "history" && (
-            <HistoryPage history={history} items={items} onPick={openDetails} />
+            <HistoryPage
+              history={history}
+              items={items}
+              target={target}
+              onTarget={markTarget}
+              onPick={openDetails}
+              onAction={actItem}
+            />
           )}
-          {view === "pack" && <PackPage pack={pack} onImport={importPack} />}
+          {view === "pack" && (
+            <PackPage
+              pack={{
+                ...pack,
+                watchableCount: items.length,
+                relationshipCount: relations.length,
+              }}
+              onImport={importPack}
+              onNotImplemented={notImplemented}
+            />
+          )}
         </div>
         {detailsOpen && selected && (
           <>
@@ -425,7 +638,7 @@ function App() {
           <button
             key={id}
             className={view === id ? "active" : ""}
-            onClick={() => setView(id)}
+            onClick={() => navigate(id)}
           >
             <span>{icon}</span>
             {label.replace("Focus ", "")}
@@ -440,6 +653,25 @@ function App() {
           onTarget={markTarget}
           onAction={actItem}
           notify={notify}
+        />
+      )}
+      {catalogDialog && (
+        <CatalogDialog
+          dialog={catalogDialog}
+          setDialog={setCatalogDialog}
+          notify={notify}
+        />
+      )}
+      {gridContextMenu && (
+        <WatchableActionMenu
+          className={`gridContextMenu ${gridContextMenu.surface}ContextMenu`}
+          item={gridContextMenu.item}
+          targetId={target}
+          onTarget={markTarget}
+          onViewingAction={actItem}
+          onInspect={openDetails}
+          onClose={() => setGridContextMenu(undefined)}
+          style={{ left: gridContextMenu.x, top: gridContextMenu.y }}
         />
       )}
       <div className={`toast ${toast ? "show" : ""}`}>{toast}</div>
@@ -511,19 +743,56 @@ function RelationshipSummary({ selected }) {
     </section>
   );
 }
-function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
-  const next = recommendedNext(items, nextUp);
-  const queueDatasource = useMemo(
-    () => createInfiniteDatasource(nextUp, { allowSort: false }),
-    [nextUp],
+function NextPage({
+  items,
+  nextUp,
+  target,
+  onTarget,
+  onPick,
+  onAction,
+  onNotImplemented,
+}) {
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState("All");
+  const [state, setState] = useState("All");
+  const [queueState, setQueueState] = useState("All");
+  const [hideWatched, setHideWatched] = useState(false);
+  const [context, setContext] = useState();
+  const queue = useMemo(() => queuePresentation(nextUp), [nextUp]);
+  const filtered = useMemo(
+    () =>
+      queue.filter(
+        (item) =>
+          (!query ||
+            Object.values(item).some((value) =>
+              String(value ?? "")
+                .toLowerCase()
+                .includes(query.toLowerCase()),
+            )) &&
+          (type === "All" || item.type === type) &&
+          (state === "All" || item.state === state) &&
+          (queueState === "All" || item.queueStatus === queueState) &&
+          (!hideWatched || item.state !== "Watched"),
+      ),
+    [queue, query, type, state, queueState, hideWatched],
   );
+  const queueDatasource = useMemo(
+    () => createInfiniteDatasource(filtered, { allowSort: false }),
+    [filtered],
+  );
+  const next = recommendedNext(items, nextUp);
+  const targetItem = items.find((item) => item.id === target);
+  const types = [...new Set(queue.map((item) => item.type))];
   return (
     <>
       <div className="pageTitle">
         <div>
           <span className="eyebrow">Deterministic guidance</span>
           <h1>Next Up</h1>
-          <p>Follow prerequisite and release order to the active target.</p>
+          <p>
+            Ranked from your Focus, target, prerequisites, viewing state,
+            release order, and Series Momentum.
+          </p>
         </div>
       </div>
       {next && (
@@ -548,6 +817,10 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
             <span className="eyebrow">Recommended next</span>
             <h2>{next.title}</h2>
             <p>{next.why}</p>
+            <small>
+              Queue #{queue.findIndex((item) => item.id === next.id) + 1} ·{" "}
+              {next.runtime} min · {queue.remainingCount} remaining
+            </small>
             <div className="actions">
               <button
                 className="primary"
@@ -561,7 +834,113 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
           </div>
         </div>
       )}
-      <h2>Queue to target</h2>
+      <h2>Why this order?</h2>
+      <div className="reasonGrid">
+        <div>
+          <b>✓ Eligibility</b>
+          <p>Required and sequence prerequisites are evaluated.</p>
+        </div>
+        <div>
+          <b>◎ Target path</b>
+          <p>
+            Only the dependency closure leading to the active target is queued.
+          </p>
+        </div>
+        <div>
+          <b>↗ Progress</b>
+          <p>
+            Completed titles remain visible while the first eligible title
+            advances.
+          </p>
+        </div>
+        <div>
+          <b>≡ Tie-break</b>
+          <p>
+            Pack order resolves equally eligible branches deterministically.
+          </p>
+        </div>
+      </div>
+      <div className="queueHeading">
+        <div>
+          <span className="eyebrow">Active Focus playlist</span>
+          <h2>Queue to {targetItem?.title || "target"}</h2>
+        </div>
+        <b>
+          {queue.remainingCount} remaining · {queue.remainingMinutes} min
+        </b>
+      </div>
+      <div className="gridTools queueFilters">
+        <label>
+          Watch target
+          <select
+            value={target || ""}
+            onChange={(event) =>
+              onTarget(items.find((item) => item.id === event.target.value))
+            }
+          >
+            {items.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Title, Series, type…"
+        />
+        <select value={type} onChange={(event) => setType(event.target.value)}>
+          <option>All</option>
+          {types.map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select
+          value={state}
+          onChange={(event) => setState(event.target.value)}
+        >
+          <option>All</option>
+          <option>Not Started</option>
+          <option>In Progress</option>
+          <option>Watched</option>
+        </select>
+        <select
+          value={queueState}
+          onChange={(event) => setQueueState(event.target.value)}
+          aria-label="Queue status"
+        >
+          <option>All</option>
+          <option>Ready</option>
+          <option>Queued</option>
+          <option>Blocked</option>
+        </select>
+        <label className="checkFilter">
+          <input
+            type="checkbox"
+            checked={hideWatched}
+            onChange={(event) => setHideWatched(event.target.checked)}
+          />
+          Hide watched
+        </label>
+        <button
+          onClick={() => {
+            setQuery("");
+            setType("All");
+            setState("All");
+            setQueueState("All");
+            setHideWatched(false);
+          }}
+        >
+          Clear filters
+        </button>
+        <button onClick={() => onNotImplemented("Save queue view")}>
+          Save view
+        </button>
+        <span>
+          {filtered.length} of {queue.length}
+        </span>
+      </div>
       <div className="agWrap queueGrid">
         <AgGridReact
           theme={appTheme}
@@ -570,34 +949,120 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
           cacheBlockSize={50}
           maxBlocksInCache={4}
           columnDefs={[
-            { field: "order", headerName: "#", width: 70 },
-            { field: "title", flex: 1, minWidth: 240 },
-            { field: "type", width: 120 },
+            {
+              checkboxSelection: true,
+              headerCheckboxSelection: true,
+              width: 52,
+            },
+            { field: "position", headerName: "#", width: 70 },
+            {
+              field: "title",
+              headerName: "Queue to target",
+              flex: 1,
+              minWidth: 220,
+            },
+            {
+              field: "identity",
+              headerName: "Series / episode",
+              minWidth: 190,
+            },
+            { field: "type", width: 110 },
+            { field: "runtime", headerName: "Minutes", width: 105 },
             {
               field: "state",
-              width: 150,
+              headerName: "Viewing",
+              width: 140,
               cellRenderer: (p) => <StateBadge value={p.value} />,
             },
+            { field: "queueStatus", headerName: "Queue status", width: 125 },
+            {
+              field: "reason",
+              headerName: "Why / prerequisite",
+              minWidth: 240,
+            },
           ]}
-          defaultColDef={{ sortable: false, resizable: true }}
-          onRowClicked={(e) => onPick(e.data)}
+          defaultColDef={{ sortable: false, filter: true, resizable: true }}
+          rowSelection="multiple"
+          onRowClicked={(event) => onPick(event.data)}
+          preventDefaultOnContextMenu
+          onCellContextMenu={(params) => {
+            params.event?.preventDefault();
+            if (params.data && params.event)
+              setContext({
+                item: params.data,
+                x: params.event.clientX,
+                y: params.event.clientY,
+              });
+          }}
         />
       </div>
+      {context && (
+        <WatchableActionMenu
+          item={context.item}
+          targetId={target}
+          onTarget={onTarget}
+          onViewingAction={onAction}
+          onInspect={onPick}
+          onClose={() => setContext(undefined)}
+          style={{ left: context.x, top: context.y }}
+        />
+      )}
     </>
   );
 }
-function HistoryPage({ history, items, onPick }) {
+function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
+  const [context, setContext] = useState();
+  const summary = useMemo(() => historySummary(history), [history]);
   const historyDatasource = useMemo(
     () => createInfiniteDatasource(history),
     [history],
   );
+  const saveView = () => {
+    const blob = new Blob([JSON.stringify(history, null, 2)], {
+      type: "application/json",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "watch-tracker-history.json";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
   return (
     <>
       <div className="pageTitle">
         <div>
           <span className="eyebrow">Viewing lifecycle</span>
           <h1>History & feedback</h1>
-          <p>Completed sessions and discarded attempts from the workspace.</p>
+          <p>
+            Immutable sessions, discarded attempts, rewatches, ratings,
+            favorites, notes, and “would rewatch.”
+          </p>
+        </div>
+        <button onClick={saveView}>Save view</button>
+      </div>
+      <div className="summaryCards">
+        <div>
+          <b>{summary.completed}</b>
+          <span>Completed</span>
+        </div>
+        <div>
+          <b>
+            {Math.floor(summary.watchedMinutes / 60)}h{" "}
+            {summary.watchedMinutes % 60}m
+          </b>
+          <span>Watched duration</span>
+        </div>
+        <div>
+          <b>
+            {summary.averageRating == null
+              ? "—"
+              : summary.averageRating.toFixed(1)}
+          </b>
+          <span>Average rating</span>
+        </div>
+        <div>
+          <b>{summary.discarded}</b>
+          <span>Discarded</span>
         </div>
       </div>
       <div className="agWrap historyGrid">
@@ -615,27 +1080,57 @@ function HistoryPage({ history, items, onPick }) {
             { field: "rating" },
           ]}
           defaultColDef={{ sortable: true, filter: true, resizable: true }}
-          onRowClicked={(e) =>
+          onRowClicked={(event) =>
             onPick(
               items.find(
                 (item) =>
-                  item.title === e.data.title || item.id === e.data.slug,
+                  item.title === event.data.title ||
+                  item.id === event.data.slug,
               ),
             )
           }
+          preventDefaultOnContextMenu
+          onCellContextMenu={(params) => {
+            params.event?.preventDefault();
+            const item = items.find(
+              (candidate) =>
+                candidate.title === params.data?.title ||
+                candidate.id === params.data?.slug,
+            );
+            if (item && params.event)
+              setContext({
+                item,
+                x: params.event.clientX,
+                y: params.event.clientY,
+              });
+          }}
         />
       </div>
+      {context && (
+        <WatchableActionMenu
+          item={context.item}
+          targetId={target}
+          onTarget={onTarget}
+          onViewingAction={onAction}
+          onInspect={onPick}
+          onClose={() => setContext(undefined)}
+          style={{ left: context.x, top: context.y }}
+        />
+      )}
     </>
   );
 }
-function PackPage({ pack, onImport }) {
+function PackPage({ pack, onImport, onNotImplemented }) {
+  const evidence = packEvidence(pack);
   return (
     <>
       <div className="pageTitle">
         <div>
           <span className="eyebrow">Source-governed content</span>
           <h1>Canon Pack</h1>
-          <p>Validate and inspect the active immutable release.</p>
+          <p>
+            Validate, import, activate, and inspect one immutable Pack release.
+          </p>
         </div>
       </div>
       <div className="packGrid">
@@ -645,33 +1140,64 @@ function PackPage({ pack, onImport }) {
           <div className="kv">
             <span>Version</span>
             <b>{pack?.version || "—"}</b>
+            <span>Contract</span>
+            <b>{pack?.version || "—"}</b>
+            <span>Watchables</span>
+            <b>{pack?.watchableCount ?? "—"}</b>
+            <span>Relationships</span>
+            <b>{pack?.relationshipCount ?? "—"}</b>
             <span>Status</span>
-            <b className="green">{pack ? "Active" : "Not imported"}</b>
+            <b className={pack ? "green" : ""}>
+              {pack ? "Active" : "Not imported"}
+            </b>
+            <span>Manifest</span>
+            <b title={pack?.manifestSha256}>
+              {pack?.manifestSha256?.slice(0, 12) || "—"}
+            </b>
+            <span>Checksums</span>
+            <b title={pack?.checksumsSha256}>
+              {pack?.checksumsSha256?.slice(0, 12) || "—"}
+            </b>
           </div>
           <button className="primary" onClick={() => void onImport()}>
             Import release
           </button>
+          <button onClick={() => onNotImplemented("Verification viewer")}>
+            View verification
+          </button>
         </section>
         <section className="panel drop">
-          <span className="eyebrow">Validation</span>
-          <h2>Release readiness</h2>
+          <span className="eyebrow">Transactional import</span>
+          <h2>Import a release artifact</h2>
           <p>
-            Workspace data is rendered from the authenticated API contract.
-            Optional enrichment fields remain absent-safe.
+            Choose a Canon Pack archive. Nothing activates until schema,
+            checksum, identity, provenance, compatibility, and graph validation
+            pass.
           </p>
-          <div className="validation">
-            <div>
-              <span>✓</span>
-              <b>Graph endpoints</b>
-              <small>Loaded</small>
-            </div>
-            <div>
-              <span>✓</span>
-              <b>Workspace contract</b>
-              <small>Loaded</small>
-            </div>
-          </div>
+          <button
+            className="dropzone"
+            onClick={() => onNotImplemented("Canon Pack archive upload")}
+          >
+            <span>⬆</span>
+            <b>Choose Canon Pack archive</b>
+            <small>.zip · release artifacts only · Not Implemented</small>
+          </button>
+          <button className="primary" onClick={() => void onImport()}>
+            Run validation
+          </button>
         </section>
+      </div>
+      <h2>Validation report</h2>
+      <div className="validation report">
+        {evidence.slice(1).map((entry) => (
+          <div key={`report-${entry.label}`}>
+            <span>{entry.status === "available" ? "✓" : "—"}</span>
+            <b>{entry.label}</b>
+            <small>
+              {entry.status === "available" ? "Reported" : "Unavailable"}
+            </small>
+          </div>
+        ))}
       </div>
     </>
   );

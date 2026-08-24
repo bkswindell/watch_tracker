@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.04";
+export const EXPECTED_SCHEMA_VERSION = "0.05";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -116,6 +116,13 @@ const REQUIRED_CORE_SLICE_COLUMNS = [
   ["canon_pack_watchable", "release_order", "int4", "NO"],
   ["canon_pack_watchable", "runtime_minutes", "int4", "NO"],
   ["canon_pack_watchable", "primary_series", "text", "NO"],
+  ["canon_pack_watchable", "season_number", "int4", "YES"],
+  ["canon_pack_watchable", "episode_number", "int4", "YES"],
+  ["canon_pack_watchable", "aliases", "_text", "NO"],
+  ["canon_pack_watchable", "generated_poster", "bool", "NO"],
+  ["canon_pack_watchable", "queue_reason", "text", "NO"],
+  ["canon_pack_watchable", "poster_url", "text", "YES"],
+
   ["watch_focus", "singleton", "bool", "NO"],
   ["watch_focus", "target_slug", "varchar", "NO"],
   ["watch_focus", "updated_at", "timestamptz", "NO"],
@@ -173,12 +180,52 @@ const REQUIRED_CORE_SLICE_CONSTRAINTS = [
     "canon_pack_watchable_primary_series_not_blank",
     "c",
   ],
+  ["canon_pack_watchable", "canon_pack_watchable_season_positive", "c"],
+  ["canon_pack_watchable", "canon_pack_watchable_episode_positive", "c"],
+  ["canon_pack_watchable", "canon_pack_watchable_episode_identity_pair", "c"],
+  ["canon_pack_watchable", "canon_pack_watchable_queue_reason_not_blank", "c"],
+  ["canon_pack_watchable", "canon_pack_watchable_poster_url_approved", "c"],
+
   ["watch_focus", "watch_focus_pkey", "p"],
   ["watch_focus", "watch_focus_target_slug_fkey", "f"],
   ["watch_focus", "watch_focus_singleton_true", "c"],
   ["viewing_attempt", "viewing_attempt_pkey", "p"],
   ["viewing_attempt", "viewing_attempt_catalog_slug_fkey", "f"],
   ["viewing_attempt", "viewing_attempt_status_valid", "c"],
+] as const;
+
+const REQUIRED_TRUTHFUL_METADATA_COLUMNS = [
+  ["canon_pack_release", "inventory_file_count", "int4", "YES"],
+  ["canon_pack_release", "inventory_total_bytes", "int8", "YES"],
+  ["canon_pack_release", "verification_status", "varchar", "YES"],
+  ["canon_pack_release", "checksums_sha256", "bpchar", "YES"],
+  ["canon_pack_viewing_attempt", "watched_minutes", "int4", "YES"],
+  ["canon_pack_viewing_attempt", "completed_at", "timestamptz", "YES"],
+] as const;
+
+const REQUIRED_TRUTHFUL_METADATA_CONSTRAINTS = [
+  [
+    "canon_pack_release",
+    "canon_pack_release_inventory_file_count_positive",
+    "c",
+  ],
+  [
+    "canon_pack_release",
+    "canon_pack_release_inventory_total_bytes_positive",
+    "c",
+  ],
+  ["canon_pack_release", "canon_pack_release_verification_status_valid", "c"],
+  ["canon_pack_release", "canon_pack_release_checksums_sha256_format", "c"],
+  [
+    "canon_pack_viewing_attempt",
+    "canon_pack_viewing_attempt_watched_minutes_positive",
+    "c",
+  ],
+  [
+    "canon_pack_viewing_attempt",
+    "canon_pack_viewing_attempt_completed_at_consistent",
+    "c",
+  ],
 ] as const;
 
 export interface Migration {
@@ -395,6 +442,61 @@ async function verifyCoreSliceIntegrity(database: Queryable): Promise<boolean> {
   );
 }
 
+async function verifyTruthfulMetadataIntegrity(
+  database: Queryable,
+): Promise<boolean> {
+  const columns = await database.query(
+    `SELECT table_name, column_name, udt_name, is_nullable
+       FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND (
+          (table_name = 'canon_pack_release'
+            AND column_name = ANY($1::text[]))
+          OR
+          (table_name = 'canon_pack_viewing_attempt'
+            AND column_name = ANY($2::text[]))
+        )`,
+    [
+      [
+        "inventory_file_count",
+        "inventory_total_bytes",
+        "verification_status",
+        "checksums_sha256",
+      ],
+      ["watched_minutes", "completed_at"],
+    ],
+  );
+  if (
+    !rowsMatchExactly(
+      columns.rows as Record<string, unknown>[],
+      ["table_name", "column_name", "udt_name", "is_nullable"],
+      REQUIRED_TRUTHFUL_METADATA_COLUMNS,
+    )
+  ) {
+    return false;
+  }
+
+  const constraintNames = REQUIRED_TRUTHFUL_METADATA_CONSTRAINTS.map(
+    ([, name]) => name,
+  );
+  const constraints = await database.query(
+    `SELECT relation.relname AS table_name,
+            constraint_record.conname AS constraint_name,
+            constraint_record.contype AS constraint_type
+       FROM pg_constraint AS constraint_record
+       JOIN pg_class AS relation ON relation.oid = constraint_record.conrelid
+       JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+      WHERE namespace.nspname = 'public'
+        AND constraint_record.conname = ANY($1::text[])`,
+    [constraintNames],
+  );
+  return rowsMatchExactly(
+    constraints.rows as Record<string, unknown>[],
+    ["table_name", "constraint_name", "constraint_type"],
+    REQUIRED_TRUTHFUL_METADATA_CONSTRAINTS,
+  );
+}
+
 function validateMigrationInventory(migrations: readonly Migration[]): void {
   if (migrations.length === 0) throw new Error("Migration inventory is empty");
 
@@ -468,7 +570,8 @@ export async function verifySchema(
   }
   if (
     !(await verifyFoundationIntegrity(database)) ||
-    !(await verifyCoreSliceIntegrity(database))
+    !(await verifyCoreSliceIntegrity(database)) ||
+    !(await verifyTruthfulMetadataIntegrity(database))
   ) {
     return { ready: false, reason: "database schema integrity mismatch" };
   }

@@ -158,6 +158,12 @@ button.primary {
   padding: 5px 9px;
   font-size: 11px;
 }
+.topActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .page {
   padding: 26px;
   width: 100%;
@@ -550,6 +556,20 @@ button.primary {
 }
 .dropzone small {
   color: var(--muted);
+}
+.dropzone:hover {
+  border-color: var(--blue);
+  background: #14202c;
+}
+.checkFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.checkFilter input {
+  width: auto;
+  margin: 0;
 }
 .validation {
   display: grid;

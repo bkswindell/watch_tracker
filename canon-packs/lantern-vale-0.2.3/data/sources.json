@@ -1,0 +1,15 @@
+[
+  {
+    "citation": "Fictional production notes created for the Canon Pack Template example.",
+    "id": "01954123-0000-7000-8000-000000000002",
+    "license": {
+      "id": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "retrievedAt": "2026-08-23",
+    "slug": "lantern-archive",
+    "sourceType": "fictional-primary",
+    "title": "The Lantern Archive",
+    "url": "https://example.invalid/lantern-archive"
+  }
+]

@@ -79,12 +79,18 @@ async function call<T>(
     response.status === 204 ? (undefined as T) : ((await response.json()) as T);
   return { data, response };
 }
-export function recommendedNext<T extends { slug: string }>(
+export function recommendedNext<T extends { slug: string; state?: string }>(
   items: T[],
   nextUp: { slug: string }[],
 ): T | undefined {
-  const nextSlug = nextUp[0]?.slug;
-  return items.find((item) => item.slug === nextSlug) ?? items[0];
+  for (const candidate of nextUp) {
+    const item = items.find((entry) => entry.slug === candidate.slug);
+    if (item && item.state !== "watched" && item.state !== "Watched")
+      return item;
+  }
+  return items.find(
+    (item) => item.state !== "watched" && item.state !== "Watched",
+  );
 }
 
 export const api = {
