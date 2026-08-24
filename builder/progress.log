@@ -91,3 +91,11 @@
 - Confirmed the app remains healthy on image `sha256:19f0a7c89eefacf20c3e84e04e9d633574301b2c952c9f2c0bc616b1ba3ae6ad`. The database is healthy and predates the app recreation; no database container, volume, durable data, or credential was changed or accessed.
 - Template PR #10 remains green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.
 - Host-controlled recovery remains blocked on selection of an approved host-managed delivery channel and user-facing recovery UX. Historical audit remains **FAIL** pending that accepted gate.
+
+## 2026-08-24 — authentication/session hardening slice 7
+
+- Confirmed the previously requested watched-feedback Validate Core run `32784974478` completed successfully for `89555034495238e5b9b0206bc56228a648238b58`.
+- Delivered Core checkpoint `8103dd0772ab9e0d5623e789b4559bd98e09848a`: `/api/bootstrap`, `/api/login`, and `/api/logout` now emit `Cache-Control: no-store`, preventing browser/intermediary retention of setup/session CSRF material and authentication responses.
+- Focused auth/SQL tests passed 10/10, including regression assertions for bootstrap, login, and logout cache-control headers. `npm run check` passed all 106 portable tests; deterministic production build passed with 25 artifacts; `npm audit --omit=dev --audit-level=high` reported zero vulnerabilities; production image build passed.
+- App-only deploy rebuilt `watch-tracker:verify` as `watch-tracker@sha256:c0f50ab8dcd861f7e516a02ca8e52eda5935d45953bec61383fbf1ca91b56c22` and recreated only `watch-tracker-lan-foundation-app-1` using `--no-deps`. The existing database container was healthy and untouched. Credential-free deployed API proof returned `/ready` ready and `Cache-Control: no-store` on `/api/bootstrap`.
+- No deployment credential was accessed; authenticated browser proof was not fabricated for this API-only change. Host-controlled recovery remains blocked on a selected host-managed delivery channel and user-facing recovery UX. Historical audit remains **FAIL** pending that gate and CI.
