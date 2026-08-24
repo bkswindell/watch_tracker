@@ -59,3 +59,16 @@ test("cinematic details keep unavailable enrichment visible without fabricated c
     /Mara Venn|Vale watcher|Mock enrichment preview/,
   );
 });
+
+test("Watched feedback controls use durable typed APIs and truthful gating", async () => {
+  const details = await readFile("apps/web/src/WatchableDetails.tsx", "utf8");
+  const frontendApi = await readFile("apps/web/src/api.ts", "utf8");
+  assert.match(details, /\.feedback\(item\.id\)/);
+  assert.match(details, /api\.saveFeedback/);
+  assert.match(details, /authoritative state is Watched/);
+  assert.match(details, /Loading personal feedback/);
+  assert.match(details, /saving \? "Saving…" : "Save feedback"/);
+  assert.doesNotMatch(details, /Feedback saved in mockup/);
+  assert.match(frontendApi, /WatchableFeedbackInput/);
+  assert.match(frontendApi, /\/feedback`/);
+});

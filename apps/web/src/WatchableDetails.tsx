@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import WatchableActionMenu, { viewingActionsFor } from "./WatchableActions";
+import { api } from "./api";
 import { artworkUrl, youtubeThumbnailUrl } from "./mediaUrls";
 
 const fallbackPalettes = [
@@ -236,42 +237,130 @@ function ActionButton({
   );
 }
 
-function Feedback({ item, notify, id }) {
+function Feedback({ item, notify, id, csrf }) {
+  const [draft, setDraft] = useState({
+      rating: null,
+      favorite: false,
+      wouldRewatch: false,
+      note: "",
+    }),
+    [loading, setLoading] = useState(item.state === "Watched"),
+    [saving, setSaving] = useState(false),
+    [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    setError("");
+    if (item.state !== "Watched") {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+    setLoading(true);
+    api
+      .feedback(item.id)
+      .then(({ data }) => {
+        if (!active) return;
+        const feedback = data.feedback;
+        setDraft({
+          rating: feedback?.rating ?? null,
+          favorite: feedback?.favorite ?? false,
+          wouldRewatch: feedback?.wouldRewatch ?? false,
+          note: feedback?.note ?? "",
+        });
+      })
+      .catch((cause) => active && setError(cause.message))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [item.id, item.state]);
   if (item.state !== "Watched")
     return (
       <section id={id} className="detailSection feedbackLocked">
         <h3>Your rating & review</h3>
         <p>
-          Personal feedback becomes available after this watchable is marked
-          watched.
+          Rating, favorite, rewatch intent, and private notes can only be
+          changed while this watchable’s authoritative state is Watched.
         </p>
       </section>
     );
+  const save = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const { data } = await api.saveFeedback(
+        item.id,
+        { ...draft, note: draft.note.trim() || null },
+        csrf,
+      );
+      setDraft({ ...data.feedback, note: data.feedback.note ?? "" });
+      notify("Personal feedback saved");
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Feedback could not be saved",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <section id={id} className="detailSection">
       <h3>Your rating & review</h3>
+      {loading && <p className="muted">Loading personal feedback…</p>}
       <div className="rating">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
-            aria-label={`Rate ${n * 2} out of 10`}
-            onClick={() => notify(`Rated ${n * 2}/10`)}
+            type="button"
+            aria-label={`Rate ${n} out of 5`}
+            aria-pressed={draft.rating === n}
+            disabled={loading || saving}
+            onClick={() => setDraft({ ...draft, rating: n })}
           >
-            ★
+            {draft.rating != null && n <= draft.rating ? "★" : "☆"}
           </button>
         ))}
       </div>
       <div className="feedbackChecks">
         <label className="check">
-          <input type="checkbox" /> Favorite
+          <input
+            type="checkbox"
+            checked={draft.favorite}
+            disabled={loading || saving}
+            onChange={(event) =>
+              setDraft({ ...draft, favorite: event.target.checked })
+            }
+          />{" "}
+          Favorite
         </label>
         <label className="check">
-          <input type="checkbox" /> Would rewatch
+          <input
+            type="checkbox"
+            checked={draft.wouldRewatch}
+            disabled={loading || saving}
+            onChange={(event) =>
+              setDraft({ ...draft, wouldRewatch: event.target.checked })
+            }
+          />{" "}
+          Would rewatch
         </label>
       </div>
-      <textarea className="feedbackNotes" placeholder="Private notes…" />
-      <button onClick={() => notify("Feedback saved in mockup")}>
-        Save feedback
+      <textarea
+        className="feedbackNotes"
+        placeholder="Private notes…"
+        maxLength={4000}
+        value={draft.note}
+        disabled={loading || saving}
+        onChange={(event) => setDraft({ ...draft, note: event.target.value })}
+      />
+      {error && (
+        <p className="errorText" role="alert">
+          {error}
+        </p>
+      )}
+      <button disabled={loading || saving} onClick={save}>
+        {saving ? "Saving…" : "Save feedback"}
       </button>
     </section>
   );
@@ -428,6 +517,7 @@ function SidecarDetail({
   onAction,
   onOpenDetails,
   notify,
+  csrf,
   palette,
 }) {
   const data = detailFields(item);
@@ -501,7 +591,7 @@ function SidecarDetail({
         <h3>Watch sources</h3>
         <SourceList sources={data.sources} notify={notify} />
       </section>
-      <Feedback item={item} notify={notify} />
+      <Feedback item={item} notify={notify} csrf={csrf} />
       <section className="detailSection">
         <h3>Provenance</h3>
         <p className="muted">
@@ -654,6 +744,7 @@ function CinematicDetail({
   onTarget,
   onAction,
   notify,
+  csrf,
   palette,
 }) {
   const data = detailFields(item),
@@ -879,7 +970,7 @@ function CinematicDetail({
               </p>
             )}
           </section>
-          <Feedback id={feedbackId} item={item} notify={notify} />
+          <Feedback id={feedbackId} item={item} notify={notify} csrf={csrf} />
           <section className="detailSection">
             <h3>Data provenance</h3>
             <p className="muted">
@@ -907,6 +998,7 @@ export function WatchableSidecar({
   onTarget,
   onAction,
   notify,
+  csrf,
 }) {
   const palette = useArtworkPalette(item);
   function startResize(event) {
@@ -959,6 +1051,7 @@ export function WatchableSidecar({
           onAction={onAction}
           onOpenDetails={onMaximize}
           notify={notify}
+          csrf={csrf}
           palette={palette}
         />
       </div>
@@ -973,6 +1066,7 @@ export function WatchableDetailModal({
   onTarget,
   onAction,
   notify,
+  csrf,
 }) {
   const palette = useArtworkPalette(item),
     style = { "--ambient-a": rgb(palette[0]), "--ambient-b": rgb(palette[1]) };
@@ -1015,6 +1109,7 @@ export function WatchableDetailModal({
             onTarget={onTarget}
             onAction={onAction}
             notify={notify}
+            csrf={csrf}
             palette={palette}
           />
         </div>

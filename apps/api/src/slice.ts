@@ -13,6 +13,11 @@ import type {
   CatalogAddition,
   CatalogAdditionInput,
 } from "../../../packages/contracts/src/catalog.js";
+import type {
+  WatchableFeedback,
+  WatchableFeedbackInput,
+  WatchableFeedbackResponse,
+} from "../../../packages/contracts/src/feedback.js";
 import { importCanonPackDirectory, type CanonPack } from "./canon-pack.js";
 
 export type ViewingState = "not-started" | "in-progress" | "watched";
@@ -134,6 +139,19 @@ export interface SliceStore {
     trackerInstanceId: string,
     id: string,
   ): Promise<boolean>;
+  watchableFeedback(
+    trackerInstanceId: string,
+    slug: string,
+  ): Promise<WatchableFeedbackResponse | undefined>;
+  saveWatchableFeedback(
+    trackerInstanceId: string,
+    slug: string,
+    input: WatchableFeedbackInput,
+  ): Promise<
+    | { status: "saved"; feedback: WatchableFeedback }
+    | { status: "not-found" }
+    | { status: "not-watched" }
+  >;
 }
 
 type ImportedItem = Omit<CatalogItem, "state">;
@@ -384,6 +402,7 @@ export class MemorySliceStore implements SliceStore {
   #items = new Map<string, ImportedItem>();
   #types: string[] = [];
   #states = new Map<string, string>();
+  #feedback = new Map<string, WatchableFeedback>();
   #focus?: string;
   #history: WorkspaceHistory[] = [];
   #pack: WorkspacePack | null = null;
@@ -604,6 +623,32 @@ export class MemorySliceStore implements SliceStore {
     id: string,
   ): Promise<boolean> {
     return this.#additions.delete(`${trackerInstanceId}:${id}`);
+  }
+  async watchableFeedback(
+    trackerInstanceId: string,
+    slug: string,
+  ): Promise<WatchableFeedbackResponse | undefined> {
+    if (!this.#items.has(slug)) return undefined;
+    return {
+      eligible: stateFor(this.#states.get(slug)) === "watched",
+      feedback: this.#feedback.get(`${trackerInstanceId}:${slug}`) ?? null,
+    };
+  }
+  async saveWatchableFeedback(
+    trackerInstanceId: string,
+    slug: string,
+    input: WatchableFeedbackInput,
+  ): Promise<
+    | { status: "saved"; feedback: WatchableFeedback }
+    | { status: "not-found" }
+    | { status: "not-watched" }
+  > {
+    if (!this.#items.has(slug)) return { status: "not-found" };
+    if (stateFor(this.#states.get(slug)) !== "watched")
+      return { status: "not-watched" };
+    const feedback = { ...input, updatedAt: new Date().toISOString() };
+    this.#feedback.set(`${trackerInstanceId}:${slug}`, feedback);
+    return { status: "saved", feedback };
   }
 }
 
@@ -1180,5 +1225,113 @@ export class SqlSliceStore implements SliceStore {
       [trackerInstanceId, id],
     );
     return result.rowCount === 1;
+  }
+  async watchableFeedback(
+    trackerInstanceId: string,
+    slug: string,
+  ): Promise<WatchableFeedbackResponse | undefined> {
+    const result = await this.pool.query<{
+      state: ViewingState;
+      rating: string | null;
+      favorite: boolean | null;
+      wouldRewatch: boolean | null;
+      note: string | null;
+      updatedAt: string | null;
+    }>(
+      `SELECT CASE latest_attempt.status WHEN 'completed' THEN 'watched' WHEN 'active' THEN 'in-progress' ELSE 'not-started' END AS state,
+              feedback.rating::text, feedback.favorite,
+              feedback.would_rewatch AS "wouldRewatch", feedback.note,
+              feedback.updated_at::text AS "updatedAt"
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_watchable watchable
+           ON watchable.canon_pack_release_id = active.canon_pack_release_id
+         LEFT JOIN LATERAL (
+           SELECT attempt.status FROM canon_pack_viewing_attempt attempt
+            WHERE attempt.canon_pack_release_id = watchable.canon_pack_release_id
+              AND attempt.watchable_id = watchable.watchable_id
+            ORDER BY attempt.created_at DESC LIMIT 1
+         ) latest_attempt ON true
+         LEFT JOIN watchable_feedback feedback
+           ON feedback.tracker_instance_id = $1
+          AND feedback.canon_pack_release_id = watchable.canon_pack_release_id
+          AND feedback.watchable_id = watchable.watchable_id
+        WHERE watchable.slug = $2`,
+      [trackerInstanceId, slug],
+    );
+    const row = result.rows[0];
+    if (!row) return undefined;
+    return {
+      eligible: row.state === "watched",
+      feedback:
+        row.updatedAt === null
+          ? null
+          : {
+              rating: row.rating === null ? null : Number(row.rating),
+              favorite: row.favorite ?? false,
+              wouldRewatch: row.wouldRewatch ?? false,
+              note: row.note,
+              updatedAt: row.updatedAt,
+            },
+    };
+  }
+  async saveWatchableFeedback(
+    trackerInstanceId: string,
+    slug: string,
+    input: WatchableFeedbackInput,
+  ): Promise<
+    | { status: "saved"; feedback: WatchableFeedback }
+    | { status: "not-found" }
+    | { status: "not-watched" }
+  > {
+    const saved = await this.pool.query<{
+      rating: string | null;
+      favorite: boolean;
+      wouldRewatch: boolean;
+      note: string | null;
+      updatedAt: string;
+    }>(
+      `INSERT INTO watchable_feedback
+         (tracker_instance_id, canon_pack_release_id, watchable_id,
+          rating, favorite, would_rewatch, note)
+       SELECT $1, watchable.canon_pack_release_id, watchable.watchable_id,
+              $3, $4, $5, $6
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_watchable watchable
+           ON watchable.canon_pack_release_id = active.canon_pack_release_id
+        WHERE watchable.slug = $2
+          AND (SELECT attempt.status
+                 FROM canon_pack_viewing_attempt attempt
+                WHERE attempt.canon_pack_release_id = watchable.canon_pack_release_id
+                  AND attempt.watchable_id = watchable.watchable_id
+                ORDER BY attempt.created_at DESC LIMIT 1) = 'completed'
+       ON CONFLICT (tracker_instance_id, canon_pack_release_id, watchable_id)
+       DO UPDATE SET rating = EXCLUDED.rating, favorite = EXCLUDED.favorite,
+                     would_rewatch = EXCLUDED.would_rewatch, note = EXCLUDED.note,
+                     updated_at = CURRENT_TIMESTAMP
+       RETURNING rating::text, favorite, would_rewatch AS "wouldRewatch", note,
+                 updated_at::text AS "updatedAt"`,
+      [
+        trackerInstanceId,
+        slug,
+        input.rating,
+        input.favorite,
+        input.wouldRewatch,
+        input.note,
+      ],
+    );
+    const row = saved.rows[0];
+    if (row)
+      return {
+        status: "saved",
+        feedback: {
+          rating: row.rating === null ? null : Number(row.rating),
+          favorite: row.favorite,
+          wouldRewatch: row.wouldRewatch,
+          note: row.note,
+          updatedAt: row.updatedAt,
+        },
+      };
+    const target = await this.watchableFeedback(trackerInstanceId, slug);
+    return { status: target ? "not-watched" : "not-found" };
   }
 }

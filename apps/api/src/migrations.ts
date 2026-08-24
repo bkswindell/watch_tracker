@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.06";
+export const EXPECTED_SCHEMA_VERSION = "0.07";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -262,6 +262,29 @@ const REQUIRED_PERSONAL_CATALOG_CONSTRAINTS = [
   ["catalog_addition_poster_url_approved", "c"],
   ["catalog_addition_updated_after_created", "c"],
   ["catalog_addition_deleted_after_created", "c"],
+] as const;
+
+const REQUIRED_FEEDBACK_COLUMNS = [
+  ["watchable_feedback_id", "uuid", "NO"],
+  ["tracker_instance_id", "uuid", "NO"],
+  ["canon_pack_release_id", "uuid", "NO"],
+  ["watchable_id", "uuid", "NO"],
+  ["rating", "numeric", "YES"],
+  ["favorite", "bool", "NO"],
+  ["would_rewatch", "bool", "NO"],
+  ["note", "text", "YES"],
+  ["created_at", "timestamptz", "NO"],
+  ["updated_at", "timestamptz", "NO"],
+] as const;
+
+const REQUIRED_FEEDBACK_CONSTRAINTS = [
+  ["watchable_feedback_pkey", "p"],
+  ["watchable_feedback_tracker_instance_id_fkey", "f"],
+  ["watchable_feedback_watchable_fkey", "f"],
+  ["watchable_feedback_owner_watchable_key", "u"],
+  ["watchable_feedback_rating_valid", "c"],
+  ["watchable_feedback_note_limited", "c"],
+  ["watchable_feedback_updated_after_created", "c"],
 ] as const;
 
 export interface Migration {
@@ -564,6 +587,35 @@ async function verifyPersonalCatalogIntegrity(
   );
 }
 
+async function verifyFeedbackIntegrity(database: Queryable): Promise<boolean> {
+  const columns = await database.query(
+    `SELECT column_name, udt_name, is_nullable
+       FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'watchable_feedback'`,
+  );
+  if (
+    !rowsMatchExactly(
+      columns.rows as Record<string, unknown>[],
+      ["column_name", "udt_name", "is_nullable"],
+      REQUIRED_FEEDBACK_COLUMNS,
+    )
+  )
+    return false;
+  const constraints = await database.query(
+    `SELECT constraint_record.conname AS constraint_name,
+            constraint_record.contype AS constraint_type
+       FROM pg_constraint AS constraint_record
+       JOIN pg_class AS relation ON relation.oid = constraint_record.conrelid
+       JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+      WHERE namespace.nspname = 'public' AND relation.relname = 'watchable_feedback'`,
+  );
+  return rowsMatchExactly(
+    constraints.rows as Record<string, unknown>[],
+    ["constraint_name", "constraint_type"],
+    REQUIRED_FEEDBACK_CONSTRAINTS,
+  );
+}
+
 function validateMigrationInventory(migrations: readonly Migration[]): void {
   if (migrations.length === 0) throw new Error("Migration inventory is empty");
 
@@ -639,7 +691,8 @@ export async function verifySchema(
     !(await verifyFoundationIntegrity(database)) ||
     !(await verifyCoreSliceIntegrity(database)) ||
     !(await verifyTruthfulMetadataIntegrity(database)) ||
-    !(await verifyPersonalCatalogIntegrity(database))
+    !(await verifyPersonalCatalogIntegrity(database)) ||
+    !(await verifyFeedbackIntegrity(database))
   ) {
     return { ready: false, reason: "database schema integrity mismatch" };
   }

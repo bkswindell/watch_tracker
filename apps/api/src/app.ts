@@ -13,6 +13,7 @@ import {
   isCatalogAdditionId,
   parseCatalogAdditionInput,
 } from "../../../packages/contracts/src/catalog.js";
+import { parseWatchableFeedbackInput } from "../../../packages/contracts/src/feedback.js";
 import { WATCH_TRACKER_API_SERVICE } from "../../../packages/contracts/src/health.js";
 import type { SliceStore } from "./slice.js";
 
@@ -426,6 +427,64 @@ export async function buildApp(
             "Catalog addition not found",
           );
         void reply.status(204).send();
+      },
+    );
+    app.get<{ Params: { slug: string } }>(
+      "/api/catalog/:slug/feedback",
+      async (request, reply) => {
+        const found = await requireAuth(request, reply);
+        if (!found) return;
+        const result = await store.watchableFeedback(
+          found.value.trackerInstanceId,
+          request.params.slug,
+        );
+        if (!result)
+          return sendError(
+            reply,
+            request,
+            404,
+            "catalog.not-found",
+            "Catalog item not found",
+          );
+        return result;
+      },
+    );
+    app.put<{ Params: { slug: string }; Body: unknown }>(
+      "/api/catalog/:slug/feedback",
+      async (request, reply) => {
+        const found = await requireCsrf(request, reply);
+        if (!found) return;
+        const parsed = parseWatchableFeedbackInput(request.body);
+        if (!parsed.value)
+          return sendError(
+            reply,
+            request,
+            400,
+            "request.invalid",
+            parsed.message ?? "Feedback is invalid",
+          );
+        const result = await store.saveWatchableFeedback(
+          found.value.trackerInstanceId,
+          request.params.slug,
+          parsed.value,
+        );
+        if (result.status === "not-found")
+          return sendError(
+            reply,
+            request,
+            404,
+            "catalog.not-found",
+            "Catalog item not found",
+          );
+        if (result.status === "not-watched")
+          return sendError(
+            reply,
+            request,
+            409,
+            "feedback.watch-required",
+            "Feedback can only be changed while the watchable is Watched",
+          );
+        return { feedback: result.feedback };
       },
     );
     app.get<{ Params: { slug: string } }>(

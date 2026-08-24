@@ -700,6 +700,7 @@ function App() {
               onTarget={markTarget}
               onAction={actItem}
               notify={notify}
+              csrf={csrf}
             />
             <RelationshipSummary selected={selected} />
           </>
@@ -725,6 +726,7 @@ function App() {
           onTarget={markTarget}
           onAction={actItem}
           notify={notify}
+          csrf={csrf}
         />
       )}
       {catalogDialog && (

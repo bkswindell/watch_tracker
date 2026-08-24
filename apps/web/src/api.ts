@@ -58,6 +58,17 @@ export type WorkspaceResponse = {
   history: WorkspaceHistory[];
   pack?: Record<string, unknown>;
 };
+export type WatchableFeedbackInput = {
+  rating: number | null;
+  favorite: boolean;
+  wouldRewatch: boolean;
+  note: string | null;
+};
+export type WatchableFeedback = WatchableFeedbackInput & { updatedAt: string };
+export type WatchableFeedbackResponse = {
+  eligible: boolean;
+  feedback: WatchableFeedback | null;
+};
 
 type Method = "GET" | "POST" | "PUT" | "DELETE";
 export function requestOptions(
@@ -84,12 +95,17 @@ async function call<T>(
   const response = await fetch(url, requestOptions(method, csrfToken, body));
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => undefined);
-    const message =
+    const error =
       typeof payload === "object" &&
       payload !== null &&
-      "message" in payload &&
-      typeof payload.message === "string"
-        ? payload.message
+      "error" in payload &&
+      typeof payload.error === "object" &&
+      payload.error !== null
+        ? payload.error
+        : undefined;
+    const message =
+      error && "message" in error && typeof error.message === "string"
+        ? error.message
         : `Request failed (${response.status})`;
     throw new Error(message);
   }
@@ -165,6 +181,18 @@ export const api = {
   },
   item: (slug: string) =>
     call<CatalogItem>(`/api/catalog/${encodeURIComponent(slug)}`, "GET"),
+  feedback: (slug: string) =>
+    call<WatchableFeedbackResponse>(
+      `/api/catalog/${encodeURIComponent(slug)}/feedback`,
+      "GET",
+    ),
+  saveFeedback: (slug: string, input: WatchableFeedbackInput, csrf: string) =>
+    call<{ feedback: WatchableFeedback }>(
+      `/api/catalog/${encodeURIComponent(slug)}/feedback`,
+      "PUT",
+      csrf,
+      input,
+    ),
   focus: (slug: string, csrf: string) =>
     call<{ nextUp?: CatalogItem }>("/api/focus", "POST", csrf, {
       targetSlug: slug,
