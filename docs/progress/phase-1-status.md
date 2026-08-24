@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
+Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, viewing workflows, and authenticated prerequisite inspection are implemented in the current vertical slice.
 
 ## Authorization boundary
 

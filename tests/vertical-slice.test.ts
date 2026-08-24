@@ -95,6 +95,37 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   assert.equal(imported.statusCode, 201);
   assert.equal(imported.json().pack.version, "0.2.0");
 
+  const detail = await request(app, {
+    method: "GET",
+    url: "/api/catalog/midwinter-signal",
+    cookies: sessionCookie,
+  });
+  assert.equal(detail.statusCode, 200);
+  assert.deepEqual(detail.json().relationships, [
+    {
+      type: "required",
+      direction: "requires",
+      referencedWatchable: {
+        id: "01954123-0000-7000-8000-000000000201",
+        slug: "lantern-vale-first-light",
+        title: "Lantern Vale: First Light",
+      },
+      summary:
+        "First Light establishes the restored beacon network used by the Special.",
+    },
+    {
+      type: "optional-connection",
+      direction: "required-by",
+      referencedWatchable: {
+        id: "01954123-0000-7000-8000-000000000205",
+        slug: "a-light-between",
+        title: "A Light Between",
+      },
+      summary:
+        "A background signal in the Short echoes the Special's relay pattern.",
+    },
+  ]);
+
   const catalog = await request(app, {
     method: "GET",
     url: "/api/catalog",

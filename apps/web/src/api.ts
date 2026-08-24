@@ -1,4 +1,10 @@
 export type ViewingState = "not-started" | "in-progress" | "watched";
+export type CatalogRelationship = {
+  type: string;
+  direction: "requires" | "required-by";
+  referencedWatchable: { id: string; slug: string; title: string };
+  summary: string;
+};
 export type CatalogItem = {
   slug: string;
   title: string;
@@ -6,6 +12,7 @@ export type CatalogItem = {
   summary: string;
   releaseOrder: number;
   state: ViewingState;
+  relationships: CatalogRelationship[];
 };
 export type CatalogResponse = { items: CatalogItem[]; nextUp?: CatalogItem };
 

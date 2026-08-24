@@ -24,3 +24,47 @@ test("SQL catalog latest viewing state is correlated to the active release and w
     /attempt\.watchable_id\s*=\s*watchable\.watchable_id/i,
   );
 });
+
+test("SQL catalog detail maps prerequisite relationship context", async () => {
+  const queries: string[] = [];
+  const pool = {
+    async query<T>(query: string): Promise<{ rows: T[] }> {
+      queries.push(query);
+      if (
+        /FROM active_canon_pack_registry active/i.test(query) &&
+        /ORDER BY watchable.release_order/i.test(query)
+      ) {
+        return {
+          rows: [
+            {
+              slug: "midwinter-signal",
+              title: "Midwinter Signal",
+              type: "Special",
+              summary: "summary",
+              releaseOrder: 4,
+              state: "not-started",
+            } as T,
+          ],
+        };
+      }
+      return {
+        rows: [
+          {
+            relationship_type: "required",
+            direction: "requires",
+            referenced_id: "watchable-id",
+            referenced_slug: "lantern-vale-first-light",
+            referenced_title: "Lantern Vale: First Light",
+            summary:
+              "First Light establishes the restored beacon network used by the Special.",
+          } as T,
+        ],
+      };
+    },
+  };
+
+  const item = await new SqlSliceStore(pool as never).item("midwinter-signal");
+  assert.equal(item?.relationships[0]?.referencedWatchable.id, "watchable-id");
+  assert.match(queries.at(-1) ?? "", /canon_pack_relationship/i);
+  assert.match(queries.at(-1) ?? "", /prerequisite_id|watchable_id/i);
+});

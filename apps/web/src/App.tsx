@@ -209,6 +209,32 @@ export default function App() {
                 </p>
                 <h2 id="detail-title">{selected.title}</h2>
                 <p>{selected.summary}</p>
+                <section
+                  className="relationships"
+                  aria-labelledby="relationships-title"
+                >
+                  <h3 id="relationships-title">
+                    Prerequisites and relationships
+                  </h3>
+                  {selected.relationships.length > 0 ? (
+                    <ul>
+                      {selected.relationships.map((relationship) => (
+                        <li
+                          key={`${relationship.direction}-${relationship.referencedWatchable.id}`}
+                        >
+                          <strong>{relationship.type}</strong> ·{" "}
+                          {relationship.direction.replace("-", " ")} ·{" "}
+                          {relationship.referencedWatchable.title}
+                          <span>{relationship.summary}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="empty-relationships">
+                      No prerequisites or relationships recorded.
+                    </p>
+                  )}
+                </section>
                 <div className="actions">
                   <button
                     type="button"

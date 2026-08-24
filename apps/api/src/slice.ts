@@ -13,6 +13,13 @@ import { importCanonPackDirectory, type CanonPack } from "./canon-pack.js";
 
 export type ViewingState = "not-started" | "in-progress" | "watched";
 
+export interface CatalogRelationship {
+  type: string;
+  direction: "requires" | "required-by";
+  referencedWatchable: { id: string; slug: string; title: string };
+  summary: string;
+}
+
 export interface CatalogItem {
   slug: string;
   title: string;
@@ -20,6 +27,7 @@ export interface CatalogItem {
   summary: string;
   releaseOrder: number;
   state: ViewingState;
+  relationships: CatalogRelationship[];
 }
 
 export interface SliceSession {
@@ -88,12 +96,39 @@ function projection(pack: CanonPack): ImportedItem[] {
   const labels = new Map(
     pack.watchableTypes.map((type) => [type.id, type.label]),
   );
+  const watchables = new Map(
+    pack.watchables.map((watchable) => [watchable.id, watchable]),
+  );
   return pack.watchables.map((watchable) => ({
     slug: watchable.slug,
     title: watchable.title,
     type: labels.get(watchable.watchableTypeId) ?? "Unknown",
     summary: watchable.summary,
     releaseOrder: watchable.releaseOrder,
+    relationships: pack.relationships
+      .filter(
+        (relationship) =>
+          relationship.watchableId === watchable.id ||
+          relationship.prerequisiteId === watchable.id,
+      )
+      .map((relationship) => {
+        const requires = relationship.watchableId === watchable.id;
+        const referenced = watchables.get(
+          requires ? relationship.prerequisiteId : relationship.watchableId,
+        );
+        if (!referenced)
+          throw new Error("relationship references unknown watchable");
+        return {
+          type: relationship.type,
+          direction: requires ? "requires" : "required-by",
+          referencedWatchable: {
+            id: referenced.id,
+            slug: referenced.slug,
+            title: referenced.title,
+          },
+          summary: relationship.summary,
+        };
+      }),
   }));
 }
 
@@ -435,7 +470,7 @@ export class SqlSliceStore implements SliceStore {
     }
   }
   async catalog(): Promise<CatalogItem[]> {
-    const result = await this.pool.query<CatalogItem>(
+    const result = await this.pool.query<Omit<CatalogItem, "relationships">>(
       `SELECT watchable.slug, watchable.title, type.label AS type, watchable.summary,
               watchable.release_order AS "releaseOrder",
               CASE latest_attempt.status WHEN 'active' THEN 'in-progress' WHEN 'completed' THEN 'watched' ELSE 'not-started' END AS state
@@ -449,10 +484,45 @@ export class SqlSliceStore implements SliceStore {
          ) latest_attempt ON true
         ORDER BY watchable.release_order`,
     );
-    return result.rows;
+    return result.rows.map((item) => ({ ...item, relationships: [] }));
   }
   async item(slug: string): Promise<CatalogItem | undefined> {
-    return (await this.catalog()).find((item) => item.slug === slug);
+    const item = (await this.catalog()).find((item) => item.slug === slug);
+    if (!item) return undefined;
+    const result = await this.pool.query<{
+      relationship_type: string;
+      direction: "requires" | "required-by";
+      referenced_id: string;
+      referenced_slug: string;
+      referenced_title: string;
+      summary: string;
+    }>(
+      `SELECT relationship.relationship_type,
+              CASE WHEN relationship.watchable_id = target.watchable_id THEN 'requires' ELSE 'required-by' END AS direction,
+              referenced.watchable_id AS referenced_id, referenced.slug AS referenced_slug,
+              referenced.title AS referenced_title, relationship.summary
+         FROM active_canon_pack_registry active
+         JOIN canon_pack_watchable target ON target.canon_pack_release_id = active.canon_pack_release_id
+         JOIN canon_pack_relationship relationship ON relationship.canon_pack_release_id = active.canon_pack_release_id
+          AND (relationship.watchable_id = target.watchable_id OR relationship.prerequisite_id = target.watchable_id)
+         JOIN canon_pack_watchable referenced ON referenced.canon_pack_release_id = active.canon_pack_release_id
+          AND referenced.watchable_id = CASE WHEN relationship.watchable_id = target.watchable_id THEN relationship.prerequisite_id ELSE relationship.watchable_id END
+        WHERE target.slug = $1 ORDER BY relationship.relationship_id`,
+      [slug],
+    );
+    return {
+      ...item,
+      relationships: result.rows.map((row) => ({
+        type: row.relationship_type,
+        direction: row.direction,
+        referencedWatchable: {
+          id: row.referenced_id,
+          slug: row.referenced_slug,
+          title: row.referenced_title,
+        },
+        summary: row.summary,
+      })),
+    };
   }
   async setFocus(targetSlug: string): Promise<CatalogItem | undefined> {
     const target = await this.pool.query<{
