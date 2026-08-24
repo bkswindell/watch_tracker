@@ -159,6 +159,27 @@ test("logout invalidates the server session and clears the browser cookie", asyn
     headers: { cookie },
   });
   assert.equal(workspace.statusCode, 401);
+  assert.equal(workspace.headers["cache-control"], "no-store");
+});
+
+test("authenticated owner-scoped API responses are never cached", async (t) => {
+  const { app, csrf } = await configuredApp();
+  t.after(() => app.close());
+  const login = await app.inject({
+    method: "POST",
+    url: "/api/login",
+    payload: { password: "correct-password" },
+    headers: { "x-csrf-token": csrf },
+  });
+  const cookie = String(login.headers["set-cookie"]).split(";")[0] ?? "";
+
+  const workspace = await app.inject({
+    method: "GET",
+    url: "/api/workspace",
+    headers: { cookie },
+  });
+  assert.equal(workspace.statusCode, 200);
+  assert.equal(workspace.headers["cache-control"], "no-store");
 });
 
 test("sessions expire after 30 days without activity", async () => {

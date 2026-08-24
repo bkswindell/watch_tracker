@@ -172,6 +172,10 @@ export async function buildApp(
 
   app.addHook("onRequest", async (request, reply) => {
     void reply.header("x-request-id", request.id);
+    // API responses can contain authentication material or owner-scoped state.
+    // Keep successful and error responses out of browser/intermediary caches.
+    if (request.url === "/api" || request.url.startsWith("/api/"))
+      void reply.header("cache-control", "no-store");
   });
 
   app.get("/health", async (request) => ({
