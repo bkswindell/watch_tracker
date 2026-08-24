@@ -6,7 +6,7 @@ x-watch-tracker-image: &watch-tracker-image
 
 x-watch-tracker-environment: &watch-tracker-environment
   DATABASE_URL: postgresql://watch_tracker:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@database:5432/watch_tracker
-  CANON_PACK_PATH: /app/canon-packs/lantern-vale-0.2.1
+  CANON_PACK_PATH: /app/canon-packs/lantern-vale-0.2.0
 
 x-watch-tracker-security: &watch-tracker-security
   read_only: true

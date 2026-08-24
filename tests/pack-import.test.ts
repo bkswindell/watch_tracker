@@ -13,11 +13,12 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  ACCEPTED_LANTERN_VALE_RELEASE,
   importCanonPackDirectory,
   MemorySliceStore,
 } from "../apps/api/src/slice.js";
 
-const LANTERN_VALE_021 = path.resolve("canon-packs/lantern-vale-0.2.1");
+const LANTERN_VALE_020 = path.resolve("canon-packs/lantern-vale-0.2.0");
 const REQUIRED_DATA = [
   "data/pack.json",
   "data/sources.json",
@@ -239,14 +240,26 @@ async function packFixture(
   return directory;
 }
 
-test("imports the verified Lantern Vale 0.2.1 directory fixture", async () => {
-  const pack = await importCanonPackDirectory(LANTERN_VALE_021);
+test("imports the verified Lantern Vale 0.2.0 directory fixture", async () => {
+  assert.deepEqual(ACCEPTED_LANTERN_VALE_RELEASE, {
+    id: "01954123-0000-7000-8000-000000000001",
+    slug: "lantern-vale",
+    title: "Lantern Vale Stories",
+    version: "0.2.0",
+    manifestSha256:
+      "f5c1041ad7daf7a49f8987bdd7d8127f0a8b6c94e70b4aca775e732010b98b8c",
+  });
+  const pack = await importCanonPackDirectory(LANTERN_VALE_020);
   assert.deepEqual(pack.identity, {
     id: "01954123-0000-7000-8000-000000000001",
     slug: "lantern-vale",
     title: "Lantern Vale Stories",
-    version: "0.2.1",
+    version: "0.2.0",
   });
+  assert.equal(
+    pack.manifestSha256,
+    ACCEPTED_LANTERN_VALE_RELEASE.manifestSha256,
+  );
   assert.equal(pack.watchables.length, 5);
   assert.equal(pack.memberships.length, 6);
   assert.equal(pack.memberships.at(-1)?.position, undefined);
@@ -597,7 +610,7 @@ test("the Lantern Vale import entry point rejects a self-attested replacement re
 test("an injected activation fault preserves the active pack and personal viewing and focus state", async () => {
   let failActivation = false;
   const store = new MemorySliceStore({
-    packPath: LANTERN_VALE_021,
+    packPath: LANTERN_VALE_020,
     faultAfterStage: () => failActivation,
   });
   await store.importLanternVale();

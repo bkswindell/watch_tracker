@@ -1,0 +1,5 @@
+{
+  "authoringContract": "0.2.0",
+  "coreSchema": ">=0.2.0 <0.3.0",
+  "releaseContract": "0.2.0"
+}

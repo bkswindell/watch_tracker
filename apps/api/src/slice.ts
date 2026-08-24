@@ -49,11 +49,11 @@ type ImportedItem = Omit<CatalogItem, "state">;
 
 export { importCanonPackDirectory } from "./canon-pack.js";
 
-export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.1";
+export const DEFAULT_CANON_PACK_PATH = "/app/canon-packs/lantern-vale-0.2.0";
 
 function defaultCanonPackPath(): string {
   return process.env.NODE_TEST_CONTEXT !== undefined
-    ? path.resolve("canon-packs/lantern-vale-0.2.1")
+    ? path.resolve("canon-packs/lantern-vale-0.2.0")
     : DEFAULT_CANON_PACK_PATH;
 }
 
@@ -62,9 +62,9 @@ export const ACCEPTED_LANTERN_VALE_RELEASE = Object.freeze({
   id: "01954123-0000-7000-8000-000000000001",
   slug: "lantern-vale",
   title: "Lantern Vale Stories",
-  version: "0.2.1",
+  version: "0.2.0",
   manifestSha256:
-    "feaf10ac4aea93cfa98644c65f238469383ed3cb2d40a05cd7ca6edf51ebb369",
+    "f5c1041ad7daf7a49f8987bdd7d8127f0a8b6c94e70b4aca775e732010b98b8c",
 });
 
 async function importAcceptedLanternVale(
