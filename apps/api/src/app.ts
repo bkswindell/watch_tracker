@@ -30,6 +30,7 @@ export interface BuildAppOptions {
   webRoot?: string;
   sliceStore?: SliceStore;
   posterFetch?: typeof fetch;
+  loginThrottle?: { maxFailures: number; windowMs: number };
 }
 
 export const API_SERVER_LIMITS = Object.freeze({
@@ -108,6 +109,23 @@ function readCsrf(request: FastifyRequest): string | undefined {
     : undefined;
 }
 
+function sameOrigin(request: FastifyRequest): boolean {
+  const origin = request.headers.origin;
+  if (!origin) return true; // Non-browser clients still require the CSRF token.
+  if (Array.isArray(origin)) return false;
+  try {
+    const parsed = new URL(origin);
+    const host = request.headers.host;
+    return (
+      Boolean(host) &&
+      parsed.host === host &&
+      ["http:", "https:"].includes(parsed.protocol)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -178,6 +196,39 @@ export async function buildApp(
   if (options.sliceStore) {
     const store = options.sliceStore;
     const setupCsrf = randomBytes(32).toString("hex");
+    const loginThrottle = options.loginThrottle ?? {
+      maxFailures: 5,
+      windowMs: 15 * 60_000,
+    };
+    const failedLogins = new Map<
+      string,
+      { count: number; startedAt: number }
+    >();
+    function loginKey(request: FastifyRequest): string {
+      return request.ip;
+    }
+    function loginBlocked(request: FastifyRequest): number | undefined {
+      const failure = failedLogins.get(loginKey(request));
+      if (!failure) return undefined;
+      const remaining =
+        loginThrottle.windowMs - (Date.now() - failure.startedAt);
+      if (remaining <= 0) {
+        failedLogins.delete(loginKey(request));
+        return undefined;
+      }
+      return failure.count >= loginThrottle.maxFailures ? remaining : undefined;
+    }
+    function recordLoginFailure(request: FastifyRequest): void {
+      const key = loginKey(request);
+      const existing = failedLogins.get(key);
+      const now = Date.now();
+      if (!existing || now - existing.startedAt >= loginThrottle.windowMs)
+        failedLogins.set(key, { count: 1, startedAt: now });
+      else existing.count += 1;
+    }
+    function clearLoginFailures(request: FastifyRequest): void {
+      failedLogins.delete(loginKey(request));
+    }
     async function session(request: FastifyRequest) {
       const token = readCookie(request, "watch_tracker_session");
       return token
@@ -195,7 +246,12 @@ export async function buildApp(
     async function requireCsrf(request: FastifyRequest, reply: FastifyReply) {
       const found = await requireAuth(request, reply);
       const csrf = readCsrf(request);
-      if (!found || !csrf || !(await store.validateCsrf(found.token, csrf))) {
+      if (
+        !found ||
+        !sameOrigin(request) ||
+        !csrf ||
+        !(await store.validateCsrf(found.token, csrf))
+      ) {
         if (found)
           sendError(
             reply,
@@ -276,7 +332,7 @@ export async function buildApp(
       };
     });
     app.post("/api/setup", async (request, reply) => {
-      if (readCsrf(request) !== setupCsrf) {
+      if (!sameOrigin(request) || readCsrf(request) !== setupCsrf) {
         sendError(
           reply,
           request,
@@ -301,7 +357,7 @@ export async function buildApp(
     app.post<{ Body: { password?: unknown } }>(
       "/api/login",
       async (request, reply) => {
-        if (readCsrf(request) !== setupCsrf) {
+        if (!sameOrigin(request) || readCsrf(request) !== setupCsrf) {
           sendError(
             reply,
             request,
@@ -311,12 +367,24 @@ export async function buildApp(
           );
           return;
         }
+        const blockedFor = loginBlocked(request);
+        if (blockedFor !== undefined) {
+          void reply.header("retry-after", Math.ceil(blockedFor / 1000));
+          return sendError(
+            reply,
+            request,
+            429,
+            "auth.throttled",
+            "Too many sign-in attempts. Try again later.",
+          );
+        }
         const password = request.body?.password;
         if (
           typeof password !== "string" ||
           password.length > 1024 ||
           !(await store.authenticate(password))
         ) {
+          recordLoginFailure(request);
           sendError(
             reply,
             request,
@@ -326,6 +394,7 @@ export async function buildApp(
           );
           return;
         }
+        clearLoginFailures(request);
         const created = await store.createSession();
         void reply
           .header(
@@ -337,6 +406,18 @@ export async function buildApp(
           .send();
       },
     );
+    app.post("/api/logout", async (request, reply) => {
+      const found = await requireCsrf(request, reply);
+      if (!found) return;
+      await store.invalidateSession(found.token);
+      void reply
+        .header(
+          "set-cookie",
+          "watch_tracker_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+        )
+        .status(204)
+        .send();
+    });
     app.post("/api/import-lantern-vale", async (request, reply) => {
       if (!(await requireCsrf(request, reply))) return;
       return reply.status(201).send({ pack: await store.importLanternVale() });

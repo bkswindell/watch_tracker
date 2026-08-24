@@ -103,6 +103,7 @@ export interface SliceStore {
   setup(): Promise<boolean>;
   authenticate(password: string): Promise<boolean>;
   createSession(): Promise<SliceSession>;
+  invalidateSession(token: string): Promise<void>;
   getSession(
     token: string,
   ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined>;
@@ -446,6 +447,9 @@ export class MemorySliceStore implements SliceStore {
     });
     return session;
   }
+  async invalidateSession(token: string): Promise<void> {
+    this.#sessions.delete(token);
+  }
   async getSession(
     token: string,
   ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined> {
@@ -734,6 +738,11 @@ export class SqlSliceStore implements SliceStore {
       ],
     );
     return session;
+  }
+  async invalidateSession(token: string): Promise<void> {
+    await this.pool.query("DELETE FROM app_session WHERE token_sha256 = $1", [
+      digest(token),
+    ]);
   }
   async getSession(
     token: string,

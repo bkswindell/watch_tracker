@@ -218,6 +218,16 @@ function App() {
     window.setTimeout(() => setToast(""), 2300);
   };
   const notImplemented = (feature) => notify(`${feature} · Not Implemented`);
+  const logout = () =>
+    perform(async () => {
+      await api.logout(csrf);
+      setPassword("");
+      setCsrf("");
+      setScreen("login");
+      setItems([]);
+      setSelected(undefined);
+      notify("Signed out.");
+    });
   const loadWorkspace = async () => {
     const [{ data }, { data: additions }] = await Promise.all([
       api.workspace(),
@@ -512,6 +522,9 @@ function App() {
             <span className="mockBadge">MVP · POSTGRESQL</span>
             <button onClick={() => void importPack()} disabled={busy}>
               Import pack
+            </button>
+            <button onClick={() => void logout()} disabled={busy}>
+              Sign out
             </button>
           </div>
         </header>
