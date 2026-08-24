@@ -133,7 +133,11 @@ test("server environment validation fails closed for missing or malformed values
 
 test("API startup refuses effective UID zero before loading configuration or secrets", () => {
   assert.throws(() => assertNonRootRuntime(0), /refuses to start API as root/);
-  assert.doesNotThrow(() => assertNonRootRuntime(1000));
+  assert.throws(
+    () => assertNonRootRuntime(1000, 0),
+    /refuses to start API as root/,
+  );
+  assert.doesNotThrow(() => assertNonRootRuntime(1000, 1000));
 });
 
 test("shutdown always ends the database pool when app close fails", async () => {
