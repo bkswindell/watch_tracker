@@ -1,0 +1,17 @@
+# Phase 1 progress log
+
+## 2026-08-24 — authentication/session hardening slice 1
+
+- Confirmed Validate Core run `32784974478` for `89555034495238e5b9b0206bc56228a648238b58` completed successfully.
+- Delivered Core checkpoint `28dcddbef2bff9f4f26537d934b37227690d5fe0`:
+  - unsafe requests now reject a supplied mismatched `Origin` in addition to token CSRF validation;
+  - login failures are per-client fixed-window throttled (default 5 failures/15 minutes, `429` plus `Retry-After`);
+  - `POST /api/logout` requires authenticated same-origin CSRF, invalidates the server-side session, and expires the cookie;
+  - Web UI exposes Sign out.
+- Added focused tests for hostile Origin, throttling/reset behavior, and server-side logout invalidation.
+- Validation: focused auth/SQL test set passed; `npm run check` passed (99 tests); deterministic build passed (25 artifacts); runtime production image build passed; `npm audit --omit=dev --audit-level=high` reported 0 vulnerabilities.
+- PostgreSQL integration attempt was blocked by `ECONNREFUSED 127.0.0.1:5432`: the healthy project database is intentionally not host-published. No PostgreSQL container, volume, or credential was changed.
+- App-only deployment: `docker compose -p watch-tracker-lan-foundation up -d --no-deps app`; `http://10.18.0.201:3100/ready` returned ready and app health is healthy. No migration ran and database service was untouched.
+- Git remote verification: `automation/phase1` and PR #4 head both equal `28dcddbef2bff9f4f26537d934b37227690d5fe0`.
+- Browser certification blocker: no supported Chromium-family browser is available to the cron browser harness. Authenticated proof was not fabricated and no credential was accessed.
+- Historical audit remains **FAIL** pending every accepted auth/session gate.
