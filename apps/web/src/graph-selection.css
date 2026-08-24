@@ -1,0 +1,60 @@
+/* Persistent graph roles: selected > target > next up. */
+.watchNode{position:relative}
+
+.watchNode.nextUp:not(.selected):not(.target){
+ outline:3px solid #c084fc;
+ outline-offset:3px;
+ box-shadow:0 0 0 7px rgba(192,132,252,.15),0 10px 28px rgba(0,0,0,.38);
+}
+.watchNode.target:not(.selected){
+ outline:3px solid #72e0b5;
+ outline-offset:3px;
+ box-shadow:0 0 0 7px rgba(114,224,181,.15),0 10px 28px rgba(0,0,0,.38);
+}
+.watchNode.selected{
+ outline:3px solid #22d3ee;
+ outline-offset:3px;
+ box-shadow:0 0 0 7px rgba(34,211,238,.16),0 10px 28px rgba(0,0,0,.38);
+}
+.watchNode.target.selected{
+ box-shadow:0 0 0 7px rgba(34,211,238,.16),inset 0 0 0 2px var(--mint),0 10px 28px rgba(0,0,0,.38);
+}
+
+.roleNodeBadge{
+ position:absolute;
+ z-index:4;
+ top:-15px;
+ right:14px;
+ padding:4px 9px;
+ border:1px solid;
+ border-radius:999px;
+ box-shadow:0 5px 16px rgba(0,0,0,.42);
+ font-size:10px;
+ font-weight:900;
+ letter-spacing:.08em;
+ line-height:1;
+ text-transform:uppercase;
+ pointer-events:none;
+}
+.selectedNodeBadge{
+ border-color:#67e8f9;
+ background:#083344;
+ color:#cffafe;
+}
+.targetNodeBadge{
+ border-color:#86efc7;
+ background:#07382b;
+ color:#d1fae5;
+}
+.nextUpNodeBadge{
+ border-color:#d8b4fe;
+ background:#2e1065;
+ color:#f3e8ff;
+}
+.react-flow__node-watchable:focus-visible .watchNode{
+ outline:3px solid #bae6fd;
+ outline-offset:4px;
+}
+@media (prefers-reduced-motion:reduce){
+ .watchNode{transition:none}
+}
