@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { execFile, execFileSync } from "node:child_process";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -12,6 +19,24 @@ function run(file: string): string {
     env: { ...process.env, INITIAL_ADMIN_PASSWORD_FILE: file },
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+  });
+}
+
+function runAsync(
+  file: string,
+  env: Record<string, string>,
+): Promise<{ error?: unknown; stdout: string; stderr: string }> {
+  return new Promise((resolve) => {
+    execFile(
+      script,
+      [],
+      {
+        env: { ...process.env, ...env, INITIAL_ADMIN_PASSWORD_FILE: file },
+        encoding: "utf8",
+      },
+      (error, stdout, stderr) =>
+        resolve({ error: error ?? undefined, stdout, stderr }),
+    );
   });
 }
 
@@ -45,6 +70,53 @@ test("fills an existing private empty password file without printing it", () => 
   assert.equal(output, "");
   assert.equal(mode, 0o600);
   assert.match(password, /^[A-Za-z0-9+/]{64}\n$/);
+});
+
+test("allows concurrent initialization when one valid process wins", async () => {
+  const directory = mkdtempSync(
+    path.join(tmpdir(), "watch-tracker-admin-race-"),
+  );
+  const file = path.join(directory, "initial_admin_password");
+  const barrier = path.join(directory, "barrier");
+  const bin = path.join(directory, "bin");
+  const fakeOpenSsl = path.join(bin, "openssl");
+  mkdirSync(barrier);
+  mkdirSync(bin);
+  writeFileSync(
+    fakeOpenSsl,
+    `#!/usr/bin/env bash
+set -Eeuo pipefail
+mkdir -- "$BARRIER/$PPID"
+while true; do
+  markers=("$BARRIER"/*)
+  ((\${#markers[@]} >= 2)) && break
+  sleep 0.01
+done
+printf 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\\n'
+`,
+    { mode: 0o700 },
+  );
+  chmodSync(fakeOpenSsl, 0o700);
+  writeFileSync(file, "", { mode: 0o600 });
+
+  const env = {
+    BARRIER: barrier,
+    PATH: `${bin}:${process.env.PATH ?? ""}`,
+  };
+  const results = await Promise.all([runAsync(file, env), runAsync(file, env)]);
+
+  assert.deepEqual(
+    results.map(({ error, stdout, stderr }) => ({ error, stdout, stderr })),
+    [
+      { error: undefined, stdout: "", stderr: "" },
+      { error: undefined, stdout: "", stderr: "" },
+    ],
+  );
+  const password = readFileSync(file, "utf8");
+  assert.equal(password.length, 65);
+  assert.match(password, /^[A-Za-z0-9+/]{64}/);
+  assert.equal(password.at(-1), "\n");
+  assert.equal(statSync(file).mode & 0o777, 0o600);
 });
 
 test("fails closed when the password parent is group-readable or group-writable", () => {

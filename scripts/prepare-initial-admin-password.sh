@@ -75,10 +75,14 @@ if [[ -e "$password_file" ]]; then
   }
   mode=$(stat -c '%a' -- "$password_file")
   owner=$(stat -c '%u' -- "$password_file")
-  [[ "$owner" == "$(id -u)" && "$mode" == "600" && ! -s "$password_file" ]] || {
+  [[ "$owner" == "$(id -u)" && "$mode" == "600" ]] || {
     printf 'password file changed before safe replacement\n' >&2
     exit 1
   }
+  # Another safe process may have won the replacement race. Reuse its
+  # non-empty regular file rather than treating the successful initialization
+  # as a failure.
+  [[ -s "$password_file" ]] && exit 0
   mv -T -- "$temporary" "$password_file"
 else
   # Link instead of rename so a concurrent creator cannot be overwritten.
