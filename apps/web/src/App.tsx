@@ -1,6 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { api, type CatalogItem, type CatalogResponse } from "./api";
+import {
+  api,
+  type CatalogItem,
+  type CatalogResponse,
+  type CatalogRelationship,
+} from "./api.js";
+
+export function graphRelationship(
+  selectedTitle: string,
+  relationship: CatalogRelationship,
+) {
+  const referencedTitle = relationship.referencedWatchable.title;
+  const requiredBy = relationship.direction === "required-by";
+  const source = requiredBy ? referencedTitle : selectedTitle;
+  const destination = requiredBy ? selectedTitle : referencedTitle;
+  return {
+    source,
+    destination,
+    label: requiredBy
+      ? `${source} is required by ${destination}`
+      : `${source} requires ${destination}`,
+  };
+}
 
 type Screen = "loading" | "setup" | "login" | "catalog";
 
@@ -232,6 +254,61 @@ export default function App() {
                   ) : (
                     <p className="empty-relationships">
                       No prerequisites or relationships recorded.
+                    </p>
+                  )}
+                </section>
+                <section
+                  className="dependency-graph"
+                  aria-labelledby="dependency-graph-title"
+                  aria-describedby="dependency-graph-description"
+                  role="region"
+                >
+                  <h3 id="dependency-graph-title">Dependency graph</h3>
+                  <p id="dependency-graph-description">
+                    Directed relationships between this item and related catalog
+                    items.
+                  </p>
+                  {selected.relationships.length > 0 ? (
+                    <div className="graph-edges" role="list">
+                      {selected.relationships.map((relationship) => {
+                        const graph = graphRelationship(
+                          selected.title,
+                          relationship,
+                        );
+                        return (
+                          <div
+                            className="graph-edge"
+                            role="listitem"
+                            key={`graph-${relationship.direction}-${relationship.referencedWatchable.id}`}
+                            aria-label={`Relationship: ${relationship.type}; ${graph.label}`}
+                          >
+                            <span
+                              className="graph-node"
+                              role="img"
+                              aria-label={`Node: ${graph.source}`}
+                            >
+                              {graph.source}
+                            </span>
+                            <span className="graph-arrow" aria-hidden="true">
+                              →
+                            </span>
+                            <span
+                              className="graph-node"
+                              role="img"
+                              aria-label={`Node: ${graph.destination}`}
+                            >
+                              {graph.destination}
+                            </span>
+                            <span className="graph-edge-label">
+                              {relationship.type} · {graph.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="empty-dependency-graph">
+                      No dependencies or relationships to graph.
                     </p>
                   )}
                 </section>
