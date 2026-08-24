@@ -53,9 +53,18 @@ This deployment path is for local development and verification only. It does not
 
 1. Copy `.env.example` to `.env`.
 2. Replace the password placeholder with a long random local PostgreSQL password.
-3. Create `.secrets/initial_admin_password` with a random deployment password,
-   owned by the local user and mode `0600`. Compose mounts it read-only for the
-   non-root application container; it is not committed or logged.
+3. Prepare the initial local admin password without displaying it:
+
+   ```bash
+   ./scripts/prepare-initial-admin-password.sh
+   ```
+
+   The script writes `.secrets/initial_admin_password` (or the path in
+   `INITIAL_ADMIN_PASSWORD_FILE`) only when the file is absent or empty. It
+   creates and checks a private parent directory, writes a strong random
+   password with mode `0600`, never prints the password, and is safe to run
+   repeatedly. Compose mounts this ignored file read-only for the non-root
+   application container.
 4. Start the stack:
 
    ```bash
