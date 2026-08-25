@@ -131,6 +131,19 @@ test("Catalog provides a filterable poster grid without replacing the bounded li
   assert.match(styles, /aspect-ratio: 2 \/ 3/);
 });
 
+test("Next Up hero recovers from unavailable approved artwork", async () => {
+  const app = await source();
+  const styles = await readFile("apps/web/src/styles.css", "utf8");
+  assert.match(
+    app,
+    /const \[nextPosterAvailable, setNextPosterAvailable\] = useState\(true\)/,
+  );
+  assert.match(app, /setNextPosterAvailable\(Boolean\(next\?\.posterUrl\)\)/);
+  assert.match(app, /onError=\{\(\) => setNextPosterAvailable\(false\)\}/);
+  assert.match(app, /artwork unavailable/);
+  assert.match(styles, /\.nextHeroPosterFallback/);
+});
+
 test("cinematic details keep unavailable enrichment visible without fabricated content", async () => {
   const details = await readFile("apps/web/src/WatchableDetails.tsx", "utf8");
   assert.match(details, /Cast and crew data unavailable/);

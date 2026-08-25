@@ -1095,6 +1095,7 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
   const [queueState, setQueueState] = useState("All");
   const [hideWatched, setHideWatched] = useState(false);
   const [context, setContext] = useState();
+  const [nextPosterAvailable, setNextPosterAvailable] = useState(true);
   const queue = useMemo(() => queuePresentation(nextUp), [nextUp]);
   const filtered = useMemo(
     () =>
@@ -1119,6 +1120,9 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
   );
   const next = recommendedNext(items, nextUp);
   const targetItem = items.find((item) => item.id === target);
+  useEffect(() => {
+    setNextPosterAvailable(Boolean(next?.posterUrl));
+  }, [next?.id, next?.posterUrl]);
   const types = [...new Set(queue.map((item) => item.type))];
   const saveView = () => {
     const blob = new Blob(
@@ -1157,12 +1161,21 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
         <div
           className={`nextHero ${next.posterUrl || next.poster ? "hasPoster" : "noPoster"}`}
         >
-          {next.posterUrl ? (
+          {next.posterUrl && nextPosterAvailable ? (
             <img
               className="nextHeroPoster"
               src={artworkUrl(next.posterUrl)}
               alt={`${next.title} poster`}
+              onError={() => setNextPosterAvailable(false)}
             />
+          ) : next.posterUrl ? (
+            <div
+              className="nextHeroPoster nextHeroPosterFallback"
+              role="img"
+              aria-label={`${next.type || "Watchable"} artwork unavailable`}
+            >
+              {next.type?.slice(0, 1).toLocaleUpperCase() || "W"}
+            </div>
           ) : next.poster ? (
             <div
               className="poster"
