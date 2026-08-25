@@ -148,9 +148,23 @@ export function historySummary(history) {
     discarded: history.filter((item) => item.action === "discarded").length,
   };
 }
-export function historyViewSnapshot(history) {
+export function historyVisibleRecords(history, query, action) {
+  const needle = query.trim().toLocaleLowerCase();
+  return history.filter(
+    (record) =>
+      (!needle ||
+        Object.values(record).some((value) =>
+          String(value ?? "")
+            .toLocaleLowerCase()
+            .includes(needle),
+        )) &&
+      (action === "All" || record.action === action),
+  );
+}
+export function historyViewSnapshot(history, filters = undefined) {
   return {
     exportedAt: new Date().toISOString(),
+    filters,
     summary: historySummary(history),
     items: history,
   };
@@ -1452,14 +1466,33 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
 }
 function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
   const [context, setContext] = useState();
-  const summary = useMemo(() => historySummary(history), [history]);
+  const [query, setQuery] = useState("");
+  const [action, setAction] = useState("All");
+  const visibleHistory = useMemo(
+    () => historyVisibleRecords(history, query, action),
+    [history, query, action],
+  );
+  const summary = useMemo(
+    () => historySummary(visibleHistory),
+    [visibleHistory],
+  );
   const historyDatasource = useMemo(
-    () => createInfiniteDatasource(history),
+    () => createInfiniteDatasource(visibleHistory),
+    [visibleHistory],
+  );
+  const actions = useMemo(
+    () => [...new Set(history.map((record) => record.action))].sort(),
     [history],
   );
   const saveView = () => {
     const blob = new Blob(
-      [JSON.stringify(historyViewSnapshot(history), null, 2)],
+      [
+        JSON.stringify(
+          historyViewSnapshot(visibleHistory, { query, action }),
+          null,
+          2,
+        ),
+      ],
       {
         type: "application/json",
       },
@@ -1507,6 +1540,38 @@ function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
           <b>{summary.discarded}</b>
           <span>Discarded</span>
         </div>
+      </div>
+      <div className="gridTools historyFilters">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search history…"
+          aria-label="Search viewing history"
+        />
+        <label>
+          Activity
+          <select
+            value={action}
+            onChange={(event) => setAction(event.target.value)}
+            aria-label="Filter history by activity"
+          >
+            <option>All</option>
+            {actions.map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <button
+          onClick={() => {
+            setQuery("");
+            setAction("All");
+          }}
+        >
+          Clear filters
+        </button>
+        <span className="catalogResultCount" aria-live="polite">
+          {visibleHistory.length} of {history.length}
+        </span>
       </div>
       <div className="agWrap historyGrid">
         <Suspense

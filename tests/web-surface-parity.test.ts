@@ -61,10 +61,23 @@ test("Next Up exports its visible deterministic queue rather than a placeholder"
 test("App derives History cards from returned lifecycle records", async () => {
   const app = await source();
   assert.match(app, /function historySummary\(history\)/);
-  assert.match(app, /export function historyViewSnapshot\(history\)/);
+  assert.match(
+    app,
+    /export function historyVisibleRecords\(history, query, action\)/,
+  );
+  assert.match(
+    app,
+    /export function historyViewSnapshot\(history, filters = undefined\)/,
+  );
   assert.match(app, /exportedAt: new Date\(\)\.toISOString\(\)/);
   assert.match(app, /summary: historySummary\(history\)/);
-  assert.match(app, /historyViewSnapshot\(history\)/);
+  assert.match(
+    app,
+    /historyViewSnapshot\(visibleHistory, \{ query, action \}\)/,
+  );
+  assert.match(app, /aria-label="Search viewing history"/);
+  assert.match(app, /aria-label="Filter history by activity"/);
+  assert.match(app, /createInfiniteDatasource\(visibleHistory\)/);
   assert.match(app, /Watched duration/);
   assert.match(app, /Average rating/);
   assert.match(app, /Save view/);

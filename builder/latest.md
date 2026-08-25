@@ -1,6 +1,8 @@
 # Phase 1 builder status
 
-**Checkpoint:** Recovery migration documentation reconciled; live deployment remains blocked by unapplied schema `0.11`
+**Checkpoint:** History command filters and truthful filtered export; live deployment remains blocked by unapplied schema `0.11`
+
+- **Current History command-filter delivery (2026-08-25):** History now has accessible all-column search and Activity controls above its bounded grid. The filtered records drive the summary cards, result count, and `Save view` envelope together, so the exported lifecycle records, filter metadata, and aggregates are one truthful projection. `npm run check` passed all 129 portable tests; deterministic production build passed 29 artifacts; high-severity dependency audit and `git diff --check` passed. No PostgreSQL, migration, credential, volume, app deployment, or browser operation occurred. The retained live database remains deliberately schema `0.10`, so this `0.11`-requiring head is not deployed. Historical Phase 1 audit remains **FAIL**.
 
 - **Current recovery documentation checkpoint (2026-08-25):** corrected the public Core overview to state the actual required PostgreSQL migration level, `0.11`, rather than obsolete `0.10`. A portable regression now reads the README and asserts the `0.11` contract alongside the documented 15-minute, digest-only host-admin recovery guarantees, preventing the operator guidance from silently drifting behind the schema required by the recovery gate. `npm run check` passed all 129 portable tests; deterministic build passed with 29 artifacts; high-severity production dependency audit and Compose configuration validation passed. No PostgreSQL, migration, credential, volume, app deployment, or browser operation occurred. The retained live database is deliberately schema `0.10`, so deploying this head would correctly fail readiness. Historical Phase 1 audit remains **FAIL**.
 

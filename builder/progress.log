@@ -1,5 +1,11 @@
 # Phase 1 progress log
 
+## 2026-08-25 — History command-filtered view
+
+- Delivered accessible all-column History search and an Activity selector. The command-filtered records now consistently drive the bounded Infinite Row Model datasource, summary cards, visible count, and downloaded `watch-tracker-history.json` envelope, which records the applied filters and matching summary rather than implying an unfiltered export.
+- Validation: focused web-surface coverage passed 13/13; `npm run check` passed all 129 portable tests; deterministic build passed 29 artifacts; `npm audit --audit-level=high` found zero vulnerabilities; `git diff --check` passed. Browser certification remains unavailable because the cron browser harness cannot start a supported Chromium-family browser.
+- The live database intentionally remains schema `0.10` while this branch requires additive `0.11`, so no application deployment was attempted. No PostgreSQL, migration, credential, volume, or durable-data operation occurred. Historical Phase 1 audit remains **FAIL**.
+
 ## 2026-08-25 — recovery migration documentation contract
 
 - Reconciled the public Core overview with the implemented recovery schema: PostgreSQL migrations are required through additive `0.11`, not the obsolete `0.10` declaration. The host-admin recovery instructions already describe the actual 15-minute, SHA-256-digest-only reset mechanism.
