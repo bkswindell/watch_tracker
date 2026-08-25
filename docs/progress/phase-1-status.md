@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migrations through `0.10`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, hardened authentication and host-admin recovery, Pack import, catalog behavior, viewing workflows, and authenticated prerequisite inspection are implemented in the current vertical slice.
+Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migrations through `0.11` (with the live database intentionally retained at `0.10` pending additive migration), one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, hardened authentication and host-admin recovery, Pack import, catalog behavior, viewing workflows, and authenticated prerequisite inspection are implemented in the current vertical slice.
 
 ## Authorization boundary
 
@@ -35,6 +35,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 - Template at start: clean `main` at `6b15a0b6ed53b333238418b7ac56453fdfcbe6e2`.
 
 ## Progress log
+
+### 2026-08-25 — recovery expiry invariant CI-certified
+
+- Additive migration `0.11_password-recovery-expiry-bound.sql` enforces `password_reset_token.expires_at <= created_at + INTERVAL '15 minutes'`; runtime identity verifies the named constraint and terminal schema version. This protects the approved host-admin recovery lifetime against a future persistence writer extending a stored token.
+- Exact Core PR #4 head `8b061263e5053bf5ecd4d68b490aaf90769dc6f9` passed Validate Core run `32818274725`, including isolated PostgreSQL migration/recovery identity. The host's direct PostgreSQL test command intentionally fails closed because `TEST_DATABASE_URL` is unavailable, so no live database operation occurred.
+- The live database remains schema `0.10`; `0.11` is deliberately not applied and the application is not redeployed until that additive migration is explicitly performed. Historical Phase 1 audit remains **FAIL** pending broader closeout and exact-final browser certification.
 
 ### 2026-08-23 — M0 started
 
