@@ -244,4 +244,10 @@ test("serves the built Watch Tracker shell when a web root is configured", async
   assert.equal(response.statusCode, 200);
   assert.match(response.headers["content-type"] ?? "", /^text\/html/);
   assert.match(response.body, /<title>Watch Tracker<\/title>/);
+
+  const reset = await app.inject({ method: "GET", url: "/reset-password" });
+  assert.equal(reset.statusCode, 200);
+  assert.equal(reset.headers["cache-control"], "no-store");
+  assert.equal(reset.headers["referrer-policy"], "no-referrer");
+  assert.match(reset.body, /<title>Watch Tracker<\/title>/);
 });

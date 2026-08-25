@@ -1,0 +1,108 @@
+import { useState, type FormEvent } from "react";
+
+import { api } from "./api";
+
+export const PASSWORD_RESET_POLICY =
+  "Use 15 to 1024 characters. Passwords must not contain NUL bytes.";
+
+export function ResetPassword({
+  token,
+  onAttempted,
+  onCompleted,
+}: {
+  token: string;
+  onAttempted: () => void;
+  onCompleted: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [complete, setComplete] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    if (password.length < 15 || password.includes("\0")) {
+      setError(PASSWORD_RESET_POLICY);
+      return;
+    }
+    if (password !== confirmation) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await api.completePasswordReset(token, password);
+      setPassword("");
+      setConfirmation("");
+      setComplete(true);
+    } catch {
+      // The API intentionally uses one failure response for every token state.
+      setError("Password reset could not be completed.");
+    } finally {
+      onAttempted();
+      setPassword("");
+      setConfirmation("");
+      setBusy(false);
+    }
+  }
+
+  if (complete)
+    return (
+      <div className="authShell">
+        <div className="authCard">
+          <div className="logo">WT</div>
+          <span className="eyebrow">Password recovery</span>
+          <h1>Password updated</h1>
+          <p>Your administrator password was changed. Sign in to continue.</p>
+          <button className="primary" onClick={onCompleted}>
+            Continue to sign in
+          </button>
+        </div>
+      </div>
+    );
+
+  return (
+    <div className="authShell">
+      <div className="authCard">
+        <div className="logo">WT</div>
+        <span className="eyebrow">Password recovery</span>
+        <h1>Choose a new password</h1>
+        <p>{PASSWORD_RESET_POLICY}</p>
+        {error ? (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <form onSubmit={submit}>
+          <label htmlFor="reset-password">New administrator password</label>
+          <input
+            id="reset-password"
+            type="password"
+            autoComplete="new-password"
+            minLength={15}
+            maxLength={1024}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+          <label htmlFor="reset-password-confirm">Confirm new password</label>
+          <input
+            id="reset-password-confirm"
+            type="password"
+            autoComplete="new-password"
+            minLength={15}
+            maxLength={1024}
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+            required
+          />
+          <button className="primary" disabled={busy}>
+            {busy ? "Updating password…" : "Update password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

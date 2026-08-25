@@ -103,12 +103,21 @@ export interface SliceStore {
   needsSetup(): Promise<boolean>;
   setup(): Promise<boolean>;
   authenticate(password: string): Promise<boolean>;
+  authenticateAndCreateSession(
+    password: string,
+  ): Promise<SliceSession | undefined>;
   createSession(): Promise<SliceSession>;
   invalidateSession(token: string): Promise<void>;
   getSession(
     token: string,
   ): Promise<{ csrfToken: string; trackerInstanceId: string } | undefined>;
   validateCsrf(token: string, csrfToken: string): Promise<boolean>;
+  issuePasswordResetToken(): Promise<{
+    token: string;
+    trackerInstanceId: string;
+    expiresAt: string;
+  }>;
+  completePasswordReset(token: string, password: string): Promise<boolean>;
   importLanternVale(): Promise<{ title: string; version: string }>;
   catalog(options?: {
     search?: string | undefined;
@@ -312,6 +321,8 @@ function newSession(trackerInstanceId: string): SliceSession {
 
 export const SESSION_IDLE_LIFETIME_MS = 30 * 24 * 60 * 60_000;
 export const SESSION_ABSOLUTE_LIFETIME_MS = 90 * 24 * 60 * 60_000;
+export const PASSWORD_RESET_TOKEN_BYTES = 32;
+export const PASSWORD_RESET_TOKEN_LIFETIME_MS = 15 * 60_000;
 
 function stateFor(status?: string): ViewingState {
   if (status === "active") return "in-progress";
@@ -437,6 +448,14 @@ export class MemorySliceStore implements SliceStore {
       absoluteExpiresAt: number;
     }
   >();
+  #passwordResetTokens = new Map<
+    string,
+    {
+      trackerInstanceId: string;
+      expiresAt: number;
+      consumed: boolean;
+    }
+  >();
   #additions = new Map<string, CatalogAddition>();
   #items = new Map<string, ImportedItem>();
   #types: string[] = [];
@@ -480,6 +499,15 @@ export class MemorySliceStore implements SliceStore {
       (await credentialMatches(password, this.#credential))
     );
   }
+  async authenticateAndCreateSession(
+    password: string,
+  ): Promise<SliceSession | undefined> {
+    const credential = this.#credential;
+    if (!credential || !(await credentialMatches(password, credential)))
+      return undefined;
+    if (this.#credential !== credential) return undefined;
+    return this.createSession();
+  }
   async createSession(): Promise<SliceSession> {
     const session = newSession(this.#trackerInstanceId);
     const now = this.#now();
@@ -522,6 +550,56 @@ export class MemorySliceStore implements SliceStore {
       session.absoluteExpiresAt > now &&
       session.csrfToken === csrfToken
     );
+  }
+  async issuePasswordResetToken(): Promise<{
+    token: string;
+    trackerInstanceId: string;
+    expiresAt: string;
+  }> {
+    if (this.#credential === undefined)
+      throw new Error("setup is not complete");
+    for (const reset of this.#passwordResetTokens.values()) {
+      if (
+        reset.trackerInstanceId === this.#trackerInstanceId &&
+        !reset.consumed
+      )
+        reset.consumed = true;
+    }
+    const token = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("base64url");
+    const expiresAt = this.#now() + PASSWORD_RESET_TOKEN_LIFETIME_MS;
+    this.#passwordResetTokens.set(digest(token), {
+      trackerInstanceId: this.#trackerInstanceId,
+      expiresAt,
+      consumed: false,
+    });
+    return {
+      token,
+      trackerInstanceId: this.#trackerInstanceId,
+      expiresAt: new Date(expiresAt).toISOString(),
+    };
+  }
+  async completePasswordReset(
+    token: string,
+    password: string,
+  ): Promise<boolean> {
+    if (passwordPolicyError(password)) return false;
+    const reset = this.#passwordResetTokens.get(digest(token));
+    if (
+      !reset ||
+      reset.trackerInstanceId !== this.#trackerInstanceId ||
+      reset.consumed ||
+      reset.expiresAt <= this.#now()
+    )
+      return false;
+    reset.consumed = true;
+    try {
+      this.#credential = await credentialHash(password);
+      this.#sessions.clear();
+      return true;
+    } catch (error) {
+      reset.consumed = false;
+      throw error;
+    }
   }
   async importLanternVale(): Promise<{ title: string; version: string }> {
     const pack = await importAcceptedLanternVale(this.#packPath);
@@ -786,6 +864,50 @@ export class SqlSliceStore implements SliceStore {
       ? await credentialMatches(password, result.rows[0].credential_hash)
       : false;
   }
+  async authenticateAndCreateSession(
+    password: string,
+  ): Promise<SliceSession | undefined> {
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await client.query<{
+        credential_hash: string | null;
+        tracker_instance_id: string;
+      }>(
+        `SELECT instance.credential_hash, instance.tracker_instance_id
+           FROM tracker_instance instance
+           JOIN installation_setup setup
+             ON setup.tracker_instance_id = instance.tracker_instance_id
+          WHERE setup.singleton = true
+          FOR UPDATE OF instance`,
+      );
+      const row = result.rows[0];
+      if (
+        !row?.credential_hash ||
+        !(await credentialMatches(password, row.credential_hash))
+      ) {
+        await client.query("ROLLBACK");
+        return undefined;
+      }
+      const session = newSession(row.tracker_instance_id);
+      await client.query(
+        "INSERT INTO app_session (token_sha256, csrf_token, csrf_sha256, tracker_instance_id, expires_at, last_seen_at, absolute_expires_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP + INTERVAL '30 days', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '90 days')",
+        [
+          digest(session.token),
+          session.csrfToken,
+          digest(session.csrfToken),
+          session.trackerInstanceId,
+        ],
+      );
+      await client.query("COMMIT");
+      return session;
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
   async createSession(): Promise<SliceSession> {
     const setup = await this.pool.query<{ tracker_instance_id: string }>(
       "SELECT tracker_instance_id FROM installation_setup WHERE singleton = true",
@@ -833,6 +955,86 @@ export class SqlSliceStore implements SliceStore {
       [digest(token), digest(csrfToken)],
     );
     return result.rowCount === 1;
+  }
+  async issuePasswordResetToken(): Promise<{
+    token: string;
+    trackerInstanceId: string;
+    expiresAt: string;
+  }> {
+    const token = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("base64url");
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const setup = await client.query<{ tracker_instance_id: string }>(
+        "SELECT tracker_instance_id FROM installation_setup WHERE singleton = true FOR UPDATE",
+      );
+      const trackerInstanceId = setup.rows[0]?.tracker_instance_id;
+      if (!trackerInstanceId) throw new Error("setup is not complete");
+      await client.query(
+        "UPDATE password_reset_token SET consumed_at = CURRENT_TIMESTAMP WHERE tracker_instance_id = $1 AND consumed_at IS NULL",
+        [trackerInstanceId],
+      );
+      const inserted = await client.query<{ expires_at: string }>(
+        "INSERT INTO password_reset_token (token_sha256, tracker_instance_id, expires_at) VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '15 minutes') RETURNING expires_at::text AS expires_at",
+        [digest(token), trackerInstanceId],
+      );
+      const expiresAt = inserted.rows[0]?.expires_at;
+      if (!expiresAt) throw new Error("password reset token was not created");
+      await client.query("COMMIT");
+      return { token, trackerInstanceId, expiresAt };
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+  async completePasswordReset(
+    token: string,
+    password: string,
+  ): Promise<boolean> {
+    if (passwordPolicyError(password)) return false;
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const consumed = await client.query<{ tracker_instance_id: string }>(
+        `UPDATE password_reset_token reset
+            SET consumed_at = CURRENT_TIMESTAMP
+          WHERE reset.token_sha256 = $1
+            AND reset.consumed_at IS NULL
+            AND reset.expires_at > CURRENT_TIMESTAMP
+            AND reset.tracker_instance_id = (
+              SELECT setup.tracker_instance_id
+                FROM installation_setup setup
+               WHERE setup.singleton = true
+            )
+        RETURNING reset.tracker_instance_id`,
+        [digest(token)],
+      );
+      const trackerInstanceId = consumed.rows[0]?.tracker_instance_id;
+      if (!trackerInstanceId) {
+        await client.query("ROLLBACK");
+        return false;
+      }
+      const credential = await credentialHash(password);
+      const updated = await client.query(
+        "UPDATE tracker_instance SET credential_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE tracker_instance_id = $2",
+        [credential, trackerInstanceId],
+      );
+      if (updated.rowCount !== 1)
+        throw new Error("tracker credential was not updated");
+      await client.query(
+        "DELETE FROM app_session WHERE tracker_instance_id = $1",
+        [trackerInstanceId],
+      );
+      await client.query("COMMIT");
+      return true;
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
   async importLanternVale(): Promise<{ title: string; version: string }> {
     const pack = await importAcceptedLanternVale(this.#packPath);

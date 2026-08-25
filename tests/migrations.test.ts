@@ -52,7 +52,9 @@ function migration(
                   ? "personal-catalog-additions"
                   : version === "0.07"
                     ? "watchable-feedback"
-                    : "session-lifetimes",
+                    : version === "0.08"
+                      ? "session-lifetimes"
+                      : "password-recovery",
     sha256,
     sql: "SELECT 1",
   };
@@ -60,7 +62,7 @@ function migration(
 
 test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 8);
+  assert.equal(migrations.length, 9);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
@@ -85,7 +87,26 @@ test("loads the ordered foundation and Core slice migrations with deterministic 
   assert.equal(migrations[7]?.version, "0.08");
   assert.equal(migrations[7]?.name, "session-lifetimes");
   assert.match(migrations[7]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.08");
+  assert.equal(migrations[8]?.version, "0.09");
+  assert.equal(migrations[8]?.name, "password-recovery");
+  assert.match(migrations[8]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.09");
+});
+
+test("0.09 stores expiring password reset token digests by owner", async () => {
+  const sql = await readFile(
+    "db/migrations/0.09_password-recovery.sql",
+    "utf8",
+  );
+  assert.match(sql, /token_sha256 char\(64\) PRIMARY KEY/);
+  assert.match(
+    sql,
+    /tracker_instance_id uuid NOT NULL REFERENCES tracker_instance/,
+  );
+  assert.match(sql, /expires_at timestamptz NOT NULL/);
+  assert.match(sql, /consumed_at timestamptz/);
+  assert.match(sql, /token_sha256 ~ '\^\[0-9a-f\]\{64\}\$'/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
 });
 
 test("0.08 adds bounded idle and absolute session lifetimes", async () => {
@@ -216,7 +237,7 @@ test("migration discovery rejects a terminal version that differs from the appli
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.05 does not match expected schema version 0\.08/,
+    /Migration terminal version 0\.05 does not match expected schema version 0\.09/,
   );
 });
 
@@ -274,8 +295,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.08",
-          migration_name: "session-lifetimes",
+          migration_version: "0.09",
+          migration_name: "password-recovery",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -293,8 +314,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.08",
-          migration_name: "renamed-session-lifetimes",
+          migration_version: "0.09",
+          migration_name: "renamed-password-recovery",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -425,8 +446,8 @@ test("schema verification fails closed when the migration ledger and foundation 
         return {
           rows: [
             {
-              migration_version: "0.08",
-              migration_name: "session-lifetimes",
+              migration_version: "0.09",
+              migration_name: "password-recovery",
               migration_sha256: "a".repeat(64),
             },
           ],
@@ -460,7 +481,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.09",
+              migration_version: "0.10",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },

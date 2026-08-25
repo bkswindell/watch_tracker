@@ -66,6 +66,7 @@ This deployment path is for local development and verification only. It does not
    repeatedly. Compose mounts this ignored file read-only and preserves its
    source UID, so the non-root application UID must match the local user that
    owns the file.
+
 4. Start the stack:
 
    ```bash
@@ -89,6 +90,32 @@ the loopback URL. To use the trusted-LAN default, remove that override (or set
 `0.0.0.0` unless exposure on every host interface is intentional. This changes
 the deployment's access boundary, so use authentication before treating LAN
 exposure as an MVP deployment.
+
+### Host-admin password recovery
+
+Password recovery does not use email or an external provider. An administrator
+with direct database access can issue a short-lived link from the application
+host:
+
+```bash
+DATABASE_URL='postgresql://…' \
+WATCH_TRACKER_BASE_URL='https://tracker.example/' \
+npm run password-recovery
+```
+
+The command writes the reset link exactly once to standard output. Deliver it
+directly to the owner and do not paste it into tickets, chat logs, shell history,
+analytics, or monitoring systems. The 256-bit token is carried in the URL
+fragment, is stored only as a SHA-256 digest, expires after 15 minutes, and is
+invalidated when another link is issued. Opening the link removes the fragment
+from the address bar immediately. A successful reset consumes the token,
+applies the normal Argon2id password policy, and revokes every existing session.
+Invalid, expired, superseded, and reused links return the same generic failure.
+
+Run this command only from a trusted host-admin shell. Prefer a base URL using
+HTTPS; HTTP is supported for loopback/local development only. The command does
+not modify a password. Credentials change only when the owner explicitly
+submits a valid token and policy-compliant new password through the reset page.
 
 Compose builds a digest-pinned PostgreSQL derivative that runs directly as `postgres`, while the application and migrator run as non-root with read-only filesystems, dropped capabilities, and `no-new-privileges`. To validate the source independently, run:
 

@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.08";
+export const EXPECTED_SCHEMA_VERSION = "0.09";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -290,6 +290,26 @@ const REQUIRED_FEEDBACK_CONSTRAINTS = [
   ["watchable_feedback_rating_valid", "c"],
   ["watchable_feedback_note_limited", "c"],
   ["watchable_feedback_updated_after_created", "c"],
+] as const;
+
+const REQUIRED_PASSWORD_RECOVERY_COLUMNS = [
+  ["password_reset_token", "token_sha256", "bpchar", "NO"],
+  ["password_reset_token", "tracker_instance_id", "uuid", "NO"],
+  ["password_reset_token", "expires_at", "timestamptz", "NO"],
+  ["password_reset_token", "consumed_at", "timestamptz", "YES"],
+  ["password_reset_token", "created_at", "timestamptz", "NO"],
+] as const;
+
+const REQUIRED_PASSWORD_RECOVERY_CONSTRAINTS = [
+  ["password_reset_token", "password_reset_token_pkey", "p"],
+  ["password_reset_token", "password_reset_token_sha256_format", "c"],
+  ["password_reset_token", "password_reset_token_expiry_after_created", "c"],
+  ["password_reset_token", "password_reset_token_consumed_after_created", "c"],
+  [
+    "password_reset_token",
+    "password_reset_token_tracker_instance_id_fkey",
+    "f",
+  ],
 ] as const;
 
 export interface Migration {
@@ -621,6 +641,39 @@ async function verifyFeedbackIntegrity(database: Queryable): Promise<boolean> {
   );
 }
 
+async function verifyPasswordRecoveryIntegrity(
+  database: Queryable,
+): Promise<boolean> {
+  const columns = await database.query(
+    `SELECT table_name, column_name, udt_name, is_nullable
+       FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'password_reset_token'`,
+  );
+  if (
+    !rowsMatchExactly(
+      columns.rows as Record<string, unknown>[],
+      ["table_name", "column_name", "udt_name", "is_nullable"],
+      REQUIRED_PASSWORD_RECOVERY_COLUMNS,
+    )
+  )
+    return false;
+  const constraints = await database.query(
+    `SELECT relation.relname AS table_name,
+            constraint_record.conname AS constraint_name,
+            constraint_record.contype AS constraint_type
+       FROM pg_constraint AS constraint_record
+       JOIN pg_class AS relation ON relation.oid = constraint_record.conrelid
+       JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace
+      WHERE namespace.nspname = 'public'
+        AND relation.relname = 'password_reset_token'`,
+  );
+  return rowsMatchExactly(
+    constraints.rows as Record<string, unknown>[],
+    ["table_name", "constraint_name", "constraint_type"],
+    REQUIRED_PASSWORD_RECOVERY_CONSTRAINTS,
+  );
+}
+
 function validateMigrationInventory(migrations: readonly Migration[]): void {
   if (migrations.length === 0) throw new Error("Migration inventory is empty");
 
@@ -697,7 +750,8 @@ export async function verifySchema(
     !(await verifyCoreSliceIntegrity(database)) ||
     !(await verifyTruthfulMetadataIntegrity(database)) ||
     !(await verifyPersonalCatalogIntegrity(database)) ||
-    !(await verifyFeedbackIntegrity(database))
+    !(await verifyFeedbackIntegrity(database)) ||
+    !(await verifyPasswordRecoveryIntegrity(database))
   ) {
     return { ready: false, reason: "database schema integrity mismatch" };
   }

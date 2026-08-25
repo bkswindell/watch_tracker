@@ -136,6 +136,11 @@ export const api = {
   setup: (csrf: string) => call<void>("/api/setup", "POST", csrf),
   login: (password: string, csrf: string) =>
     call<void>("/api/login", "POST", csrf, { password }),
+  completePasswordReset: (token: string, password: string) =>
+    call<void>("/api/password-reset/complete", "POST", undefined, {
+      token,
+      password,
+    }),
   logout: (csrf: string) => call<void>("/api/logout", "POST", csrf),
   importPack: (csrf: string) =>
     call<{ pack: { title: string; version: string } }>(

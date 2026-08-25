@@ -14,6 +14,7 @@ import { api, recommendedNext } from "./api";
 import type { CatalogAdditionInput } from "./api";
 import { artworkUrl } from "./mediaUrls";
 import { createInfiniteDatasource } from "./infiniteGrid";
+import { ResetPassword } from "./ResetPassword";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 export function csvSafeValue(value) {
@@ -182,6 +183,13 @@ function StateBadge({ value }) {
   ) : null;
 }
 function App() {
+  const [passwordResetToken, setPasswordResetToken] = useState(() => {
+    if (location.pathname !== "/reset-password") return undefined;
+    const token =
+      new URLSearchParams(location.hash.slice(1)).get("token") ?? "";
+    window.history.replaceState(null, "", "/reset-password");
+    return token;
+  });
   const [screen, setScreen] = useState("loading"),
     [csrf, setCsrf] = useState(""),
     [password, setPassword] = useState(""),
@@ -255,6 +263,7 @@ function App() {
     }
   };
   useEffect(() => {
+    if (passwordResetToken !== undefined) return;
     api
       .bootstrap()
       .then(({ data }) => {
@@ -437,6 +446,14 @@ function App() {
     ],
     [],
   );
+  if (passwordResetToken !== undefined)
+    return (
+      <ResetPassword
+        token={passwordResetToken}
+        onAttempted={() => setPasswordResetToken("")}
+        onCompleted={() => location.replace("/")}
+      />
+    );
   if (screen === "loading")
     return <div className="loadingScreen">Loading Watch Tracker…</div>;
   if (screen === "setup" || screen === "login")

@@ -382,6 +382,43 @@ export async function buildApp(
       }
       void reply.status(204).send();
     });
+    app.post<{ Body: { token?: unknown; password?: unknown } }>(
+      "/api/password-reset/complete",
+      async (request, reply) => {
+        void reply
+          .header("cache-control", "no-store")
+          .header("referrer-policy", "no-referrer");
+        const genericFailure = () =>
+          sendError(
+            reply,
+            request,
+            400,
+            "password-reset.invalid",
+            "Password reset could not be completed",
+          );
+        if (!sameOrigin(request)) {
+          genericFailure();
+          return;
+        }
+        const token = request.body?.token;
+        const password = request.body?.password;
+        if (
+          typeof token !== "string" ||
+          typeof password !== "string" ||
+          token.length > 256 ||
+          password.length > 1024 ||
+          !(await store.completePasswordReset(token, password))
+        ) {
+          genericFailure();
+          return;
+        }
+        void reply
+          .header("cache-control", "no-store")
+          .header("referrer-policy", "no-referrer")
+          .status(204)
+          .send();
+      },
+    );
     app.post<{ Body: { password?: unknown } }>(
       "/api/login",
       async (request, reply) => {
@@ -408,11 +445,11 @@ export async function buildApp(
           );
         }
         const password = request.body?.password;
-        if (
-          typeof password !== "string" ||
-          password.length > 1024 ||
-          !(await store.authenticate(password))
-        ) {
+        const created =
+          typeof password === "string" && password.length <= 1024
+            ? await store.authenticateAndCreateSession(password)
+            : undefined;
+        if (!created) {
           recordLoginFailure(request);
           sendError(
             reply,
@@ -424,13 +461,13 @@ export async function buildApp(
           return;
         }
         clearLoginFailures(request);
-        const created = await store.createSession();
+        const createdSession = await store.createSession();
         void reply
           .header(
             "set-cookie",
-            `watch_tracker_session=${created.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}`,
+            `watch_tracker_session=${createdSession.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}`,
           )
-          .header("x-csrf-token", created.csrfToken)
+          .header("x-csrf-token", createdSession.csrfToken)
           .status(204)
           .send();
       },
@@ -779,6 +816,12 @@ export async function buildApp(
       prefix: "/",
       redirect: false,
     });
+    app.get("/reset-password", (_request, reply) =>
+      reply
+        .header("cache-control", "no-store")
+        .header("referrer-policy", "no-referrer")
+        .sendFile("index.html", { cacheControl: false }),
+    );
   }
 
   app.setNotFoundHandler((request, reply) => {
