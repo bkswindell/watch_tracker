@@ -80,6 +80,47 @@ test("unsafe requests require the Origin scheme as well as the host to match", a
   assert.equal(acceptedLogin.statusCode, 204);
 });
 
+test("login returns the session authenticated under the credential lock", async (t) => {
+  class CountingSessionStore extends MemorySliceStore {
+    sessionCreations = 0;
+
+    override async createSession() {
+      this.sessionCreations += 1;
+      return super.createSession();
+    }
+  }
+
+  const store = new CountingSessionStore({
+    initialPassword: "correct-password",
+  });
+  const app = await buildApp({
+    readinessProbe: async () => ({ ready: true }),
+    sliceStore: store,
+  });
+  t.after(() => app.close());
+  const bootstrap = await app.inject({ method: "GET", url: "/api/bootstrap" });
+  const csrf = bootstrap.json().csrfToken as string;
+  assert.equal(
+    (
+      await app.inject({
+        method: "POST",
+        url: "/api/setup",
+        headers: { "x-csrf-token": csrf },
+      })
+    ).statusCode,
+    204,
+  );
+
+  const login = await app.inject({
+    method: "POST",
+    url: "/api/login",
+    payload: { password: "correct-password" },
+    headers: { "x-csrf-token": csrf },
+  });
+  assert.equal(login.statusCode, 204);
+  assert.equal(store.sessionCreations, 1);
+});
+
 test("login failures are rate limited and a successful login resets the limit", async (t) => {
   const { app, csrf } = await configuredApp({
     maxFailures: 2,

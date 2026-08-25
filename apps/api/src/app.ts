@@ -461,13 +461,12 @@ export async function buildApp(
           return;
         }
         clearLoginFailures(request);
-        const createdSession = await store.createSession();
         void reply
           .header(
             "set-cookie",
-            `watch_tracker_session=${createdSession.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}`,
+            `watch_tracker_session=${created.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}`,
           )
-          .header("x-csrf-token", createdSession.csrfToken)
+          .header("x-csrf-token", created.csrfToken)
           .status(204)
           .send();
       },
