@@ -205,8 +205,10 @@ export async function buildApp(
   if (options.sliceStore) {
     const store = options.sliceStore;
     const setupCsrf = randomBytes(32).toString("hex");
+    // Match the reviewed deployment baseline: ten failures from one remote
+    // address within 15 minutes trigger a 15-minute cooldown.
     const loginThrottle = options.loginThrottle ?? {
-      maxFailures: 5,
+      maxFailures: 10,
       windowMs: 15 * 60_000,
       maxEntries: 10_000,
     };

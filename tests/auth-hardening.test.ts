@@ -11,17 +11,15 @@ import {
   passwordPolicyError,
 } from "../apps/api/src/slice.js";
 
-async function configuredApp(
-  loginThrottle: {
-    maxFailures: number;
-    windowMs: number;
-    maxEntries?: number;
-  } = { maxFailures: 5, windowMs: 60_000 },
-) {
+async function configuredApp(loginThrottle?: {
+  maxFailures: number;
+  windowMs: number;
+  maxEntries?: number;
+}) {
   const app = await buildApp({
     readinessProbe: async () => ({ ready: true }),
     sliceStore: new MemorySliceStore({ initialPassword: "correct-password" }),
-    loginThrottle,
+    ...(loginThrottle ? { loginThrottle } : {}),
   });
   const bootstrap = await app.inject({ method: "GET", url: "/api/bootstrap" });
   assert.equal(bootstrap.headers["cache-control"], "no-store");
@@ -104,6 +102,24 @@ test("login failures are rate limited and a successful login resets the limit", 
   assert.equal(throttled.statusCode, 429);
   assert.equal(throttled.json().error.code, "auth.throttled");
   assert.match(String(throttled.headers["retry-after"]), /^\d+$/);
+});
+
+test("the default login throttle is ten failures per 15-minute window", async (t) => {
+  const { app, csrf } = await configuredApp();
+  t.after(() => app.close());
+  const login = () =>
+    app.inject({
+      method: "POST",
+      url: "/api/login",
+      payload: { password: "wrong" },
+      headers: { "x-csrf-token": csrf },
+    });
+
+  for (let attempt = 0; attempt < 10; attempt += 1)
+    assert.equal((await login()).statusCode, 401);
+  const throttled = await login();
+  assert.equal(throttled.statusCode, 429);
+  assert.equal(throttled.json().error.code, "auth.throttled");
 });
 
 test("login throttle retains a bounded number of client entries", async (t) => {
