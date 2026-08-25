@@ -4,7 +4,7 @@ Watch Tracker is an open-source, self-hosted application for tracking progress t
 
 ## TL;DR
 
-The first runnable Core foundation is available for local development: a React shell, Fastify API, PostgreSQL migration `0.01`, one-shot migrator, and hardened Docker Compose deployment. Pack import, setup/authentication, catalog, and viewing workflows are still under development.
+The current Core vertical slice is available for local development: a React shell, Fastify API, PostgreSQL migrations through `0.10`, one-shot migrator, hardened Docker Compose deployment, validated Canon Pack import, setup/authentication, catalog, dependency inspection, and viewing workflows. Host-admin password recovery is also implemented; Phase 1 remains in active development and is not a release.
 
 ## Why Watch Tracker
 
@@ -17,7 +17,7 @@ Most media trackers answer whether something was watched. Watch Tracker is desig
 
 The Core Tracker is franchise-independent. Franchise-specific catalogs, relationships, provenance, and presentation metadata belong to separately maintained Canon Packs.
 
-## Planned Phase 1 experience
+## Phase 1 experience
 
 The proposed MVP proves one complete personal-use loop:
 
@@ -136,7 +136,7 @@ Watch Tracker does not endorse or certify the legality or accuracy of an indepen
 
 ## Project status
 
-Watch Tracker is in active Phase 1 implementation. Historical Canon Pack contract `0.1.0` remains preserved, the first declarative Watchable Type slice of contract `0.2.0` is merged, and the Core foundation is verified in a trusted-LAN app-only deployment. This is not a production release or public hosted service; no Core release has been published yet.
+Watch Tracker is in active Phase 1 implementation. Historical Canon Pack contract `0.1.0` remains preserved, the declarative Watchable Type contract `0.2.0` is implemented, and the Core vertical slice is verified in a trusted-LAN app-only deployment. This is not a production release or public hosted service; no Core release has been published yet.
 
 ## Contributing
 
