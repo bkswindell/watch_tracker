@@ -231,16 +231,29 @@ function CatalogPosterArtwork({ item }) {
     </div>
   );
 }
-function CatalogPosterGrid({ items, query, onPick, onClearSearch }) {
+function CatalogPosterGrid({
+  items,
+  query,
+  type,
+  state,
+  onPick,
+  onClearFilters,
+}) {
   const needle = query.trim().toLocaleLowerCase();
   const visible = items
     .filter((item) => {
-      if (!needle) return true;
-      return [item.title, item.type, item.series, item.state, item.summary]
-        .filter(Boolean)
-        .join(" ")
-        .toLocaleLowerCase()
-        .includes(needle);
+      const matchesSearch =
+        !needle ||
+        [item.title, item.type, item.series, item.state, item.summary]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase()
+          .includes(needle);
+      return (
+        matchesSearch &&
+        (type === "All" || item.type === type) &&
+        (state === "All" || item.state === state)
+      );
     })
     .sort(
       (left, right) =>
@@ -255,7 +268,13 @@ function CatalogPosterGrid({ items, query, onPick, onClearSearch }) {
     >
       <div className="catalogPosterSummary" aria-live="polite">
         <span>{resultLabel}</span>
-        {needle && <span>matching “{query.trim()}”</span>}
+        {(needle || type !== "All" || state !== "All") && (
+          <span>
+            {needle ? `matching “${query.trim()}”` : "filtered"}
+            {type !== "All" ? ` · ${type}` : ""}
+            {state !== "All" ? ` · ${state}` : ""}
+          </span>
+        )}
       </div>
       {visible.length ? (
         <div className="catalogPosterGrid" aria-label="Catalog poster grid">
@@ -277,8 +296,8 @@ function CatalogPosterGrid({ items, query, onPick, onClearSearch }) {
         </div>
       ) : (
         <div className="catalogEmpty" role="status">
-          <p>No watchables match this search.</p>
-          <button onClick={onClearSearch}>Clear search</button>
+          <p>No watchables match the active filters.</p>
+          <button onClick={onClearFilters}>Clear filters</button>
         </div>
       )}
     </section>
@@ -311,6 +330,8 @@ function App() {
     [query, setQuery] = useState(""),
     [mode, setMode] = useState("Release Timeline"),
     [catalogDisplay, setCatalogDisplay] = useState("list"),
+    [catalogType, setCatalogType] = useState("All"),
+    [catalogState, setCatalogState] = useState("All"),
     [gridApi, setGridApi] = useState(),
     [colsOpen, setColsOpen] = useState(false),
     [gridContextMenu, setGridContextMenu] = useState(),
@@ -536,12 +557,21 @@ function App() {
       notify(`${result.data.pack.title} ${result.data.pack.version} imported.`);
     });
   }
-  // Keep the full workspace as the grid's immutable datasource snapshot. The
-  // Infinite Row Model applies its own column filters and requests bounded
-  // blocks, while this remains the approved all-column command search.
+  // The command filters apply identically to the bounded list and poster grid;
+  // the Infinite Row Model still owns column filtering and block requests.
+  const filteredCatalogItems = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          (catalogType === "All" || item.type === catalogType) &&
+          (catalogState === "All" || item.state === catalogState),
+      ),
+    [items, catalogType, catalogState],
+  );
   const catalogDatasource = useMemo(
-    () => createInfiniteDatasource(items, { quickFilter: query }),
-    [items, query],
+    () =>
+      createInfiniteDatasource(filteredCatalogItems, { quickFilter: query }),
+    [filteredCatalogItems, query],
   );
   const columns = useMemo(
     () => [
@@ -728,6 +758,36 @@ function App() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search all columns…"
                 />
+                <label>
+                  Type
+                  <select
+                    value={catalogType}
+                    onChange={(event) => setCatalogType(event.target.value)}
+                    aria-label="Filter catalog by type"
+                  >
+                    <option>All</option>
+                    {[...new Set(items.map((item) => item.type))]
+                      .sort()
+                      .map((type) => (
+                        <option key={type}>{type}</option>
+                      ))}
+                  </select>
+                </label>
+                <label>
+                  Viewing state
+                  <select
+                    value={catalogState}
+                    onChange={(event) => setCatalogState(event.target.value)}
+                    aria-label="Filter catalog by viewing state"
+                  >
+                    <option>All</option>
+                    {[...new Set(items.map((item) => item.state))]
+                      .sort()
+                      .map((state) => (
+                        <option key={state}>{state}</option>
+                      ))}
+                  </select>
+                </label>
                 <div
                   className="seg catalogDisplay"
                   aria-label="Catalog display"
@@ -785,6 +845,8 @@ function App() {
                 <button
                   onClick={() => {
                     setQuery("");
+                    setCatalogType("All");
+                    setCatalogState("All");
                     gridApi?.setFilterModel(null);
                     gridApi?.refreshInfiniteCache();
                   }}
@@ -849,8 +911,14 @@ function App() {
                 <CatalogPosterGrid
                   items={items}
                   query={query}
+                  type={catalogType}
+                  state={catalogState}
                   onPick={openDetails}
-                  onClearSearch={() => setQuery("")}
+                  onClearFilters={() => {
+                    setQuery("");
+                    setCatalogType("All");
+                    setCatalogState("All");
+                  }}
                 />
               )}
             </>

@@ -101,20 +101,26 @@ test("Catalog CRUD connects personal records while preserving Canon Pack immutab
   assert.match(frontendApi, /catalog-additions/);
 });
 
-test("Catalog provides a searchable poster grid without replacing the bounded list", async () => {
+test("Catalog provides a filterable poster grid without replacing the bounded list", async () => {
   const app = await source();
   const styles = await readFile("apps/web/src/styles.css", "utf8");
   assert.match(
     app,
-    /function CatalogPosterGrid\(\{ items, query, onPick, onClearSearch \}\)/,
+    /function CatalogPosterGrid\(\{[\s\S]*items,[\s\S]*query,[\s\S]*type,[\s\S]*state,[\s\S]*onPick,[\s\S]*onClearFilters,[\s\S]*\}\)/,
   );
   assert.match(app, /aria-label="Catalog poster grid"/);
   assert.match(app, /catalogDisplay === "posters"/);
   assert.match(app, /setCatalogDisplay\("posters"\)/);
   assert.match(app, /items=\{items\}/);
-  assert.match(app, /onClearSearch=\{\(\) => setQuery\(""\)\}/);
+  assert.match(app, /aria-label="Filter catalog by type"/);
+  assert.match(app, /aria-label="Filter catalog by viewing state"/);
+  assert.match(app, /const filteredCatalogItems = useMemo/);
+  assert.match(app, /createInfiniteDatasource\(filteredCatalogItems/);
+  assert.match(app, /type=\{catalogType\}/);
+  assert.match(app, /state=\{catalogState\}/);
+  assert.match(app, /onClearFilters=\{\(\) => \{/);
   assert.match(app, /catalogPosterSummary/);
-  assert.match(app, /Clear search/);
+  assert.match(app, /Clear filters/);
   assert.match(app, /rowModelType="infinite"/);
   assert.match(app, /function CatalogPosterArtwork\(\{ item \}\)/);
   assert.match(app, /onError=\{\(\) => setImageAvailable\(false\)\}/);
