@@ -110,7 +110,8 @@ fragment, is stored only as a SHA-256 digest, expires after 15 minutes, and is
 invalidated when another link is issued. Opening the link removes the fragment
 from the address bar immediately. A successful reset consumes the token,
 applies the normal Argon2id password policy, and revokes every existing session.
-Invalid, expired, superseded, and reused links return the same generic failure.
+A valid link is also consumed after five policy-invalid submissions. Invalid,
+expired, superseded, exhausted, and reused links return the same generic failure.
 
 Run this command only from a trusted host-admin shell. Prefer a base URL using
 HTTPS; HTTP is supported for loopback/local development only. The command does

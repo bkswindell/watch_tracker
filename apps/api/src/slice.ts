@@ -454,6 +454,7 @@ export class MemorySliceStore implements SliceStore {
       trackerInstanceId: string;
       expiresAt: number;
       consumed: boolean;
+      failedAttempts: number;
     }
   >();
   #additions = new Map<string, CatalogAddition>();
@@ -571,6 +572,7 @@ export class MemorySliceStore implements SliceStore {
       trackerInstanceId: this.#trackerInstanceId,
       expiresAt,
       consumed: false,
+      failedAttempts: 0,
     });
     return {
       token,
@@ -582,7 +584,6 @@ export class MemorySliceStore implements SliceStore {
     token: string,
     password: string,
   ): Promise<boolean> {
-    if (passwordPolicyError(password)) return false;
     const reset = this.#passwordResetTokens.get(digest(token));
     if (
       !reset ||
@@ -591,6 +592,11 @@ export class MemorySliceStore implements SliceStore {
       reset.expiresAt <= this.#now()
     )
       return false;
+    if (passwordPolicyError(password)) {
+      reset.failedAttempts += 1;
+      if (reset.failedAttempts >= 5) reset.consumed = true;
+      return false;
+    }
     reset.consumed = true;
     try {
       this.#credential = await credentialHash(password);
@@ -993,10 +999,31 @@ export class SqlSliceStore implements SliceStore {
     token: string,
     password: string,
   ): Promise<boolean> {
-    if (passwordPolicyError(password)) return false;
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      if (passwordPolicyError(password)) {
+        await client.query(
+          `UPDATE password_reset_token reset
+              SET failed_attempt_count = reset.failed_attempt_count + 1,
+                  consumed_at = CASE
+                    WHEN reset.failed_attempt_count + 1 >= 5
+                    THEN CURRENT_TIMESTAMP
+                    ELSE reset.consumed_at
+                  END
+            WHERE reset.token_sha256 = $1
+              AND reset.consumed_at IS NULL
+              AND reset.expires_at > CURRENT_TIMESTAMP
+              AND reset.tracker_instance_id = (
+                SELECT setup.tracker_instance_id
+                  FROM installation_setup setup
+                 WHERE setup.singleton = true
+              )`,
+          [digest(token)],
+        );
+        await client.query("COMMIT");
+        return false;
+      }
       const consumed = await client.query<{ tracker_instance_id: string }>(
         `UPDATE password_reset_token reset
             SET consumed_at = CURRENT_TIMESTAMP

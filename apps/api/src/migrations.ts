@@ -6,7 +6,7 @@ import type { Pool, PoolClient, QueryResult } from "pg";
 
 import type { ReadinessResult } from "./app.js";
 
-export const EXPECTED_SCHEMA_VERSION = "0.09";
+export const EXPECTED_SCHEMA_VERSION = "0.10";
 const MIGRATION_FILE = /^(0\.\d{2})_([a-z0-9-]+)\.sql$/;
 const MIGRATION_VERSION = /^0\.\d{2}$/;
 const MIGRATION_LOCK_KEY = 873_214_019;
@@ -298,6 +298,7 @@ const REQUIRED_PASSWORD_RECOVERY_COLUMNS = [
   ["password_reset_token", "expires_at", "timestamptz", "NO"],
   ["password_reset_token", "consumed_at", "timestamptz", "YES"],
   ["password_reset_token", "created_at", "timestamptz", "NO"],
+  ["password_reset_token", "failed_attempt_count", "int2", "NO"],
 ] as const;
 
 const REQUIRED_PASSWORD_RECOVERY_CONSTRAINTS = [
@@ -305,6 +306,11 @@ const REQUIRED_PASSWORD_RECOVERY_CONSTRAINTS = [
   ["password_reset_token", "password_reset_token_sha256_format", "c"],
   ["password_reset_token", "password_reset_token_expiry_after_created", "c"],
   ["password_reset_token", "password_reset_token_consumed_after_created", "c"],
+  [
+    "password_reset_token",
+    "password_reset_token_failed_attempt_count_valid",
+    "c",
+  ],
   [
     "password_reset_token",
     "password_reset_token_tracker_instance_id_fkey",

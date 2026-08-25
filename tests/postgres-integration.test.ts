@@ -172,10 +172,33 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
     assert.equal(JSON.stringify(persisted.rows).includes(first.token), false);
     assert.equal(JSON.stringify(persisted.rows).includes(second.token), false);
 
+    assert.deepEqual(
+      await Promise.all(
+        Array.from({ length: 5 }, () =>
+          store.completePasswordReset(second.token, "too-short"),
+        ),
+      ),
+      [false, false, false, false, false],
+    );
+    const exhausted = await pool.query<{
+      consumed_at: Date | null;
+      failed_attempt_count: number;
+    }>(
+      "SELECT consumed_at, failed_attempt_count FROM password_reset_token WHERE token_sha256 = $1",
+      [secondDigest],
+    );
+    assert.equal(exhausted.rows[0]?.failed_attempt_count, 5);
+    assert.ok(exhausted.rows[0]?.consumed_at);
+    assert.equal(
+      await store.completePasswordReset(second.token, newPassword),
+      false,
+    );
+
+    const successful = await store.issuePasswordResetToken();
     const session = await store.createSession();
     const attempts = await Promise.all([
-      store.completePasswordReset(second.token, newPassword),
-      store.completePasswordReset(second.token, newPassword),
+      store.completePasswordReset(successful.token, newPassword),
+      store.completePasswordReset(successful.token, newPassword),
     ]);
     assert.deepEqual(attempts.sort(), [false, true]);
     assert.equal(await store.getSession(session.token), undefined);

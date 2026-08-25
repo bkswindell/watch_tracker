@@ -57,16 +57,31 @@ test("password reset tokens are high-entropy, expiring, one-use, and superseded"
   );
 });
 
-test("password reset rejects invalid policy without consuming a valid token", async () => {
+test("password reset consumes a valid token after five policy failures", async () => {
   const store = await configuredStore();
   const reset = await store.issuePasswordResetToken();
-  assert.equal(
-    await store.completePasswordReset(reset.token, "too-short"),
-    false,
-  );
+  for (let attempt = 0; attempt < 4; attempt += 1)
+    assert.equal(
+      await store.completePasswordReset(reset.token, "too-short"),
+      false,
+    );
   assert.equal(
     await store.completePasswordReset(reset.token, NEW_PASSWORD),
     true,
+  );
+
+  const exhausted = await store.issuePasswordResetToken();
+  assert.deepEqual(
+    await Promise.all(
+      Array.from({ length: 5 }, () =>
+        store.completePasswordReset(exhausted.token, "too-short"),
+      ),
+    ),
+    [false, false, false, false, false],
+  );
+  assert.equal(
+    await store.completePasswordReset(exhausted.token, NEW_PASSWORD),
+    false,
   );
 });
 
