@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted direction; the current Core vertical slice is implemented and undergoing continuing Phase 1 review. It includes a Fastify API, schema-aware health/readiness, strict ordered migrations through `0.10`, hardened local Compose deployment, image scanning/SBOM gates, a responsive React shell, setup/authentication, host-admin password recovery, validated Pack import, catalog behavior, dependency inspection, and viewing workflows. This remains an active development branch, not a release.
+Accepted direction; the current Core vertical slice is implemented and undergoing continuing Phase 1 review. It includes a Fastify API, schema-aware health/readiness, strict ordered migrations through `0.11`, hardened local Compose deployment, image scanning/SBOM gates, a responsive React shell, setup/authentication, host-admin password recovery, validated Pack import, catalog behavior, dependency inspection, and viewing workflows. This remains an active development branch, not a release.
 
 ## Core and Canon Pack seam
 

@@ -36,6 +36,11 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — public recovery migration contract reconciled
+
+- Corrected the remaining public architecture overview reference from schema `0.10` to the actual required `0.11` recovery schema. A portable regression now reads both public architecture documents so the README and architecture overview cannot silently diverge on the migration contract.
+- Focused API-foundation coverage passed 11/11; `npm run check` passed 130 portable tests; deterministic production verification passed 29 artifacts; high-severity dependency audit, Compose validation, and `git diff --check` passed. No app, PostgreSQL, migration, credential, volume, backup, user, or durable-record operation occurred. Historical Phase 1 audit remains **FAIL** pending exact-final browser certification and broader closeout.
+
 ### 2026-08-25 — fixture import control wired to its supported Phase 1 flow
 
 - Replaced the inert Canon Pack archive chooser (which referenced an out-of-scope handler) with an explicit Lantern Vale fixture validation/import control. The control now invokes the existing authenticated, CSRF-protected transactional fixture importer, while accurately stating that arbitrary archive selection is not part of this Phase 1 workflow.

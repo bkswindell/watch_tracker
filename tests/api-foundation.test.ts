@@ -21,12 +21,16 @@ const unavailable: ReadinessProbe = async () => ({
   reason: "database unavailable",
 });
 
-test("README states the current recovery migration contract", async () => {
-  const readme = await readFile("README.md", "utf8");
+test("public architecture documents state the current recovery migration contract", async () => {
+  const [readme, architecture] = await Promise.all([
+    readFile("README.md", "utf8"),
+    readFile("docs/architecture.md", "utf8"),
+  ]);
 
   assert.match(readme, /PostgreSQL migrations through `0\.11`/);
   assert.match(readme, /expires after 15 minutes/);
   assert.match(readme, /stored only as a SHA-256 digest/);
+  assert.match(architecture, /strict ordered migrations through `0\.11`/);
 });
 
 test("health is live while readiness reports an unavailable database", async (t) => {
