@@ -334,6 +334,10 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
     resetUi,
     /password\.length < 15[\s\S]*password\.length > 1024[\s\S]*password\.includes\("\\0"\)/,
   );
+  assert.match(
+    resetUi,
+    /const \[showPasswords, setShowPasswords\] = useState\(false\)[\s\S]*type=\{showPasswords \? "text" : "password"\}[\s\S]*aria-pressed=\{showPasswords\}[\s\S]*\{showPasswords \? "Hide passwords" : "Show passwords"\}/,
+  );
   const resetRequest = resetUi.indexOf(
     "await api.completePasswordReset(token, password)",
   );

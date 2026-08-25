@@ -16,6 +16,7 @@ export function ResetPassword({
 }) {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [complete, setComplete] = useState(false);
@@ -111,7 +112,7 @@ export function ResetPassword({
           <label htmlFor="reset-password">New administrator password</label>
           <input
             id="reset-password"
-            type="password"
+            type={showPasswords ? "text" : "password"}
             autoComplete="new-password"
             minLength={15}
             maxLength={1024}
@@ -122,7 +123,7 @@ export function ResetPassword({
           <label htmlFor="reset-password-confirm">Confirm new password</label>
           <input
             id="reset-password-confirm"
-            type="password"
+            type={showPasswords ? "text" : "password"}
             autoComplete="new-password"
             minLength={15}
             maxLength={1024}
@@ -130,6 +131,14 @@ export function ResetPassword({
             onChange={(event) => setConfirmation(event.target.value)}
             required
           />
+          <button
+            type="button"
+            className="subtle"
+            aria-pressed={showPasswords}
+            onClick={() => setShowPasswords((shown) => !shown)}
+          >
+            {showPasswords ? "Hide passwords" : "Show passwords"}
+          </button>
           <button className="primary" disabled={busy}>
             {busy ? "Updating password…" : "Update password"}
           </button>

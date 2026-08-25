@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — recovery form visibility control
+
+- The approved fragment-only recovery page now has one explicit, accessible **Show passwords / Hide passwords** control for both new-password fields. It is a local React state toggle (`aria-pressed`), does not alter the token, request body, password policy, browser storage, referrer behavior, or recovery lifecycle, and defaults to concealed inputs.
+- The focused recovery suite passed 8/8, including the existing token issuance, expiry, reuse, origin, no-store, no-referrer, session-revocation, and no-storage assertions plus the new visibility-control regression. Full `npm run check` passed 130 portable tests; deterministic production verification passed 29 artifacts; high-severity dependency audit, Compose validation, and `git diff --check` passed.
+- Direct local PostgreSQL integration was intentionally not run against the trusted-LAN database because `TEST_DATABASE_URL` is not configured; the command failed closed before connecting. No recovery token, credential, migration, database, volume, backup, user, or durable record was changed. Historical Phase 1 audit remains **FAIL** pending exact-final browser certification and broader closeout.
+
 ### 2026-08-25 — current deployed Edge invalid-link browser proof
 
 - Started an isolated headless Microsoft Edge `151.0.0.0` CDP session solely for live UI certification; no persisted browser profile, credential, reset link, migration, database, volume, backup, user, or durable record was read or changed. The deployed exact reset route rendered the generic **Password reset unavailable** state for an absent fragment, with no form and empty `localStorage`/`sessionStorage`.
