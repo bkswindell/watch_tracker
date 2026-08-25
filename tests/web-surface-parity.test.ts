@@ -68,6 +68,22 @@ test("Focus Map can clear its optional target and return to the Release Timeline
   );
 });
 
+test("Focus Map resets every local filter without changing the chosen target", async () => {
+  const graph = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
+  assert.match(graph, /const hasActiveMapFilters =/);
+  assert.match(graph, /function resetMapFilters\(\)/);
+  assert.match(graph, /setSearch\(""\)/);
+  assert.match(graph, /setType\("All"\)/);
+  assert.match(graph, /setState\("All"\)/);
+  assert.match(graph, /setHideWatched\(false\)/);
+  assert.match(graph, /setShowAfter\(false\)/);
+  assert.match(graph, /setEnabledEdges\(new Set\(Object\.keys\(edgeMeta\)\)\)/);
+  assert.match(graph, /setCollapsed\(new Set\(\)\)/);
+  assert.match(graph, /onClick=\{resetMapFilters\}/);
+  assert.match(graph, /disabled=\{!hasActiveMapFilters\}/);
+  assert.match(graph, /Reset map filters/);
+});
+
 test("Next Up exports its visible deterministic queue rather than a placeholder", async () => {
   const app = await source();
   assert.match(app, /export function queueViewSnapshot/);

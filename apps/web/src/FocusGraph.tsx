@@ -723,6 +723,23 @@ export default function FocusGraph({
       return n;
     });
   }
+  const hasActiveMapFilters =
+    search !== "" ||
+    type !== "All" ||
+    state !== "All" ||
+    hideWatched ||
+    showAfter ||
+    enabledEdges.size !== Object.keys(edgeMeta).length ||
+    collapsed.size > 0;
+  function resetMapFilters() {
+    setSearch("");
+    setType("All");
+    setState("All");
+    setHideWatched(false);
+    setShowAfter(false);
+    setEnabledEdges(new Set(Object.keys(edgeMeta)));
+    setCollapsed(new Set());
+  }
   const series = [...new Set(items.map((x) => x.series))];
   const menuItem = contextMenu && items.find((x) => x.id === contextMenu.id);
   return (
@@ -788,6 +805,13 @@ export default function FocusGraph({
           />{" "}
           Explore beyond target
         </label>
+        <button
+          className="resetMapFilters"
+          onClick={resetMapFilters}
+          disabled={!hasActiveMapFilters}
+        >
+          Reset map filters
+        </button>
       </div>
       <div className="graphSubTools">
         <div className="edgeFilters">
