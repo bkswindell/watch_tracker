@@ -59,6 +59,17 @@ const nav = [
   ["history", "↺", "History"],
   ["pack", "⬡", "Canon Pack"],
 ];
+const viewIds = new Set(nav.map(([id]) => id));
+export function workspaceViewFromLocation(search = location.search) {
+  const requested = new URLSearchParams(search).get("view");
+  return requested && viewIds.has(requested) ? requested : "map";
+}
+function workspaceViewUrl(view) {
+  const url = new URL(location.href);
+  if (view === "map") url.searchParams.delete("view");
+  else url.searchParams.set("view", view);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 function normalize(item) {
   return {
     ...item,
@@ -200,9 +211,7 @@ function App() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(),
     [toast, setToast] = useState("");
-  const [view, setView] = useState(
-      () => new URLSearchParams(location.search).get("view") || "map",
-    ),
+  const [view, setView] = useState(() => workspaceViewFromLocation()),
     [items, setItems] = useState([]),
     [relations, setRelations] = useState([]),
     [target, setTarget] = useState(),
@@ -220,11 +229,29 @@ function App() {
     [gridContextMenu, setGridContextMenu] = useState(),
     [catalogDialog, setCatalogDialog] = useState();
   const navigate = (nextView) => {
-    setView(nextView);
+    if (!viewIds.has(nextView)) return;
+    if (nextView !== view) {
+      window.history.pushState(
+        { view: nextView },
+        "",
+        workspaceViewUrl(nextView),
+      );
+      setView(nextView);
+    }
     setDetailsOpen(false);
     setDetailsModal(false);
     setGridContextMenu(undefined);
   };
+  useEffect(() => {
+    const restoreWorkspaceView = () => {
+      setView(workspaceViewFromLocation());
+      setDetailsOpen(false);
+      setDetailsModal(false);
+      setGridContextMenu(undefined);
+    };
+    window.addEventListener("popstate", restoreWorkspaceView);
+    return () => window.removeEventListener("popstate", restoreWorkspaceView);
+  }, []);
   const notify = (text) => {
     setToast(text);
     window.setTimeout(() => setToast(""), 2300);

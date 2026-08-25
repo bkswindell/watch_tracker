@@ -14,6 +14,19 @@ test("Focus Map is loaded on demand with an accessible loading state", async () 
   assert.match(app, /role="status"/);
 });
 
+test("workspace navigation has shareable routes and restores browser history", async () => {
+  const app = await source();
+  assert.match(app, /export function workspaceViewFromLocation/);
+  assert.match(app, /viewIds\.has\(requested\) \? requested : "map"/);
+  assert.match(app, /url\.searchParams\.set\("view", view\)/);
+  assert.match(app, /window\.history\.pushState\(\s*\{ view: nextView \}/);
+  assert.match(
+    app,
+    /window\.addEventListener\("popstate", restoreWorkspaceView\)/,
+  );
+  assert.match(app, /setDetailsOpen\(false\)/);
+});
+
 test("App restores server-ordered Next Up presentation and truthful summaries", async () => {
   const app = await source();
   assert.match(app, /function queuePresentation\(nextUp\)/);
