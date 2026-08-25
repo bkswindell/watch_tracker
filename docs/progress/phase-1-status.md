@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — recovery document no-referrer defense
+
+- Added a document-level `no-referrer` meta policy to the reset shell. The server already sends `Referrer-Policy: no-referrer` and strips the fragment before React renders; this provides a pre-bootstrap defense for any navigation initiated while the fragment-only reset link is first loading. A focused regression protects the markup.
+- Focused recovery coverage passed 9/9 and complete `npm run check` passed all 131 portable tests. Deterministic production verification passed 29 artifacts; production and complete high-severity dependency audits, Compose validation, and `git diff --check` passed. `npm run test:postgres` failed closed before connection because `TEST_DATABASE_URL` is not configured.
+- App-only deployment rebuilt `watch-tracker:phase1-4feec1b` and recreated only `watch-tracker-lan-foundation-app-1`; it became healthy and its in-container `/ready` returned HTTP 200. Database container `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` retained its creation time and healthy state. The cron browser harness still cannot start a supported Chromium-family browser, so no new browser certification is claimed. Historical Phase 1 audit remains **FAIL** pending the exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — recovery completion sign-out clarification
 
 - Successful recovery now clearly tells the administrator that the password change signs out all existing sessions before offering the normal sign-in continuation. It documents the actual server-side behavior without changing any recovery token, credential, migration, database, browser-storage, or logging behavior.
