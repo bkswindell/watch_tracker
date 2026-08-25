@@ -215,6 +215,45 @@ export async function buildApp(
       void reply.header("cache-control", "no-store");
   });
 
+  // Register before routes so Fastify's route contexts inherit the recovery
+  // parser-error contract as well as the general application error contract.
+  app.setErrorHandler((error: FastifyError, request, reply) => {
+    if (request.url.split("?", 1)[0] === "/api/password-reset/complete") {
+      void reply
+        .header("cache-control", "no-store")
+        .header("referrer-policy", "no-referrer");
+      sendError(
+        reply,
+        request,
+        400,
+        "password-reset.invalid",
+        "Password reset could not be completed",
+      );
+      return;
+    }
+    if (error.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
+      sendError(
+        reply,
+        request,
+        413,
+        "request.body-too-large",
+        "Request body exceeds the configured limit",
+      );
+      return;
+    }
+    const statusCode =
+      typeof error.statusCode === "number" && error.statusCode >= 400
+        ? error.statusCode
+        : 500;
+    sendError(
+      reply,
+      request,
+      statusCode,
+      statusCode >= 500 ? "internal.error" : "request.invalid",
+      statusCode >= 500 ? "Internal server error" : error.message,
+    );
+  });
+
   app.get("/health", async (request) => ({
     status: "ok",
     service: WATCH_TRACKER_API_SERVICE,
@@ -858,30 +897,6 @@ export async function buildApp(
 
   app.setNotFoundHandler((request, reply) => {
     sendError(reply, request, 404, "request.not-found", "Route not found");
-  });
-
-  app.setErrorHandler((error: FastifyError, request, reply) => {
-    if (error.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
-      sendError(
-        reply,
-        request,
-        413,
-        "request.body-too-large",
-        "Request body exceeds the configured limit",
-      );
-      return;
-    }
-    const statusCode =
-      typeof error.statusCode === "number" && error.statusCode >= 400
-        ? error.statusCode
-        : 500;
-    sendError(
-      reply,
-      request,
-      statusCode,
-      statusCode >= 500 ? "internal.error" : "request.invalid",
-      statusCode >= 500 ? "Internal server error" : error.message,
-    );
   });
 
   await app.ready();

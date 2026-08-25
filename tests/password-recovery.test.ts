@@ -120,6 +120,38 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
   assert.equal(invalid.headers["cache-control"], "no-store");
   assert.equal(invalid.headers["referrer-policy"], "no-referrer");
 
+  const malformed = await app.inject({
+    method: "POST",
+    url: "/api/password-reset/complete",
+    headers: {
+      host: "localhost",
+      origin: "http://localhost",
+      "content-type": "application/json",
+    },
+    payload: '{"token":',
+  });
+  assert.equal(malformed.statusCode, 400);
+  assert.deepEqual(malformed.json().error, invalid.json().error);
+  assert.equal(malformed.headers["cache-control"], "no-store");
+  assert.equal(malformed.headers["referrer-policy"], "no-referrer");
+
+  const constrainedApp = await buildApp({
+    readinessProbe: async () => ({ ready: true }),
+    sliceStore: store,
+    bodyLimit: 64,
+  });
+  t.after(() => constrainedApp.close());
+  const oversized = await constrainedApp.inject({
+    method: "POST",
+    url: "/api/password-reset/complete",
+    headers: { host: "localhost", origin: "http://localhost" },
+    payload: { token: "x".repeat(65), password: NEW_PASSWORD },
+  });
+  assert.equal(oversized.statusCode, 400);
+  assert.deepEqual(oversized.json().error, invalid.json().error);
+  assert.equal(oversized.headers["cache-control"], "no-store");
+  assert.equal(oversized.headers["referrer-policy"], "no-referrer");
+
   const unexpectedField = await app.inject({
     method: "POST",
     url: "/api/password-reset/complete",

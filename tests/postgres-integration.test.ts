@@ -194,6 +194,23 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
       false,
     );
 
+    const otherOwner = randomUUID();
+    await pool.query(
+      "INSERT INTO tracker_instance (tracker_instance_id, display_name) VALUES ($1, 'Other owner')",
+      [otherOwner],
+    );
+    const alienSessionDigest = createHash("sha256")
+      .update("alien-owner-session")
+      .digest("hex");
+    await pool.query(
+      `INSERT INTO app_session
+        (token_sha256, csrf_token, csrf_sha256, expires_at, tracker_instance_id,
+         last_seen_at, absolute_expires_at)
+       VALUES ($1, $2, $3, CURRENT_TIMESTAMP + INTERVAL '1 day', $4,
+         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '2 days')`,
+      [alienSessionDigest, "a".repeat(64), "b".repeat(64), otherOwner],
+    );
+
     const successful = await store.issuePasswordResetToken();
     const session = await store.createSession();
     const attempts = await Promise.all([
@@ -204,12 +221,12 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
     assert.equal(await store.getSession(session.token), undefined);
     assert.equal(await store.authenticate(oldPassword), false);
     assert.equal(await store.authenticate(newPassword), true);
-
-    const otherOwner = randomUUID();
-    await pool.query(
-      "INSERT INTO tracker_instance (tracker_instance_id, display_name) VALUES ($1, 'Other owner')",
-      [otherOwner],
+    const alienSession = await pool.query(
+      "SELECT 1 FROM app_session WHERE token_sha256 = $1 AND tracker_instance_id = $2",
+      [alienSessionDigest, otherOwner],
     );
+    assert.equal(alienSession.rowCount, 1);
+
     const alienToken = "alien-owner-password-reset-token";
     await pool.query(
       "INSERT INTO password_reset_token (token_sha256, tracker_instance_id, expires_at) VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '15 minutes')",
@@ -223,6 +240,9 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
       "DELETE FROM password_reset_token WHERE tracker_instance_id = $1",
       [otherOwner],
     );
+    await pool.query("DELETE FROM app_session WHERE tracker_instance_id = $1", [
+      otherOwner,
+    ]);
     await pool.query(
       "DELETE FROM tracker_instance WHERE tracker_instance_id = $1",
       [otherOwner],
