@@ -1,12 +1,11 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
   AllCommunityModule,
   ModuleRegistry,
   themeQuartz,
 } from "ag-grid-community";
-import FocusGraph from "./FocusGraph";
 import CatalogDialog from "./CatalogDialog";
 import WatchableActionMenu from "./WatchableActions";
 import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
@@ -16,6 +15,11 @@ import { artworkUrl } from "./mediaUrls";
 import { createInfiniteDatasource } from "./infiniteGrid";
 import { ResetPassword } from "./ResetPassword";
 import { passwordResetTokenFromFragment } from "./passwordResetToken";
+
+// The Focus Map brings the React Flow renderer and its interaction model. Keep
+// it out of the authentication/bootstrap payload and load it only when the
+// default map surface is actually rendered.
+const FocusGraph = lazy(() => import("./FocusGraph"));
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 export function csvSafeValue(value) {
@@ -564,18 +568,26 @@ function App() {
                   View Next Up →
                 </button>
               </div>
-              <FocusGraph
-                items={items}
-                relations={relations}
-                target={target || items[0]?.id}
-                nextUpId={nextUp[0]?.id}
-                selectedId={selected?.id}
-                onTarget={(id) => markTarget(items.find((x) => x.id === id))}
-                mode={mode}
-                onMode={setMode}
-                onPick={openDetails}
-                onViewingAction={actItem}
-              />
+              <Suspense
+                fallback={
+                  <div className="loadingScreen" role="status">
+                    Loading Focus Map…
+                  </div>
+                }
+              >
+                <FocusGraph
+                  items={items}
+                  relations={relations}
+                  target={target || items[0]?.id}
+                  nextUpId={nextUp[0]?.id}
+                  selectedId={selected?.id}
+                  onTarget={(id) => markTarget(items.find((x) => x.id === id))}
+                  mode={mode}
+                  onMode={setMode}
+                  onPick={openDetails}
+                  onViewingAction={actItem}
+                />
+              </Suspense>
             </>
           )}
           {view === "catalog" && (

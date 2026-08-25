@@ -4,6 +4,16 @@ import { test } from "node:test";
 
 const source = () => readFile("apps/web/src/App.tsx", "utf8");
 
+test("Focus Map is loaded on demand with an accessible loading state", async () => {
+  const app = await source();
+  assert.match(
+    app,
+    /const FocusGraph = lazy\(\(\) => import\("\.\/FocusGraph"\)\)/,
+  );
+  assert.match(app, /<Suspense[\s\S]*Loading Focus Map…[\s\S]*<FocusGraph/);
+  assert.match(app, /role="status"/);
+});
+
 test("App restores server-ordered Next Up presentation and truthful summaries", async () => {
   const app = await source();
   assert.match(app, /function queuePresentation\(nextUp\)/);
