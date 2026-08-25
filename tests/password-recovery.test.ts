@@ -8,6 +8,7 @@ import {
   passwordResetLink,
   resetLinkBase,
 } from "../scripts/password-recovery.js";
+import { passwordResetTokenFromFragment } from "../apps/web/src/passwordResetToken.js";
 
 const OLD_PASSWORD = "correct-password";
 const NEW_PASSWORD = "a-new-password-long-enough";
@@ -222,6 +223,22 @@ test("host-admin CLI creates a fragment-only reset link and validates its base U
   assert.throws(() => resetLinkBase("https://tracker.example/base/"));
 });
 
+test("reset UI accepts only one well-formed fragment token", () => {
+  const token = "A".repeat(43);
+  assert.equal(passwordResetTokenFromFragment(`#token=${token}`), token);
+  assert.equal(passwordResetTokenFromFragment(`token=${token}`), token);
+  assert.equal(
+    passwordResetTokenFromFragment(`#token=${token}&source=mail`),
+    "",
+  );
+  assert.equal(
+    passwordResetTokenFromFragment(`#token=${token}&token=${token}`),
+    "",
+  );
+  assert.equal(passwordResetTokenFromFragment("#token=not-a-token"), "");
+  assert.equal(passwordResetTokenFromFragment(`#other=${token}`), "");
+});
+
 test("recovery surfaces do not persist or log reset tokens", async () => {
   const [cli, app, resetUi, webApi, slice] = await Promise.all([
     readFile("scripts/password-recovery.ts", "utf8"),
@@ -242,6 +259,7 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
     /localStorage|sessionStorage|indexedDB|console\./,
   );
   assert.match(app, /history\.replaceState\(null, "", "\/reset-password"\)/);
+  assert.match(app, /passwordResetTokenFromFragment\(location\.hash\)/);
   assert.match(resetUi, /autoComplete="new-password"/);
   const resetRequest = resetUi.indexOf(
     "await api.completePasswordReset(token, password)",

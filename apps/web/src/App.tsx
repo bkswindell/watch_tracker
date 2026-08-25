@@ -15,6 +15,7 @@ import type { CatalogAdditionInput } from "./api";
 import { artworkUrl } from "./mediaUrls";
 import { createInfiniteDatasource } from "./infiniteGrid";
 import { ResetPassword } from "./ResetPassword";
+import { passwordResetTokenFromFragment } from "./passwordResetToken";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 export function csvSafeValue(value) {
@@ -185,8 +186,7 @@ function StateBadge({ value }) {
 function App() {
   const [passwordResetToken, setPasswordResetToken] = useState(() => {
     if (location.pathname !== "/reset-password") return undefined;
-    const token =
-      new URLSearchParams(location.hash.slice(1)).get("token") ?? "";
+    const token = passwordResetTokenFromFragment(location.hash);
     window.history.replaceState(null, "", "/reset-password");
     return token;
   });
