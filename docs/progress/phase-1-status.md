@@ -36,6 +36,11 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — Focus Map local-filter reset
+
+- Added an explicit **Reset map filters** command for the Focus Map. It remains disabled at default state and restores local search, type/state, watched/beyond-target toggles, relationship selection, and collapsed Series groups in one action, while deliberately retaining the active target, Focus mode, manual layout, and durable viewing/Canon data.
+- The focused surface regression asserts all reset boundaries and target preservation. `npm run check` passed **135 portable tests**; deterministic verification passed **29 artifacts**; production high-severity audit, Compose validation, and `git diff --check` passed. App-only deployment rebuilt `watch-tracker:verify`, recreated only `watch-tracker-lan-foundation-app-1`, reached healthy, and returned HTTP 200 from in-container `/ready`. Database `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` retained its `2026-08-24T16:08:34.899650189Z` creation time and healthy state. The cron browser harness cannot start a supported Chromium-family browser, so no browser certification is claimed. Core PR #4 validation is in progress for exact head `5f8ffcd7b6b2ca43b02c974ed134b1949b384e1a`; historical Phase 1 audit remains **FAIL** pending exact-final browser certification and broader closeout.
+
 ### 2026-08-25 — Focus Map broken-poster resilience
 
 - Focus Map cards now replace an approved poster that fails to load with the established compact type-labelled unavailable-artwork treatment. The replacement resets for a changed node and preserves the dependency-first layout, target/Next Up distinction, dragging, and context actions without fabricating media or adding a persistence/API surface.
