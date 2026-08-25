@@ -4,7 +4,7 @@
 
 - Moved the AG Grid runtime behind an explicit lazy `WatchTrackerGrid` boundary. The shell, sign-in/setup route, poster-only Catalog, and Focus Map bootstrap no longer fetch the table renderer. Catalog List, Next Up, and History each show a role=`status`, fixed-height loading state while their shared table chunk loads.
 - Production build evidence: the initial JS payload decreased from 1,367.56 kB (386.74 kB gzip) to 258.62 kB (78.70 kB gzip); `WatchTrackerGrid` is deferred as 1,108.96 kB (308.32 kB gzip). Focus Map remains a separate 190.80 kB (61.86 kB gzip) chunk. This is a user-visible startup improvement, not a fabricated fixture or data change.
-- `npm run check` passed all 127 portable tests; deterministic build passed 29 artifacts and `git diff --check` passed. No PostgreSQL, volume, credential, or live app operation occurred before CI. Historical Phase 1 audit remains **FAIL** pending broader closeout and exact-final browser certification.
+- `npm run check` passed all 127 portable tests; deterministic build passed 29 artifacts and `git diff --check` passed. Validate Core run `32819367139` is green at `1ac2af9531d602e8b1dae00343afe016ef278f9b`, including the isolated PostgreSQL migration/identity and disposable Compose gates. An app-only head deployment returned `/ready` **503** because the live database remains `0.10` and the head correctly requires `0.11`; it was immediately rolled back app-only to `dccef56`, whose `/ready` is **200**. The database ID/creation timestamp is unchanged; no credential, volume, or migration operation occurred. Historical Phase 1 audit remains **FAIL** pending broader closeout and exact-final browser certification.
 
 ## 2026-08-25 — recovery expiry invariant CI certification
 
