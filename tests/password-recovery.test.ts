@@ -320,6 +320,10 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
   assert.match(app, /history\.replaceState\(null, "", "\/reset-password"\)/);
   assert.match(app, /passwordResetTokenFromFragment\(location\.hash\)/);
   assert.match(resetUi, /autoComplete="new-password"/);
+  assert.match(
+    resetUi,
+    /Password updated[\s\S]*all[\s\S]*existing sessions were signed out/,
+  );
   assert.match(resetUi, /if \(!token\)[\s\S]*Password reset unavailable/);
   assert.match(
     resetUi,

@@ -88,7 +88,10 @@ export function ResetPassword({
           <div className="logo">WT</div>
           <span className="eyebrow">Password recovery</span>
           <h1>Password updated</h1>
-          <p>Your administrator password was changed. Sign in to continue.</p>
+          <p>
+            Your administrator password was changed. For your protection, all
+            existing sessions were signed out. Sign in to continue.
+          </p>
           <button className="primary" onClick={onCompleted}>
             Continue to sign in
           </button>
