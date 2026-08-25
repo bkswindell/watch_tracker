@@ -209,7 +209,7 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
   assert.deepEqual(reused.json().error, invalid.json().error);
 });
 
-test("expired reset API failures are indistinguishable from invalid tokens", async (t) => {
+test("expired and superseded reset API failures are indistinguishable from invalid tokens", async (t) => {
   let now = Date.parse("2026-08-25T00:00:00Z");
   const store = await configuredStore(() => now);
   const app = await buildApp({
@@ -217,8 +217,10 @@ test("expired reset API failures are indistinguishable from invalid tokens", asy
     sliceStore: store,
   });
   t.after(() => app.close());
-  const reset = await store.issuePasswordResetToken();
+  const expiredReset = await store.issuePasswordResetToken();
   now += 15 * 60_000;
+  const supersededReset = await store.issuePasswordResetToken();
+  await store.issuePasswordResetToken();
   const request = (token: string) =>
     app.inject({
       method: "POST",
@@ -226,15 +228,17 @@ test("expired reset API failures are indistinguishable from invalid tokens", asy
       headers: { host: "localhost", origin: "http://localhost" },
       payload: { token, password: NEW_PASSWORD },
     });
-  const [expired, invalid] = await Promise.all([
-    request(reset.token),
+  const [expired, superseded, invalid] = await Promise.all([
+    request(expiredReset.token),
+    request(supersededReset.token),
     request("A".repeat(43)),
   ]);
-  assert.equal(expired.statusCode, 400);
-  assert.equal(expired.statusCode, invalid.statusCode);
-  assert.deepEqual(expired.json().error, invalid.json().error);
-  assert.equal(expired.headers["cache-control"], "no-store");
-  assert.equal(expired.headers["referrer-policy"], "no-referrer");
+  for (const response of [expired, superseded]) {
+    assert.equal(response.statusCode, invalid.statusCode);
+    assert.deepEqual(response.json().error, invalid.json().error);
+    assert.equal(response.headers["cache-control"], "no-store");
+    assert.equal(response.headers["referrer-policy"], "no-referrer");
+  }
 });
 
 test("host-admin CLI creates a fragment-only reset link and validates its base URL", () => {
