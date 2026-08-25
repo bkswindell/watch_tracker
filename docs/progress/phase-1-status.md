@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — per-client concurrent login verification gate
+
+- Added a per-remote-address in-flight guard around the existing expensive credential verification. Concurrent attempts from the same address now receive the existing generic throttle response rather than starting parallel Argon2id hashes; the guard releases in `finally`, so the original request's normal success/failure accounting is preserved. A deterministic regression proves a held first verification blocks a second one before it invokes the store.
+- Focused auth coverage passed 12/12; complete `npm run check` passed 132 portable tests; deterministic production verification passed 29 artifacts; production and complete high-severity dependency audits, Compose validation, and `git diff --check` passed. Direct `npm run test:postgres` failed closed before connection because `TEST_DATABASE_URL` is not configured.
+- App-only deployment rebuilt `watch-tracker:phase1-throttle` and recreated only `watch-tracker-lan-foundation-app-1`; the app is healthy on image `sha256:ba2f4c59d7b612f43ae2ff1424de662700f0f44ac94374aadf56710ee881cf82` and its in-container `/ready` returned HTTP 200. The retained PostgreSQL container is healthy and retains creation time `2026-08-24T16:08:34.899650189Z`. Exact Core PR #4 head `98a947b7cbd7da1aeac54cfbb0bb5980bf557f54` has queued Validate Core run `32831653292`. No migration, credential, recovery token, volume, backup, user, or durable record was changed. The cron browser harness cannot launch a supported Chromium-family browser, so no new browser certification is claimed. Historical Phase 1 audit remains **FAIL** pending the exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — recovery duplicate-submit guard
 
 - The fragment-only recovery form now ignores a duplicate submit while its first completion request is in flight. This covers an Enter-key/scripted repeat before React can repaint the disabled action and avoids showing a false generic reused-token failure after an accepted first request. It does not change token format, API, password policy, persistence, or server atomicity.
