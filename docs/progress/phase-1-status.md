@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — deferred table runtime narrowed to used modules
+
+- Replaced the broad AG Grid community-module registration with the three modules actually used by the Phase 1 Catalog, Next Up, and History tables: infinite rows, text filtering, and row selection. The table runtime remains deferred behind its existing accessible loading states, while unused editors, CSV, pagination, grouping, and client-side row-model code no longer ships with a table visit.
+- The production `WatchTrackerGrid` chunk decreased from 1,108.96 kB (308.32 kB gzip) to 836.36 kB (234.67 kB gzip), a 272.60 kB / 73.65 kB gzip reduction. The bootstrap chunk and all functional table props are unchanged. A surface regression prevents accidental restoration of the broad module registration.
+- `npm run check` passed 130 portable tests; deterministic production verification passed 29 artifacts; high-severity dependency audit, Compose validation, and `git diff --check` passed. No browser, deployment, PostgreSQL, migration, credential, volume, backup, user, or durable-record operation occurred. Historical Phase 1 audit remains **FAIL** pending exact-final browser certification and broader closeout.
+
 ### 2026-08-25 — public recovery migration contract reconciled
 
 - Corrected the remaining public architecture overview reference from schema `0.10` to the actual required `0.11` recovery schema. A portable regression now reads both public architecture documents so the README and architecture overview cannot silently diverge on the migration contract.

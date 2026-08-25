@@ -1,14 +1,23 @@
 import type { ComponentProps } from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
-  AllCommunityModule,
+  InfiniteRowModelModule,
   ModuleRegistry,
+  RowSelectionModule,
+  TextFilterModule,
   themeQuartz,
 } from "ag-grid-community";
 
 // Keep the full AG Grid runtime outside the authentication/bootstrap bundle.
 // The workspace only fetches it when a list surface needs to render.
-ModuleRegistry.registerModules([AllCommunityModule]);
+// The three Phase 1 tables use only the infinite model, text filters, and
+// row selection. Registering the complete community feature set also ships unrelated editors,
+// CSV, pagination, grouping, and client-side model code to every table visit.
+ModuleRegistry.registerModules([
+  InfiniteRowModelModule,
+  RowSelectionModule,
+  TextFilterModule,
+]);
 
 const appTheme = themeQuartz.withParams({
   accentColor: "#72e0b5",

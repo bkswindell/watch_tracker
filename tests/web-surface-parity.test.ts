@@ -23,6 +23,10 @@ test("Focus Map and workspace tables load on demand with accessible states", asy
   assert.match(app, /role="status"/);
   assert.match(grid, /from "ag-grid-react"/);
   assert.match(grid, /ModuleRegistry\.registerModules/);
+  assert.match(grid, /InfiniteRowModelModule/);
+  assert.match(grid, /RowSelectionModule/);
+  assert.match(grid, /TextFilterModule/);
+  assert.doesNotMatch(grid, /AllCommunityModule/);
   assert.match(styles, /\.gridLoading/);
 });
 
