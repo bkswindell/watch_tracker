@@ -110,6 +110,22 @@ test("Canon Pack shows its validated contract rather than repeating release vers
   assert.match(frontendApi, /contractVersion: string/);
 });
 
+test("Canon Pack fixture import surface invokes the supported transactional flow", async () => {
+  const app = await source();
+  const styles = await readFile("apps/web/src/styles.css", "utf8");
+  assert.match(
+    app,
+    /function PackPage\(\{ pack, onImport, onViewVerification \}\)/,
+  );
+  assert.match(app, /Validate the Phase 1 fixture/);
+  assert.match(app, /Lantern Vale fixture release/);
+  assert.match(app, /Validate and import fixture/);
+  assert.match(app, /onClick=\{\(\) => void onImport\(\)\}/);
+  assert.doesNotMatch(app, /onNotImplemented\("Canon Pack archive upload"\)/);
+  assert.doesNotMatch(app, /\.zip · release artifacts only · Not Implemented/);
+  assert.match(styles, /\.fixtureImportSummary/);
+});
+
 test("Catalog CRUD connects personal records while preserving Canon Pack immutability", async () => {
   const app = await source();
   const catalogDialog = await readFile(

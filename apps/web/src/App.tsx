@@ -1681,22 +1681,23 @@ function PackPage({ pack, onImport, onViewVerification }) {
         </section>
         <section className="panel drop">
           <span className="eyebrow">Transactional import</span>
-          <h2>Import a release artifact</h2>
+          <h2>Validate the Phase 1 fixture</h2>
           <p>
-            Choose a Canon Pack archive. Nothing activates until schema,
-            checksum, identity, provenance, compatibility, and graph validation
-            pass.
+            Run the bundled Lantern Vale release through schema, checksum,
+            identity, provenance, compatibility, and graph validation before it
+            becomes the active Pack.
           </p>
-          <button
-            className="dropzone"
-            onClick={() => onNotImplemented("Canon Pack archive upload")}
-          >
-            <span>⬆</span>
-            <b>Choose Canon Pack archive</b>
-            <small>.zip · release artifacts only · Not Implemented</small>
-          </button>
+          <div className="fixtureImportSummary" role="status">
+            <span aria-hidden="true">⬡</span>
+            <div>
+              <b>Lantern Vale fixture release</b>
+              <small>
+                Archive selection is not part of this Phase 1 fixture workflow.
+              </small>
+            </div>
+          </div>
           <button className="primary" onClick={() => void onImport()}>
-            Run validation
+            Validate and import fixture
           </button>
         </section>
       </div>

@@ -659,6 +659,29 @@ button.primary {
   border-color: var(--blue);
   background: #14202c;
 }
+.fixtureImportSummary {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #121b25;
+}
+.fixtureImportSummary > span {
+  color: var(--mint);
+  font-size: 22px;
+  line-height: 1;
+}
+.fixtureImportSummary b,
+.fixtureImportSummary small {
+  display: block;
+}
+.fixtureImportSummary small {
+  margin-top: 4px;
+  color: var(--muted);
+}
 .checkFilter {
   display: inline-flex;
   align-items: center;
