@@ -85,6 +85,15 @@ test("App derives History cards from returned lifecycle records", async () => {
   assert.match(app, /Watched duration/);
   assert.match(app, /Average rating/);
   assert.match(app, /Save view/);
+  assert.match(app, /export function historyCsv\(history\)/);
+  assert.match(
+    app,
+    /const columns = \["date", "title", "action", "duration", "rating"\]/,
+  );
+  assert.match(app, /csvSafeValue\(value \?\? ""\)/);
+  assert.match(app, /watch-tracker-history\.csv/);
+  assert.match(app, /<button onClick=\{exportCsv\}>Export CSV<\/button>/);
+  assert.match(app, /historyCsv\(visibleHistory\)/);
   assert.match(app, /onCellContextMenu/);
 });
 

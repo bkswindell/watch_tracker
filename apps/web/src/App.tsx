@@ -169,7 +169,20 @@ export function historyViewSnapshot(history, filters = undefined) {
     items: history,
   };
 }
-export function packEvidence(pack) {
+export function historyCsv(history) {
+  const columns = ["date", "title", "action", "duration", "rating"];
+  const csvCell = (value) => {
+    const text = String(csvSafeValue(value ?? ""));
+    return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  };
+  return [
+    columns.join(","),
+    ...history.map((record) =>
+      columns.map((column) => csvCell(record[column])).join(","),
+    ),
+  ].join("\r\n");
+}
+function packEvidence(pack) {
   return [
     {
       label: "Active release",
@@ -1484,25 +1497,30 @@ function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
     () => [...new Set(history.map((record) => record.action))].sort(),
     [history],
   );
-  const saveView = () => {
-    const blob = new Blob(
-      [
-        JSON.stringify(
-          historyViewSnapshot(visibleHistory, { query, action }),
-          null,
-          2,
-        ),
-      ],
-      {
-        type: "application/json",
-      },
-    );
+  const download = (body, type, filename) => {
+    const blob = new Blob([body], { type });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "watch-tracker-history.json";
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(link.href);
   };
+  const saveView = () =>
+    download(
+      JSON.stringify(
+        historyViewSnapshot(visibleHistory, { query, action }),
+        null,
+        2,
+      ),
+      "application/json",
+      "watch-tracker-history.json",
+    );
+  const exportCsv = () =>
+    download(
+      historyCsv(visibleHistory),
+      "text/csv;charset=utf-8",
+      "watch-tracker-history.csv",
+    );
   return (
     <>
       <div className="pageTitle">
@@ -1514,7 +1532,10 @@ function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
             favorites, notes, and “would rewatch.”
           </p>
         </div>
-        <button onClick={saveView}>Save view</button>
+        <div className="pageActions">
+          <button onClick={exportCsv}>Export CSV</button>
+          <button onClick={saveView}>Save view</button>
+        </div>
       </div>
       <div className="summaryCards">
         <div>
