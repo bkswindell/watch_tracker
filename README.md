@@ -136,7 +136,7 @@ Watch Tracker does not endorse or certify the legality or accuracy of an indepen
 
 ## Project status
 
-Watch Tracker is in active Phase 1 implementation. Historical Canon Pack contract `0.1.0` remains preserved, the first declarative Watchable Type slice of contract `0.2.0` is merged, and the Core foundation now runs locally. There is no production or hosted deployment, and no Core release has been published yet.
+Watch Tracker is in active Phase 1 implementation. Historical Canon Pack contract `0.1.0` remains preserved, the first declarative Watchable Type slice of contract `0.2.0` is merged, and the Core foundation is verified in a trusted-LAN app-only deployment. This is not a production release or public hosted service; no Core release has been published yet.
 
 ## Contributing
 
