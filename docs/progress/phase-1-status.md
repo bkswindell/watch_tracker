@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — current deployed Edge invalid-link browser proof
+
+- Started an isolated headless Microsoft Edge `151.0.0.0` CDP session solely for live UI certification; no persisted browser profile, credential, reset link, migration, database, volume, backup, user, or durable record was read or changed. The deployed exact reset route rendered the generic **Password reset unavailable** state for an absent fragment, with no form and empty `localStorage`/`sessionStorage`.
+- A separate fresh browser page used a synthetic, non-secret 43-character token. The client removed its fragment before rendering, retained no browser storage, submitted only to same-origin `/api/password-reset/complete`, received HTTP `400`, and rendered the generic **Password reset could not be completed** state. The captured API response included `Cache-Control: no-store`, `Referrer-Policy: no-referrer`, and the self-only CSP; the resource URL contained no token.
+- This establishes fresh deployed Edge coverage for absent and invalid token behavior at the current app deployment. It does **not** certify a valid-token password change, expired token, reused token, or authenticated workspace without intentionally issuing recovery material or changing a credential. Those acceptance cases remain covered by the deterministic API/PostgreSQL suites; the historical Phase 1 audit remains **FAIL** pending the full exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — recovery acceptance verification checkpoint
 
 - Re-reviewed the approved host-admin recovery gate at exact Core PR #4 head `8960d68d1420ea87a8653d9b8e724f813410f71d`: fragment-only 256-bit links, digest-only instance-bound persistence, 15-minute expiry invariant, atomic single-use/supersession, generic failures, Argon2id policy enforcement, and session revocation remain covered by the focused recovery suite.
