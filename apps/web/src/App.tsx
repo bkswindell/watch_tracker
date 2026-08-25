@@ -450,7 +450,7 @@ function App() {
     return (
       <ResetPassword
         token={passwordResetToken}
-        onAttempted={() => setPasswordResetToken("")}
+        onSucceeded={() => setPasswordResetToken("")}
         onCompleted={() => location.replace("/")}
       />
     );

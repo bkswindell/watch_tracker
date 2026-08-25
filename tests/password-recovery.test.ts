@@ -215,6 +215,7 @@ test("host-admin CLI creates a fragment-only reset link and validates its base U
     "http://[::1]:3100/",
   );
   assert.throws(() => resetLinkBase("http://tracker.example"));
+  assert.throws(() => resetLinkBase("http://127.999.999.999"));
   assert.throws(() => resetLinkBase("file:///tmp/watch-tracker"));
   assert.throws(() => resetLinkBase("https://user:pass@tracker.example"));
   assert.throws(() => resetLinkBase("https://tracker.example/?token=bad"));
@@ -242,6 +243,16 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
   );
   assert.match(app, /history\.replaceState\(null, "", "\/reset-password"\)/);
   assert.match(resetUi, /autoComplete="new-password"/);
+  const resetRequest = resetUi.indexOf(
+    "await api.completePasswordReset(token, password)",
+  );
+  const resetSuccess = resetUi.indexOf("onSucceeded()", resetRequest);
+  const resetFailure = resetUi.indexOf("} catch {", resetRequest);
+  assert.ok(resetRequest >= 0 && resetSuccess > resetRequest);
+  assert.ok(
+    resetSuccess < resetFailure,
+    "the in-memory token must only be discarded after confirmed success",
+  );
   assert.match(
     webApi,
     /call<void>\("\/api\/password-reset\/complete", "POST", undefined, \{/,

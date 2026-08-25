@@ -7,11 +7,11 @@ export const PASSWORD_RESET_POLICY =
 
 export function ResetPassword({
   token,
-  onAttempted,
+  onSucceeded,
   onCompleted,
 }: {
   token: string;
-  onAttempted: () => void;
+  onSucceeded: () => void;
   onCompleted: () => void;
 }) {
   const [password, setPassword] = useState("");
@@ -37,11 +37,14 @@ export function ResetPassword({
       setPassword("");
       setConfirmation("");
       setComplete(true);
+      // Keep the fragment-derived token in memory after a generic failure so
+      // the owner can retry a policy-valid password or a transient request.
+      // Discard it immediately once the server confirms atomic consumption.
+      onSucceeded();
     } catch {
       // The API intentionally uses one failure response for every token state.
       setError("Password reset could not be completed.");
     } finally {
-      onAttempted();
       setPassword("");
       setConfirmation("");
       setBusy(false);
