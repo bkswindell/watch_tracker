@@ -121,8 +121,16 @@ function sameOrigin(request: FastifyRequest): boolean {
   try {
     const parsed = new URL(origin);
     const host = request.headers.host;
+    // Origin is serialized by browsers as scheme, host, and port only. Reject
+    // URL decorations instead of accepting a lookalike value whose `host`
+    // happens to match (for example, userinfo before an otherwise valid host).
     return (
       Boolean(host) &&
+      !parsed.username &&
+      !parsed.password &&
+      parsed.pathname === "/" &&
+      !parsed.search &&
+      !parsed.hash &&
       parsed.host === host &&
       parsed.protocol === `${request.protocol}:`
     );
