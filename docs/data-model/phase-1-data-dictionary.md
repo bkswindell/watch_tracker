@@ -596,18 +596,16 @@ Stores hashed deployment authentication sessions and expiration state.
 
 ### `password_reset_token` — Infrastructure
 
-Stores only SHA-256 digests of short-lived host-admin-issued password-reset
-tokens. Each digest is bound to the deployment's Tracker instance; the
-plaintext token exists only in the one-time CLI output and URL fragment.
+Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.
 
 | Column | Type | Null | Key / constraint |
 |---|---|---:|---|
-| `token_sha256` | `CHAR(64)` | No | PK; lowercase SHA-256 hex digest |
+| `token_sha256` | `CHAR(64)` | No | PK |
 | `tracker_instance_id` | `UUID` | No | FK → `tracker_instance.tracker_instance_id` |
-| `expires_at` | `TIMESTAMPTZ` | No | Must be later than `created_at` |
-| `created_at` | `TIMESTAMPTZ` | No | Defaults to current time |
-| `failed_attempt_count` | `SMALLINT` | No | Defaults to zero; bounded from 0 through 5 |
-| `consumed_at` | `TIMESTAMPTZ` | Yes | May not predate `created_at` |
+| `expires_at` | `TIMESTAMPTZ` | No | CHECK `expires_at > created_at` |
+| `consumed_at` | `TIMESTAMPTZ` | Yes | CHECK `consumed_at IS NULL OR consumed_at >= created_at` |
+| `created_at` | `TIMESTAMPTZ` | No |  |
+| `failed_attempt_count` | `SMALLINT` | No | CHECK `failed_attempt_count BETWEEN 0 AND 5` |
 
 ### `canon_pack_repository` — Infrastructure
 

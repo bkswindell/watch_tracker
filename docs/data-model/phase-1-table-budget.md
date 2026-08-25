@@ -74,7 +74,7 @@ The accepted lean budget is **48 persisted PostgreSQL tables plus 9 derived SQL 
 ### Operational and infrastructure
 
 - `deployment_session` — Infrastructure: Stores hashed deployment authentication sessions and expiration state.
-- `password_reset_token` — Infrastructure: Stores digest-only, short-lived host-admin password-reset tokens bound to the Tracker instance.
+- `password_reset_token` — Infrastructure: Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.
 - `canon_pack_repository` — Infrastructure: Configures the Phase 1 Canon Pack release source.
 - `canon_pack_import` — Infrastructure: Records validation and transactional import attempts.
 - `canon_pack_activation` — Infrastructure: Records which verified release was active during each interval.

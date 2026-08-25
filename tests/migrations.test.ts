@@ -124,6 +124,63 @@ test("0.09 stores expiring password reset token digests by owner", async () => {
   assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
 });
 
+test("recovery data-model artifacts match the digest-only migration schema", async () => {
+  const [logicalText, drawDbText] = await Promise.all([
+    readFile("docs/data-model/phase-1-logical-model.json", "utf8"),
+    readFile("docs/data-model/phase-1.drawdb.json", "utf8"),
+  ]);
+  const logical = JSON.parse(logicalText) as {
+    relationships: Array<{ fromTable: string }>;
+    tables: Array<{
+      name: string;
+      columns: Array<{ name: string; type: string }>;
+    }>;
+  };
+  const drawDb = JSON.parse(drawDbText) as {
+    relationships: Array<{ name: string; startTableId: string }>;
+    tables: Array<{
+      id: string;
+      fields: Array<{ name: string; type: string }>;
+    }>;
+  };
+  const expectedFields = [
+    ["token_sha256", "CHAR"],
+    ["tracker_instance_id", "UUID"],
+    ["expires_at", "TIMESTAMPTZ"],
+    ["consumed_at", "TIMESTAMPTZ"],
+    ["created_at", "TIMESTAMPTZ"],
+    ["failed_attempt_count", "SMALLINT"],
+  ];
+
+  const logicalToken = logical.tables.find(
+    ({ name }) => name === "password_reset_token",
+  );
+  assert.deepEqual(
+    logicalToken?.columns.map(({ name, type }) => [name, type]),
+    expectedFields,
+  );
+  assert.ok(
+    logical.relationships.some(
+      ({ fromTable }) => fromTable === "password_reset_token",
+    ),
+  );
+
+  const drawDbToken = drawDb.tables.find(
+    ({ id }) => id === "password_reset_token",
+  );
+  assert.deepEqual(
+    drawDbToken?.fields.map(({ name, type }) => [name, type]),
+    expectedFields,
+  );
+  assert.ok(
+    drawDb.relationships.some(
+      ({ name, startTableId }) =>
+        name === "fk_password_reset_token_tracker_instance_id" &&
+        startTableId === "password_reset_token",
+    ),
+  );
+});
+
 test("0.08 adds bounded idle and absolute session lifetimes", async () => {
   const sql = await readFile(
     "db/migrations/0.08_session-lifetimes.sql",

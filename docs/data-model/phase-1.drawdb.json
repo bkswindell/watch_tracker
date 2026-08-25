@@ -986,9 +986,9 @@
       "endFieldId": "f27_1",
       "endTableId": "tracker_instance",
       "id": "r87",
-      "name": "fk_password_recovery_credential_tracker_instance_id",
+      "name": "fk_password_reset_token_tracker_instance_id",
       "startFieldId": "f41_2",
-      "startTableId": "password_recovery_credential",
+      "startTableId": "password_reset_token",
       "updateConstraint": "No action"
     },
     {
@@ -4956,18 +4956,19 @@
     },
     {
       "color": "#8B5CF6",
-      "comment": "Infrastructure: Stores short-lived host-generated recovery credentials.",
+      "comment": "Infrastructure: Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.",
       "fields": [
         {
           "check": "",
-          "comment": "Stable password_recovery_credential identity",
+          "comment": "SHA-256 digest of a host-generated reset token; plaintext is never stored",
           "default": "",
           "id": "f41_1",
           "increment": false,
-          "name": "password_recovery_credential_id",
+          "name": "token_sha256",
           "notNull": true,
           "primary": true,
-          "type": "UUID",
+          "size": 64,
+          "type": "CHAR",
           "unique": false
         },
         {
@@ -4983,70 +4984,57 @@
           "unique": false
         },
         {
-          "check": "",
+          "check": "expires_at > created_at",
           "comment": "",
           "default": "",
           "id": "f41_3",
           "increment": false,
-          "name": "code_hash",
+          "name": "expires_at",
           "notNull": true,
           "primary": false,
-          "size": 128,
-          "type": "VARCHAR",
-          "unique": true
+          "type": "TIMESTAMPTZ",
+          "unique": false
         },
         {
-          "check": "",
+          "check": "consumed_at IS NULL OR consumed_at >= created_at",
           "comment": "",
           "default": "",
           "id": "f41_4",
           "increment": false,
-          "name": "created_at",
-          "notNull": true,
+          "name": "consumed_at",
+          "notNull": false,
           "primary": false,
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "unique": false
         },
         {
           "check": "",
-          "comment": "",
+          "comment": "Defaults to current time",
           "default": "",
           "id": "f41_5",
           "increment": false,
-          "name": "expires_at",
+          "name": "created_at",
           "notNull": true,
           "primary": false,
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "unique": false
         },
         {
-          "check": "",
-          "comment": "",
+          "check": "failed_attempt_count BETWEEN 0 AND 5",
+          "comment": "Defaults to zero",
           "default": "",
           "id": "f41_6",
           "increment": false,
           "name": "failed_attempt_count",
           "notNull": true,
           "primary": false,
-          "type": "INT",
-          "unique": false
-        },
-        {
-          "check": "",
-          "comment": "",
-          "default": "",
-          "id": "f41_7",
-          "increment": false,
-          "name": "consumed_at",
-          "notNull": false,
-          "primary": false,
-          "type": "TIMESTAMP",
+          "type": "SMALLINT",
           "unique": false
         }
       ],
-      "id": "password_recovery_credential",
+      "id": "password_reset_token",
       "indices": [],
-      "name": "PASSWORD_RECOVERY_CREDENTIAL",
+      "name": "PASSWORD_RESET_TOKEN",
       "x": 3780,
       "y": 100
     },
