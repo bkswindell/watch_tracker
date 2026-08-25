@@ -108,6 +108,7 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   });
   assert.equal(workspace.statusCode, 200);
   assert.equal(workspace.json().pack.version, "0.2.3");
+  assert.equal(workspace.json().pack.contractVersion, "0.2.0");
   assert.equal(workspace.json().items.length, 31);
   assert.equal(workspace.json().relationships.length, 32);
   assert.equal(workspace.json().items[0].series, "Lantern Vale");

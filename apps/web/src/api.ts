@@ -50,13 +50,23 @@ export type WorkspaceHistory = {
   completedAt?: string;
   [key: string]: unknown;
 };
+export type WorkspacePack = {
+  title: string;
+  version: string;
+  contractVersion: string;
+  manifestSha256: string;
+  checksumsSha256: string;
+  inventoryFileCount: number | null;
+  inventoryTotalBytes: number | null;
+  verificationStatus: "verified" | "rejected" | null;
+};
 export type WorkspaceResponse = {
   items: CatalogItem[];
   relationships: WorkspaceRelationship[];
   targetSlug?: string;
   nextUp: CatalogItem[];
   history: WorkspaceHistory[];
-  pack?: Record<string, unknown>;
+  pack?: WorkspacePack | null;
 };
 export type WatchableFeedbackInput = {
   rating: number | null;

@@ -70,6 +70,17 @@ test("Canon Pack presents unavailable evidence honestly", async () => {
   assert.doesNotMatch(app, /<small>Loaded<\/small>/);
 });
 
+test("Canon Pack shows its validated contract rather than repeating release version", async () => {
+  const app = await source();
+  const frontendApi = await readFile("apps/web/src/api.ts", "utf8");
+  assert.match(
+    app,
+    /pack\?\.contractVersion \|\| "Unavailable from workspace API"/,
+  );
+  assert.match(frontendApi, /export type WorkspacePack/);
+  assert.match(frontendApi, /contractVersion: string/);
+});
+
 test("Catalog CRUD connects personal records while preserving Canon Pack immutability", async () => {
   const app = await source();
   const catalogDialog = await readFile(

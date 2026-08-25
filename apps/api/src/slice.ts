@@ -73,6 +73,7 @@ export interface WorkspaceHistory {
 export interface WorkspacePack {
   title: string;
   version: string;
+  contractVersion: string;
   manifestSha256: string;
   checksumsSha256: string;
   inventoryFileCount: number | null;
@@ -616,6 +617,7 @@ export class MemorySliceStore implements SliceStore {
     this.#pack = {
       title: pack.identity.title,
       version: pack.identity.version,
+      contractVersion: "0.2.0",
       manifestSha256: pack.manifestSha256,
       checksumsSha256: pack.checksumsSha256,
       inventoryFileCount: pack.verification.fileCount,
@@ -1362,6 +1364,7 @@ export class SqlSliceStore implements SliceStore {
     );
     const pack = await this.pool.query<WorkspacePack>(
       `SELECT pack.pack_title AS title, pack.pack_version AS version,
+              pack.contract_version AS "contractVersion",
               pack.manifest_sha256 AS "manifestSha256",
               pack.checksums_sha256 AS "checksumsSha256",
               pack.inventory_file_count AS "inventoryFileCount",

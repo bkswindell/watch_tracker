@@ -1429,7 +1429,7 @@ function PackPage({ pack, onImport, onViewVerification }) {
             <span>Version</span>
             <b>{pack?.version || "—"}</b>
             <span>Contract</span>
-            <b>{pack?.version || "—"}</b>
+            <b>{pack?.contractVersion || "Unavailable from workspace API"}</b>
             <span>Watchables</span>
             <b>{pack?.watchableCount ?? "—"}</b>
             <span>Relationships</span>

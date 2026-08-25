@@ -215,6 +215,11 @@
 
 - Validate Core run `32803174337` passed at PR head `91c2d17977910ce6cd6e75dbca0acdd6571a54a9`, including locked-install and production/full audits, all 117 portable tests, isolated PostgreSQL recovery/migration identity, deterministic build, Docker/Compose validation, image scans, SBOM, and disposable runtime smoke. Template PR #10 remains open and green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.
 - Rebuilt and recreated only `watch-tracker-lan-foundation-app-1` with `--no-deps` from `watch-tracker:verify` image `sha256:e44f85f3f96db7cb947b1558b6499e96e618df9f5cb1825705331aa8b0ae2bfc`. `/ready` returned ready. The credential-free live invalid-token completion returned generic `400 password-reset.invalid` with `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+
+## 2026-08-25 — Canon Pack contract display correction
+
+- Corrected the Canon Pack workspace panel, which previously displayed the Pack release version in both Version and Contract rows. The typed workspace API now projects persisted `contract_version`; the in-memory accepted Pack projection reports its explicitly validated `0.2.0` contract.
+- Added vertical-slice API coverage for `pack.contractVersion` and a focused web surface regression that rejects the version-repeat implementation. Local `npm run check` passed all format/type/lint/build gates and 125 portable tests; deterministic build passed 28 artifacts, high-severity audit reported zero vulnerabilities, and Compose config validated.
 - Database container `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5`, its creation time, volume `watch-tracker-lan-foundation_postgres_data`, health, durable state, migration state, and credentials were preserved. Chrome could not be started by the browser harness, so no latest-head authenticated or expired/reused browser result was fabricated.
 - The historical overall Phase 1 audit remains **FAIL** pending broad closeout, exact-final-diff governance, and latest-head browser certification. No credential changed; no release, tag, default-branch merge, force-push, destructive durable-data operation, or OxyGen/port 3000 action occurred.
 
