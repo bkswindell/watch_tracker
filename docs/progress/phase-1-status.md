@@ -21,7 +21,7 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 | M3 Core/PostgreSQL/Docker foundation | Complete | Core PR #1 merged as `c4a6a07`; PR CI `32658514890` and post-merge CI `32658626306` passed; 25/25 tests; deterministic build; hardened Compose; zero high/critical final-image findings; SBOM; persistence | None |
 | M4 Setup/auth/import/activation | Complete (current slice) | Setup, Argon2id authentication/session protections, host-admin one-use recovery, validated Pack import, and activation are implemented and covered by the Core gate | Broader M2 contract closeout remains separate |
 | M5 MVP UX and viewing loop | Complete (current slice) | Responsive workspace, Catalog, Focus Map, dependency inspection, viewing lifecycle, feedback, and persisted personal records are implemented and covered by the Core gate | M6 final browser matrix/closeout |
-| M6 MVP deployed verification/release | In progress | Trusted-LAN app-only deployment is healthy; recovery invalid-token behavior and authenticated workspace were previously certified | Exact final browser matrix and overall Phase 1 audit |
+| M6 MVP deployed verification/release | In progress | Latest trusted-LAN app-only deployment is healthy at Core `b6fcff5`; recovery invalid-token behavior and authenticated workspace were previously certified | Exact final browser matrix and overall Phase 1 audit |
 | M7 Remaining accepted Phase 1 | Pending | ADR/requirements corpus exists | M6 |
 | M8 Final Phase 1 closeout | Pending | — | M7 |
 

@@ -1,5 +1,10 @@
 # Phase 1 progress log
 
+## 2026-08-25 — recovery final-gate revalidation and deployment
+
+- Revalidated the approved host-admin recovery boundary at `b6fcff546dca0e257e8b391b52932a7ee021078f`. The complete source gate passed 137/137 portable tests, including the recovery expiry, supersession, reuse, atomic-consumption, generic-error, session-revocation, fragment-only, and CLI output bounds. Deterministic production verification reproduced 29 artifacts and the high-severity production dependency audit found zero vulnerabilities.
+- Rebuilt `watch-tracker:verify` as `sha256:fea6be40d4e4ebbf6b87018ae47c2e92817708b5eaeebb29bdcdcccbefbbe836` and recreated only `watch-tracker-lan-foundation-app-1`. It is healthy; in-container `/ready` returned 200, while `/reset-password` returned 200 with `Cache-Control: no-store`, `Referrer-Policy: no-referrer`, and the self-only CSP. The database remained container `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5`, created 2026-08-24T16:08:34.899650189Z; no migration, credential, recovery token, volume, backup, user, or durable record changed. The cron browser harness still cannot launch a supported Chromium-family browser, so no new browser certificate is claimed; historical audit remains **FAIL** pending the exact-final browser matrix and closeout.
+
 ## 2026-08-25 — Focus Map layout continuity
 
 - Corrected local filter behavior so a deliberate Focus Map card/Series arrangement survives a temporary query, type/state, relationship, or collapse projection change. The in-memory cache restores only nodes returning under the same Series parent; **Reset layout** explicitly clears the cache and restores deterministic layout.
