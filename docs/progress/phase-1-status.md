@@ -36,6 +36,13 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — recovery expiry invariant deployed to the trusted-LAN slice
+
+- Applied the additive `0.11_password-recovery-expiry-bound.sql` migration with the canonical one-shot Compose migrator against the existing trusted-LAN Watch Tracker database. The migrator reported `PASS migrations=11 schema=0.11 checksum=aec5909642507434c049621143a8573e88b7dc0982f6de4ac84b40b3453779bb`.
+- Read-back verified the complete `0.01`–`0.11` migration ledger and the `password_reset_token_expiry_within_15_minutes` database constraint. No credential, user, volume, backup, or existing durable record was changed by the additive constraint migration.
+- Built and performed an app-only deployment of Core head `d092c1b` as `watch-tracker:phase1-d092c1b`; the trusted-LAN app container is healthy and its loopback `/ready` endpoint returned Watch Tracker readiness JSON. The PostgreSQL container was not recreated.
+- Source validation passed: `npm run check` (129 tests), deterministic production build (29 artifacts), and production dependency audit (0 vulnerabilities). The Chrome browser harness could not start in this cron environment, so an exact latest-head authenticated browser matrix remains unavailable; historical Phase 1 audit remains **FAIL** pending that certification and broader closeout.
+
 ### 2026-08-25 — Catalog portable filtered-view export
 
 - Catalog list and Posters now share a single all-column-search, Type/Series/viewing-state-filtered, release-ordered projection. `Save view` downloads that exact projection as `watch-tracker-catalog.json`, including generation time, filter metadata, truthful total, and displayed records; it does not claim server-side saved-view persistence.
