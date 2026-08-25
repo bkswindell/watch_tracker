@@ -886,6 +886,11 @@ export async function buildApp(
         return { nextUp };
       },
     );
+    app.delete("/api/focus", async (request, reply) => {
+      if (!(await requireCsrf(request, reply))) return;
+      await store.clearFocus();
+      return { cleared: true };
+    });
     app.post<{
       Params: {
         slug: string;

@@ -127,6 +127,7 @@ export interface SliceStore {
   catalogTypes(): Promise<string[]>;
   item(slug: string): Promise<CatalogItem | undefined>;
   setFocus(targetSlug: string): Promise<CatalogItem | undefined>;
+  clearFocus(): Promise<void>;
   nextUp(): Promise<CatalogItem | undefined>;
   workspace(): Promise<WorkspaceAggregate>;
   viewingAction(
@@ -463,7 +464,7 @@ export class MemorySliceStore implements SliceStore {
   #types: string[] = [];
   #states = new Map<string, string>();
   #feedback = new Map<string, WatchableFeedback>();
-  #focus?: string;
+  #focus: string | undefined;
   #history: WorkspaceHistory[] = [];
   #pack: WorkspacePack | null = null;
   #packPath: string;
@@ -656,6 +657,9 @@ export class MemorySliceStore implements SliceStore {
     if (!this.#items.has(targetSlug)) return undefined;
     this.#focus = targetSlug;
     return this.nextUp();
+  }
+  async clearFocus(): Promise<void> {
+    this.#focus = undefined;
   }
   async nextUp(): Promise<CatalogItem | undefined> {
     const items = await this.catalog();
@@ -1297,6 +1301,11 @@ export class SqlSliceStore implements SliceStore {
       [focus.canon_pack_release_id, focus.watchable_id],
     );
     return this.nextUp();
+  }
+  async clearFocus(): Promise<void> {
+    await this.pool.query(
+      "DELETE FROM canon_pack_watch_focus WHERE singleton = true",
+    );
   }
   async nextUp(): Promise<CatalogItem | undefined> {
     const catalog = await this.catalog();

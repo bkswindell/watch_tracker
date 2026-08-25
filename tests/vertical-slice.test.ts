@@ -7,7 +7,7 @@ import { MemorySliceStore } from "../apps/api/src/slice.js";
 async function request(
   app: Awaited<ReturnType<typeof buildApp>>,
   options: {
-    method: "GET" | "POST";
+    method: "GET" | "POST" | "DELETE";
     url: string;
     payload?: string;
     headers?: Record<string, string>;
@@ -197,6 +197,22 @@ test("first-run setup, login, import, focus, and viewing actions form a protecte
   });
   assert.equal(focus.statusCode, 200);
   assert.equal(focus.json().nextUp.slug, first.slug);
+
+  const clearFocus = await request(app, {
+    method: "DELETE",
+    url: "/api/focus",
+    cookies: sessionCookie,
+    headers: { "x-csrf-token": authenticated.json().csrfToken },
+  });
+  assert.equal(clearFocus.statusCode, 200);
+  assert.equal(clearFocus.json().cleared, true);
+  const workspaceWithoutTarget = await request(app, {
+    method: "GET",
+    url: "/api/workspace",
+    cookies: sessionCookie,
+  });
+  assert.equal(workspaceWithoutTarget.statusCode, 200);
+  assert.equal(workspaceWithoutTarget.json().targetSlug, null);
 
   const started = await request(app, {
     method: "POST",

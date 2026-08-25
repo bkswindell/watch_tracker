@@ -551,6 +551,14 @@ function App() {
       openDetails(item);
       notify(`${item.title} · active target`);
     });
+  const clearTarget = () =>
+    perform(async () => {
+      await api.clearFocus(csrf);
+      await loadWorkspace();
+      notify(
+        "Active target cleared · Next Up follows the full Release Timeline",
+      );
+    });
   const actItem = (item, state) =>
     perform(async () => {
       const action =
@@ -766,9 +774,16 @@ function App() {
                     exactly why each title is included.
                   </p>
                 </div>
-                <button className="primary" onClick={() => navigate("next")}>
-                  View Next Up →
-                </button>
+                <div className="pageActions">
+                  {target && (
+                    <button onClick={() => void clearTarget()} disabled={busy}>
+                      Clear target
+                    </button>
+                  )}
+                  <button className="primary" onClick={() => navigate("next")}>
+                    View Next Up →
+                  </button>
+                </div>
               </div>
               <Suspense
                 fallback={

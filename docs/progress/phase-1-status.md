@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — optional Focus target can return to the full timeline
+
+- Added a compact **Clear target** command to the Focus Map title actions. It appears only with an active target and returns the workspace to its normal full Release Timeline without touching viewing activity or Canon data.
+- The protected `DELETE /api/focus` route requires the existing authenticated exact-Origin/CSRF boundary. Memory and PostgreSQL stores both clear only the Focus selection; API coverage proves the workspace reports `targetSlug: null` after clearing, and the UI regression verifies the command and client contract.
+- `npm run check` passed all 133 portable tests; deterministic verification passed 29 artifacts; `npm audit --omit=dev --audit-level=high`, Compose validation, and `git diff --check` passed. Direct `npm run test:postgres` failed closed before connection because `TEST_DATABASE_URL` is not configured. The local Docker daemon has no Watch Tracker stack, so no deployment action is claimed. No migration, credential, recovery token, volume, backup, user, or durable record has been changed by this source checkpoint. Historical Phase 1 audit remains **FAIL** pending the exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — per-client concurrent login verification gate
 
 - Added a per-remote-address in-flight guard around the existing expensive credential verification. Concurrent attempts from the same address now receive the existing generic throttle response rather than starting parallel Argon2id hashes; the guard releases in `finally`, so the original request's normal success/failure accounting is preserved. A deterministic regression proves a held first verification blocks a second one before it invokes the store.

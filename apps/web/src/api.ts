@@ -213,6 +213,8 @@ export const api = {
     call<{ nextUp?: CatalogItem }>("/api/focus", "POST", csrf, {
       targetSlug: slug,
     }),
+  clearFocus: (csrf: string) =>
+    call<{ cleared: true }>("/api/focus", "DELETE", csrf),
   action: (
     slug: string,
     action: "start" | "complete" | "discard" | "repeat",

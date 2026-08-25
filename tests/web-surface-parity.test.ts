@@ -52,6 +52,22 @@ test("App restores server-ordered Next Up presentation and truthful summaries", 
   assert.match(app, /Ready to watch/);
 });
 
+test("Focus Map can clear its optional target and return to the Release Timeline", async () => {
+  const app = await source();
+  const frontendApi = await readFile("apps/web/src/api.ts", "utf8");
+  assert.match(app, /const clearTarget = \(\) =>/);
+  assert.match(
+    app,
+    /Active target cleared · Next Up follows the full Release Timeline/,
+  );
+  assert.match(app, /Clear target/);
+  assert.match(frontendApi, /clearFocus: \(csrf: string\)/);
+  assert.match(
+    frontendApi,
+    /call<\{ cleared: true \}>\("\/api\/focus", "DELETE", csrf\)/,
+  );
+});
+
 test("Next Up exports its visible deterministic queue rather than a placeholder", async () => {
   const app = await source();
   assert.match(app, /export function queueViewSnapshot/);
