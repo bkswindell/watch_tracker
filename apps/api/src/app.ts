@@ -138,6 +138,36 @@ function sameBrowserOrigin(request: FastifyRequest): boolean {
   return typeof request.headers.origin === "string" && sameOrigin(request);
 }
 
+// Recovery accepts a deliberately narrow body contract. In particular, do not
+// silently accept companion fields that a browser extension, proxy, or future
+// client might mistake as part of the recovery flow. The token format is the
+// 32-byte base64url value issued by the host-admin CLI.
+function passwordResetInput(
+  value: unknown,
+): { token: string; password: string } | undefined {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    Object.getPrototypeOf(value) !== Object.prototype
+  )
+    return undefined;
+  const entries = Object.entries(value);
+  if (
+    entries.length !== 2 ||
+    !Object.hasOwn(value, "token") ||
+    !Object.hasOwn(value, "password")
+  )
+    return undefined;
+  const { token, password } = value as { token: unknown; password: unknown };
+  return typeof token === "string" &&
+    /^[A-Za-z0-9_-]{43}$/.test(token) &&
+    typeof password === "string" &&
+    password.length <= 1024
+    ? { token, password }
+    : undefined;
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -407,14 +437,10 @@ export async function buildApp(
           genericFailure();
           return;
         }
-        const token = request.body?.token;
-        const password = request.body?.password;
+        const input = passwordResetInput(request.body);
         if (
-          typeof token !== "string" ||
-          typeof password !== "string" ||
-          token.length > 256 ||
-          password.length > 1024 ||
-          !(await store.completePasswordReset(token, password))
+          !input ||
+          !(await store.completePasswordReset(input.token, input.password))
         ) {
           genericFailure();
           return;

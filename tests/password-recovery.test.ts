@@ -120,6 +120,15 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
   assert.equal(invalid.headers["cache-control"], "no-store");
   assert.equal(invalid.headers["referrer-policy"], "no-referrer");
 
+  const unexpectedField = await app.inject({
+    method: "POST",
+    url: "/api/password-reset/complete",
+    headers: { host: "localhost", origin: "http://localhost" },
+    payload: { token: reset.token, password: NEW_PASSWORD, ignored: true },
+  });
+  assert.equal(unexpectedField.statusCode, 400);
+  assert.deepEqual(unexpectedField.json().error, invalid.json().error);
+
   const success = await app.inject({
     method: "POST",
     url: "/api/password-reset/complete",
