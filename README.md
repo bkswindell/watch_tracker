@@ -4,7 +4,7 @@ Watch Tracker is an open-source, self-hosted application for tracking progress t
 
 ## TL;DR
 
-The current Core vertical slice is available for local development: a React shell, Fastify API, PostgreSQL migrations through `0.10`, one-shot migrator, hardened Docker Compose deployment, validated Canon Pack import, setup/authentication, catalog, dependency inspection, and viewing workflows. Host-admin password recovery is also implemented; Phase 1 remains in active development and is not a release.
+The current Core vertical slice is available for local development: a React shell, Fastify API, PostgreSQL migrations through `0.11`, one-shot migrator, hardened Docker Compose deployment, validated Canon Pack import, setup/authentication, catalog, dependency inspection, and viewing workflows. Host-admin password recovery is also implemented; Phase 1 remains in active development and is not a release.
 
 ## Why Watch Tracker
 

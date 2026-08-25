@@ -1,5 +1,11 @@
 # Phase 1 progress log
 
+## 2026-08-25 — recovery migration documentation contract
+
+- Reconciled the public Core overview with the implemented recovery schema: PostgreSQL migrations are required through additive `0.11`, not the obsolete `0.10` declaration. The host-admin recovery instructions already describe the actual 15-minute, SHA-256-digest-only reset mechanism.
+- Added a portable regression that reads `README.md` and pins the migration level and those recovery guarantees, preventing future documentation from directing an operator to an insufficient schema contract.
+- Validation: focused API-foundation test and `npm run check` passed all 129 portable tests; deterministic build passed 29 artifacts; `npm audit --omit=dev --audit-level=high`, `docker compose config -q`, and `git diff --check` passed. The live database intentionally remains schema `0.10`, so no app-only deployment was attempted; no PostgreSQL, migration, credential, volume, or durable-data operation occurred. Historical Phase 1 audit remains **FAIL**.
+
 ## 2026-08-25 — Catalog portable filtered view
 
 - Delivered `893a3136c27261bb5e814fa07301abe7b678c54f`: the List and Posters now use one all-column-search, Type/Series/viewing-state-filtered, release-ordered Catalog projection. `Save view` exports that exact projection as `watch-tracker-catalog.json` with generation time, applied filters, a truthful total, and displayed records; it does not claim server-side persistence.
