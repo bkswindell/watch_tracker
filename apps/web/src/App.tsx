@@ -215,25 +215,17 @@ function CatalogPosterArtwork({ item }) {
     </div>
   );
 }
-function CatalogPosterGrid({
-  items,
-  query,
-  type,
-  series,
-  state,
-  onPick,
-  onClearFilters,
-}) {
+export function catalogVisibleItems(items, query, type, series, state) {
   const needle = query.trim().toLocaleLowerCase();
-  const visible = items
+  return items
     .filter((item) => {
       const matchesSearch =
         !needle ||
-        [item.title, item.type, item.series, item.state, item.summary]
-          .filter(Boolean)
-          .join(" ")
-          .toLocaleLowerCase()
-          .includes(needle);
+        Object.values(item).some((value) =>
+          String(value ?? "")
+            .toLocaleLowerCase()
+            .includes(needle),
+        );
       return (
         matchesSearch &&
         (type === "All" || item.type === type) &&
@@ -246,6 +238,26 @@ function CatalogPosterGrid({
         (left.releaseOrder ?? Number.MAX_SAFE_INTEGER) -
         (right.releaseOrder ?? Number.MAX_SAFE_INTEGER),
     );
+}
+export function catalogViewSnapshot(catalog, filters) {
+  return {
+    exportedAt: new Date().toISOString(),
+    filters,
+    summary: { total: catalog.length },
+    items: catalog,
+  };
+}
+function CatalogPosterGrid({
+  items,
+  query,
+  type,
+  series,
+  state,
+  onPick,
+  onClearFilters,
+}) {
+  const needle = query.trim().toLocaleLowerCase();
+  const visible = catalogVisibleItems(items, query, type, series, state);
   const resultLabel = `${visible.length} of ${items.length} watchables`;
   return (
     <section
@@ -545,23 +557,45 @@ function App() {
       notify(`${result.data.pack.title} ${result.data.pack.version} imported.`);
     });
   }
-  // The command filters apply identically to the bounded list and poster grid;
-  // the Infinite Row Model still owns column filtering and block requests.
+  // Command filters and all-column search have one shared, release-ordered
+  // projection for the bounded list, poster grid, and portable view export.
   const filteredCatalogItems = useMemo(
     () =>
-      items.filter(
-        (item) =>
-          (catalogType === "All" || item.type === catalogType) &&
-          (catalogSeries === "All" || item.series === catalogSeries) &&
-          (catalogState === "All" || item.state === catalogState),
+      catalogVisibleItems(
+        items,
+        query,
+        catalogType,
+        catalogSeries,
+        catalogState,
       ),
-    [items, catalogType, catalogSeries, catalogState],
+    [items, query, catalogType, catalogSeries, catalogState],
   );
   const catalogDatasource = useMemo(
-    () =>
-      createInfiniteDatasource(filteredCatalogItems, { quickFilter: query }),
-    [filteredCatalogItems, query],
+    () => createInfiniteDatasource(filteredCatalogItems),
+    [filteredCatalogItems],
   );
+  const saveCatalogView = () => {
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          catalogViewSnapshot(filteredCatalogItems, {
+            query,
+            type: catalogType,
+            series: catalogSeries,
+            viewingState: catalogState,
+          }),
+          null,
+          2,
+        ),
+      ],
+      { type: "application/json" },
+    );
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "watch-tracker-catalog.json";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
   const columns = useMemo(
     () => [
       { field: "order", headerName: "#", width: 70 },
@@ -869,9 +903,14 @@ function App() {
                       processCellCallback: ({ value }) => csvSafeValue(value),
                     })
                   }
+                  disabled={catalogDisplay !== "list"}
                 >
                   Export CSV
                 </button>
+                <button onClick={saveCatalogView}>Save view</button>
+                <span className="catalogResultCount" aria-live="polite">
+                  {filteredCatalogItems.length} of {items.length}
+                </span>
                 {colsOpen && (
                   <div className="columnMenu">
                     {columns.map((column) => (

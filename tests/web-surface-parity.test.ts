@@ -145,6 +145,17 @@ test("Catalog provides a filterable poster grid without replacing the bounded li
   assert.match(styles, /aspect-ratio: 2 \/ 3/);
 });
 
+test("Catalog saves the same filtered, release-ordered view shown in either display", async () => {
+  const app = await source();
+  assert.match(app, /export function catalogVisibleItems/);
+  assert.match(app, /export function catalogViewSnapshot/);
+  assert.match(app, /catalogVisibleItems\(\s*items,\s*query,\s*catalogType,/);
+  assert.match(app, /catalogViewSnapshot\(filteredCatalogItems,/);
+  assert.match(app, /link\.download = "watch-tracker-catalog\.json"/);
+  assert.match(app, /<button onClick=\{saveCatalogView\}>Save view<\/button>/);
+  assert.match(app, /disabled=\{catalogDisplay !== "list"\}/);
+});
+
 test("Next Up hero recovers from unavailable approved artwork", async () => {
   const app = await source();
   const styles = await readFile("apps/web/src/styles.css", "utf8");

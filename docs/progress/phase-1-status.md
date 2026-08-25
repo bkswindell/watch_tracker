@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — Catalog portable filtered-view export
+
+- Catalog list and Posters now share a single all-column-search, Type/Series/viewing-state-filtered, release-ordered projection. `Save view` downloads that exact projection as `watch-tracker-catalog.json`, including generation time, filter metadata, truthful total, and displayed records; it does not claim server-side saved-view persistence.
+- The table-specific CSV export is intentionally disabled in Posters mode while the portable JSON export stays available in both modes. Focused surface coverage and the full `npm run check` gate passed 128 portable tests; deterministic production build passed with 29 artifacts. High-severity dependency audit and Compose configuration validation passed.
+- No migration, database, credential, volume, OxyGen service, release, tag, or default-branch merge occurred. Browser certification remains unavailable in the cron harness; historical Phase 1 audit remains **FAIL**.
+
 ### 2026-08-25 — recovery expiry invariant CI-certified
 
 - Additive migration `0.11_password-recovery-expiry-bound.sql` enforces `password_reset_token.expires_at <= created_at + INTERVAL '15 minutes'`; runtime identity verifies the named constraint and terminal schema version. This protects the approved host-admin recovery lifetime against a future persistence writer extending a stored token.
