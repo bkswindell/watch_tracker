@@ -148,6 +148,13 @@ export function historySummary(history) {
     discarded: history.filter((item) => item.action === "discarded").length,
   };
 }
+export function historyViewSnapshot(history) {
+  return {
+    exportedAt: new Date().toISOString(),
+    summary: historySummary(history),
+    items: history,
+  };
+}
 export function packEvidence(pack) {
   return [
     {
@@ -1451,9 +1458,12 @@ function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
     [history],
   );
   const saveView = () => {
-    const blob = new Blob([JSON.stringify(history, null, 2)], {
-      type: "application/json",
-    });
+    const blob = new Blob(
+      [JSON.stringify(historyViewSnapshot(history), null, 2)],
+      {
+        type: "application/json",
+      },
+    );
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "watch-tracker-history.json";
