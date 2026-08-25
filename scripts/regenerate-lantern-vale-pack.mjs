@@ -7,7 +7,7 @@ const root = path.resolve(
   process.env.CANON_PACK_OUTPUT ?? "canon-packs/lantern-vale-0.2.2",
 );
 const mockup = await readFile(
-  "/home/administrator/workspace/.scratch/watch-tracker-ui-mockup/src/App.jsx",
+  "/home/administrator/workspace/watch_tracker/mockup/src/App.jsx",
   "utf8",
 );
 const watchablesLiteral =
