@@ -231,6 +231,15 @@ test("Next Up hero recovers from unavailable approved artwork", async () => {
   assert.match(styles, /\.nextHeroPosterFallback/);
 });
 
+test("Focus Map node artwork recovers from an unavailable approved poster", async () => {
+  const graph = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
+  assert.match(graph, /function NodePosterArtwork\(\{ data \}\)/);
+  assert.match(graph, /setImageAvailable\(Boolean\(data\.posterUrl\)\)/);
+  assert.match(graph, /onError=\{\(\) => setImageAvailable\(false\)\}/);
+  assert.match(graph, /artwork unavailable/);
+  assert.match(graph, /<NodePosterArtwork data=\{data\} \/>/);
+});
+
 test("cinematic details keep unavailable enrichment visible without fabricated content", async () => {
   const details = await readFile("apps/web/src/WatchableDetails.tsx", "utf8");
   assert.match(details, /Cast and crew data unavailable/);

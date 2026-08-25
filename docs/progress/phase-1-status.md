@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — Focus Map broken-poster resilience
+
+- Focus Map cards now replace an approved poster that fails to load with the established compact type-labelled unavailable-artwork treatment. The replacement resets for a changed node and preserves the dependency-first layout, target/Next Up distinction, dragging, and context actions without fabricating media or adding a persistence/API surface.
+- A focused web-surface regression covers the failure recovery. `npm run check` passed **134 portable tests**; deterministic production verification passed **29 artifacts**; the production high-severity dependency audit, Compose validation, and `git diff --check` passed. Direct `npm run test:postgres` failed closed before connecting because `TEST_DATABASE_URL` is not configured.
+- App-only deployment rebuilt `watch-tracker:phase1-focus-artwork` and recreated only `watch-tracker-lan-foundation-app-1`; its replacement reached `running healthy`. Database container `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` retained its creation time `2026-08-24T16:08:34.899650189Z` and healthy state. A fresh browser-harness attempt could not start a supported Chromium-family browser, so no browser certification is claimed. Historical Phase 1 audit remains **FAIL** pending the exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — optional Focus target can return to the full timeline
 
 - Added a compact **Clear target** command to the Focus Map title actions. It appears only with an active target and returns the workspace to its normal full Release Timeline without touching viewing activity or Canon data.

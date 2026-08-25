@@ -36,6 +36,30 @@ function episodeIdentity(data) {
     ? `${data.series} S${String(data.season).padStart(2, "0")}:E${String(data.episode).padStart(2, "0")}`
     : data.series;
 }
+function NodePosterArtwork({ data }) {
+  const [imageAvailable, setImageAvailable] = useState(Boolean(data.posterUrl));
+  useEffect(() => setImageAvailable(Boolean(data.posterUrl)), [data.posterUrl]);
+  if (imageAvailable) {
+    return (
+      <img
+        className="nodePosterImage"
+        src={artworkUrl(data.posterUrl)}
+        alt={`${data.title} poster`}
+        onError={() => setImageAvailable(false)}
+      />
+    );
+  }
+  return (
+    <div
+      className={`nodePoster ${data.type.toLowerCase()}`}
+      aria-label={`${data.type} artwork unavailable`}
+    >
+      <span>Poster</span>
+      <b>Image</b>
+      <span>Unavailable</span>
+    </div>
+  );
+}
 function ItemNode({ data }) {
   const hasPoster = Boolean(data.posterUrl || data.poster),
     role = data.selected
@@ -70,23 +94,7 @@ function ItemNode({ data }) {
       {roleLabel && (
         <span className={`roleNodeBadge ${role}NodeBadge`}>{roleLabel}</span>
       )}
-      {hasPoster &&
-        (data.posterUrl ? (
-          <img
-            className="nodePosterImage"
-            src={artworkUrl(data.posterUrl)}
-            alt={`${data.title} poster`}
-          />
-        ) : (
-          <div
-            className={"nodePoster " + data.type.toLowerCase()}
-            aria-label="Poster image placeholder"
-          >
-            <span>Poster</span>
-            <b>Image</b>
-            <span>Placeholder</span>
-          </div>
-        ))}
+      {hasPoster && <NodePosterArtwork data={data} />}
       <div className="nodeContent">
         <div className="nodeTop">
           <span>{data.type}</span>
