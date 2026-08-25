@@ -23,7 +23,15 @@ export function ResetPassword({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    if (password.length < 15 || password.includes("\0")) {
+    // Match the server policy before sending an attempt. This avoids consuming
+    // one of the token's bounded failed-submission attempts for a value the UI
+    // already knows cannot be accepted (including a programmatic overlength
+    // value that bypasses the input's maxLength attribute).
+    if (
+      password.length < 15 ||
+      password.length > 1024 ||
+      password.includes("\0")
+    ) {
       setError(PASSWORD_RESET_POLICY);
       return;
     }

@@ -320,6 +320,10 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
   assert.match(app, /history\.replaceState\(null, "", "\/reset-password"\)/);
   assert.match(app, /passwordResetTokenFromFragment\(location\.hash\)/);
   assert.match(resetUi, /autoComplete="new-password"/);
+  assert.match(
+    resetUi,
+    /password\.length < 15[\s\S]*password\.length > 1024[\s\S]*password\.includes\("\\0"\)/,
+  );
   const resetRequest = resetUi.indexOf(
     "await api.completePasswordReset(token, password)",
   );
