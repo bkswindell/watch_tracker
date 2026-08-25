@@ -118,17 +118,19 @@ test("Catalog provides a filterable poster grid without replacing the bounded li
   const styles = await readFile("apps/web/src/styles.css", "utf8");
   assert.match(
     app,
-    /function CatalogPosterGrid\(\{[\s\S]*items,[\s\S]*query,[\s\S]*type,[\s\S]*state,[\s\S]*onPick,[\s\S]*onClearFilters,[\s\S]*\}\)/,
+    /function CatalogPosterGrid\(\{[\s\S]*items,[\s\S]*query,[\s\S]*type,[\s\S]*series,[\s\S]*state,[\s\S]*onPick,[\s\S]*onClearFilters,[\s\S]*\}\)/,
   );
   assert.match(app, /aria-label="Catalog poster grid"/);
   assert.match(app, /catalogDisplay === "posters"/);
   assert.match(app, /setCatalogDisplay\("posters"\)/);
   assert.match(app, /items=\{items\}/);
   assert.match(app, /aria-label="Filter catalog by type"/);
+  assert.match(app, /aria-label="Filter catalog by series"/);
   assert.match(app, /aria-label="Filter catalog by viewing state"/);
   assert.match(app, /const filteredCatalogItems = useMemo/);
   assert.match(app, /createInfiniteDatasource\(filteredCatalogItems/);
   assert.match(app, /type=\{catalogType\}/);
+  assert.match(app, /series=\{catalogSeries\}/);
   assert.match(app, /state=\{catalogState\}/);
   assert.match(app, /onClearFilters=\{\(\) => \{/);
   assert.match(app, /catalogPosterSummary/);

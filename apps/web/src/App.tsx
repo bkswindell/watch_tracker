@@ -219,6 +219,7 @@ function CatalogPosterGrid({
   items,
   query,
   type,
+  series,
   state,
   onPick,
   onClearFilters,
@@ -236,6 +237,7 @@ function CatalogPosterGrid({
       return (
         matchesSearch &&
         (type === "All" || item.type === type) &&
+        (series === "All" || item.series === series) &&
         (state === "All" || item.state === state)
       );
     })
@@ -252,10 +254,11 @@ function CatalogPosterGrid({
     >
       <div className="catalogPosterSummary" aria-live="polite">
         <span>{resultLabel}</span>
-        {(needle || type !== "All" || state !== "All") && (
+        {(needle || type !== "All" || series !== "All" || state !== "All") && (
           <span>
             {needle ? `matching “${query.trim()}”` : "filtered"}
             {type !== "All" ? ` · ${type}` : ""}
+            {series !== "All" ? ` · ${series}` : ""}
             {state !== "All" ? ` · ${state}` : ""}
           </span>
         )}
@@ -315,6 +318,7 @@ function App() {
     [mode, setMode] = useState("Release Timeline"),
     [catalogDisplay, setCatalogDisplay] = useState("list"),
     [catalogType, setCatalogType] = useState("All"),
+    [catalogSeries, setCatalogSeries] = useState("All"),
     [catalogState, setCatalogState] = useState("All"),
     [gridApi, setGridApi] = useState(),
     [colsOpen, setColsOpen] = useState(false),
@@ -548,9 +552,10 @@ function App() {
       items.filter(
         (item) =>
           (catalogType === "All" || item.type === catalogType) &&
+          (catalogSeries === "All" || item.series === catalogSeries) &&
           (catalogState === "All" || item.state === catalogState),
       ),
-    [items, catalogType, catalogState],
+    [items, catalogType, catalogSeries, catalogState],
   );
   const catalogDatasource = useMemo(
     () =>
@@ -758,6 +763,25 @@ function App() {
                   </select>
                 </label>
                 <label>
+                  Series
+                  <select
+                    value={catalogSeries}
+                    onChange={(event) => setCatalogSeries(event.target.value)}
+                    aria-label="Filter catalog by series"
+                  >
+                    <option>All</option>
+                    {[
+                      ...new Set(
+                        items.map((item) => item.series).filter(Boolean),
+                      ),
+                    ]
+                      .sort()
+                      .map((series) => (
+                        <option key={series}>{series}</option>
+                      ))}
+                  </select>
+                </label>
+                <label>
                   Viewing state
                   <select
                     value={catalogState}
@@ -830,6 +854,7 @@ function App() {
                   onClick={() => {
                     setQuery("");
                     setCatalogType("All");
+                    setCatalogSeries("All");
                     setCatalogState("All");
                     gridApi?.setFilterModel(null);
                     gridApi?.refreshInfiniteCache();
@@ -903,11 +928,13 @@ function App() {
                   items={items}
                   query={query}
                   type={catalogType}
+                  series={catalogSeries}
                   state={catalogState}
                   onPick={openDetails}
                   onClearFilters={() => {
                     setQuery("");
                     setCatalogType("All");
+                    setCatalogSeries("All");
                     setCatalogState("All");
                   }}
                 />
