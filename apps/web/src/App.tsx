@@ -231,7 +231,7 @@ function CatalogPosterArtwork({ item }) {
     </div>
   );
 }
-function CatalogPosterGrid({ items, query, onPick }) {
+function CatalogPosterGrid({ items, query, onPick, onClearSearch }) {
   const needle = query.trim().toLocaleLowerCase();
   const visible = items
     .filter((item) => {
@@ -247,27 +247,41 @@ function CatalogPosterGrid({ items, query, onPick }) {
         (left.releaseOrder ?? Number.MAX_SAFE_INTEGER) -
         (right.releaseOrder ?? Number.MAX_SAFE_INTEGER),
     );
-  if (!visible.length) {
-    return <p className="catalogEmpty">No watchables match this search.</p>;
-  }
+  const resultLabel = `${visible.length} of ${items.length} watchables`;
   return (
-    <div className="catalogPosterGrid" aria-label="Catalog poster grid">
-      {visible.map((item) => (
-        <button
-          className="catalogPosterCard"
-          key={item.id}
-          onClick={() => onPick(item)}
-          aria-label={`View details for ${item.title}`}
-        >
-          <CatalogPosterArtwork item={item} />
-          <span className="catalogPosterTitle">{item.title}</span>
-          <span className="catalogPosterMeta">
-            {item.type} · {item.release || "Release unavailable"}
-          </span>
-          <StateBadge value={item.state} />
-        </button>
-      ))}
-    </div>
+    <section
+      className="catalogPosterResults"
+      aria-label="Catalog poster results"
+    >
+      <div className="catalogPosterSummary" aria-live="polite">
+        <span>{resultLabel}</span>
+        {needle && <span>matching “{query.trim()}”</span>}
+      </div>
+      {visible.length ? (
+        <div className="catalogPosterGrid" aria-label="Catalog poster grid">
+          {visible.map((item) => (
+            <button
+              className="catalogPosterCard"
+              key={item.id}
+              onClick={() => onPick(item)}
+              aria-label={`View details for ${item.title}`}
+            >
+              <CatalogPosterArtwork item={item} />
+              <span className="catalogPosterTitle">{item.title}</span>
+              <span className="catalogPosterMeta">
+                {item.type} · {item.release || "Release unavailable"}
+              </span>
+              <StateBadge value={item.state} />
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="catalogEmpty" role="status">
+          <p>No watchables match this search.</p>
+          <button onClick={onClearSearch}>Clear search</button>
+        </div>
+      )}
+    </section>
   );
 }
 function App() {
@@ -836,6 +850,7 @@ function App() {
                   items={items}
                   query={query}
                   onPick={openDetails}
+                  onClearSearch={() => setQuery("")}
                 />
               )}
             </>

@@ -462,6 +462,21 @@ button.primary {
 .agWrap {
   height: 620px;
 }
+.catalogPosterResults {
+  display: grid;
+  gap: 12px;
+}
+.catalogPosterSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.catalogPosterSummary span:first-child {
+  color: var(--text);
+  font-weight: 800;
+}
 .catalogPosterGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
@@ -523,8 +538,17 @@ button.primary {
   margin-bottom: 11px;
 }
 .catalogEmpty {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
   color: var(--muted);
-  padding: 28px 0;
+  margin: 0;
+  padding: 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
+.catalogEmpty p {
+  margin: 0;
 }
 .historyGrid {
   height: 430px;

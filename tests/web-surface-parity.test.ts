@@ -93,17 +93,24 @@ test("Catalog CRUD connects personal records while preserving Canon Pack immutab
 test("Catalog provides a searchable poster grid without replacing the bounded list", async () => {
   const app = await source();
   const styles = await readFile("apps/web/src/styles.css", "utf8");
-  assert.match(app, /function CatalogPosterGrid\(\{ items, query, onPick \}\)/);
+  assert.match(
+    app,
+    /function CatalogPosterGrid\(\{ items, query, onPick, onClearSearch \}\)/,
+  );
   assert.match(app, /aria-label="Catalog poster grid"/);
   assert.match(app, /catalogDisplay === "posters"/);
   assert.match(app, /setCatalogDisplay\("posters"\)/);
   assert.match(app, /items=\{items\}/);
+  assert.match(app, /onClearSearch=\{\(\) => setQuery\(""\)\}/);
+  assert.match(app, /catalogPosterSummary/);
+  assert.match(app, /Clear search/);
   assert.match(app, /rowModelType="infinite"/);
   assert.match(app, /function CatalogPosterArtwork\(\{ item \}\)/);
   assert.match(app, /onError=\{\(\) => setImageAvailable\(false\)\}/);
   assert.match(app, /artwork unavailable/);
   assert.match(app, /<CatalogPosterArtwork item=\{item\} \/>/);
   assert.match(styles, /\.catalogPosterGrid/);
+  assert.match(styles, /\.catalogPosterSummary/);
   assert.match(styles, /aspect-ratio: 2 \/ 3/);
 });
 
