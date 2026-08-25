@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — fixture import control wired to its supported Phase 1 flow
+
+- Replaced the inert Canon Pack archive chooser (which referenced an out-of-scope handler) with an explicit Lantern Vale fixture validation/import control. The control now invokes the existing authenticated, CSRF-protected transactional fixture importer, while accurately stating that arbitrary archive selection is not part of this Phase 1 workflow.
+- Added a focused UI regression covering the supported action and the removal of the inert archive path. Full source validation passed with 130 portable tests; deterministic production build passed with 29 artifacts; production dependency audit and Compose configuration validation passed.
+- App-only deployment rebuilt Core `9388581` as `watch-tracker:phase1-9388581`; the published app is healthy and in-container `/ready` returned HTTP 200. Database container `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` retained its creation time and healthy status; no migration, credential, user, volume, backup, or durable-record operation occurred. The exact-head GitHub validation is queued; historical Phase 1 audit remains **FAIL** pending that result, exact-final browser certification, and broader closeout.
+
 ### 2026-08-25 — recovery expiry invariant deployed to the trusted-LAN slice
 
 - Applied the additive `0.11_password-recovery-expiry-bound.sql` migration with the canonical one-shot Compose migrator against the existing trusted-LAN Watch Tracker database. The migrator reported `PASS migrations=11 schema=0.11 checksum=aec5909642507434c049621143a8573e88b7dc0982f6de4ac84b40b3453779bb`.
