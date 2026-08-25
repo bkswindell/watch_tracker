@@ -1,5 +1,10 @@
 # Phase 1 progress log
 
+## 2026-08-25 — Focus Map viewport recovery
+
+- Added the visible **Center map** command to re-fit the current dependency map after panning or card arrangement, using only measured top-level Series bounds. The visible count is now a polite live status and explicitly identifies its filtered graph scope. No API, persistence, migration, credential, recovery, or durable user data changed.
+- Focused web-surface suite passed 18/18; complete `npm run check` passed 136 portable tests; deterministic build verification passed 29 artifacts; production high-severity audit, Compose validation, and diff validation passed. Rebuilt `watch-tracker:verify` and recreated only `watch-tracker-lan-foundation-app-1`; it is healthy and its in-container `/ready` returned 200. The retained database ID `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` remains healthy with creation time `2026-08-24T16:08:34.899650189Z`. Fresh browser launch is unavailable because no supported Chromium-family browser is running. Historical audit remains **FAIL** pending exact-final browser certification and closeout.
+
 ## 2026-08-25 — exact-head recovery evidence reconciled
 
 - Reconciled the builder record with the completed exact-head CI result for the reset document's pre-bootstrap no-referrer defense. Core PR #4 remains open at `d4066a67551f7ecb2a3f64db48874ab2efd1f809`, exactly matching `origin/automation/phase1`; Validate Core run `32829773816` is green, including the isolated PostgreSQL/migration identity gate. Template PR #10 remains open and green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.

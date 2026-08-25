@@ -84,6 +84,21 @@ test("Focus Map resets every local filter without changing the chosen target", a
   assert.match(graph, /Reset map filters/);
 });
 
+test("Focus Map keeps its viewport recoverable and announces visible graph scope", async () => {
+  const graph = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
+  assert.match(graph, /const fitGraph = useCallback/);
+  assert.match(graph, /instance\.fitBounds\(bounds,/);
+  assert.match(graph, /className="centerMap"/);
+  assert.match(graph, /onClick=\{fitGraph\}/);
+  assert.match(graph, /Center map/);
+  assert.match(graph, /title="Center and fit the visible dependency map"/);
+  assert.match(
+    graph,
+    /className="visibleCount" role="status" aria-live="polite"/,
+  );
+  assert.match(graph, /\{graph\.visible\} of \{graph\.total\} items visible/);
+});
+
 test("Next Up exports its visible deterministic queue rather than a placeholder", async () => {
   const app = await source();
   assert.match(app, /export function queueViewSnapshot/);

@@ -36,6 +36,11 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — Focus Map viewport recovery and filter status
+
+- Added a visible **Center map** command that invokes the existing measured top-level-Series `fitBounds` routine after manual panning or drag layout. The Focus Map’s visible-item count now uses a polite status region and states that it is the visible graph total, so local query/type/state, relationship, collapse, watched, and beyond-target changes have an accessible outcome without altering server state.
+- Focused web-surface coverage passed **18/18**; full `npm run check` passed **136 portable tests**; deterministic verification passed **29 artifacts**; `npm audit --omit=dev --audit-level=high`, Compose validation, and `git diff --check` passed. The production `watch-tracker:verify` image was rebuilt and only `watch-tracker-lan-foundation-app-1` was recreated. The replacement reached healthy and in-container `/ready` returned HTTP **200**. Retained database `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` remains healthy and retains creation time `2026-08-24T16:08:34.899650189Z`. A fresh browser-harness launch failed because no supported Chromium-family browser is running; no browser certification is claimed. Historical Phase 1 audit remains **FAIL** pending the exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — Focus Map local-filter reset
 
 - Added an explicit **Reset map filters** command for the Focus Map. It remains disabled at default state and restores local search, type/state, watched/beyond-target toggles, relationship selection, and collapsed Series groups in one action, while deliberately retaining the active target, Focus mode, manual layout, and durable viewing/Canon data.

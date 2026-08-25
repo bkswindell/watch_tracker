@@ -863,13 +863,20 @@ export default function FocusGraph({
         </div>
         <span className="arrangeHint">Drag cards to arrange</span>
         <button
+          className="centerMap"
+          onClick={fitGraph}
+          title="Center and fit the visible dependency map"
+        >
+          Center map
+        </button>
+        <button
           className="resetLayout"
           onClick={() => setFlowNodes(graph.nodes)}
         >
           Reset layout
         </button>
-        <span className="visibleCount">
-          {graph.visible} of {graph.total} items
+        <span className="visibleCount" role="status" aria-live="polite">
+          {graph.visible} of {graph.total} items visible
         </span>
       </div>
       <div className="mapLayout">
