@@ -594,19 +594,20 @@ Stores hashed deployment authentication sessions and expiration state.
 | `absolute_expires_at` | `TIMESTAMP` | No |  |
 | `revoked_at` | `TIMESTAMP` | Yes |  |
 
-### `password_recovery_credential` — Infrastructure
+### `password_reset_token` — Infrastructure
 
-Stores short-lived host-generated recovery credentials.
+Stores only SHA-256 digests of short-lived host-admin-issued password-reset
+tokens. Each digest is bound to the deployment's Tracker instance; the
+plaintext token exists only in the one-time CLI output and URL fragment.
 
 | Column | Type | Null | Key / constraint |
 |---|---|---:|---|
-| `password_recovery_credential_id` | `UUID` | No | PK |
+| `token_sha256` | `CHAR(64)` | No | PK; lowercase SHA-256 hex digest |
 | `tracker_instance_id` | `UUID` | No | FK → `tracker_instance.tracker_instance_id` |
-| `code_hash` | `VARCHAR(128)` | No | UNIQUE |
-| `created_at` | `TIMESTAMP` | No |  |
-| `expires_at` | `TIMESTAMP` | No |  |
-| `failed_attempt_count` | `INT` | No |  |
-| `consumed_at` | `TIMESTAMP` | Yes |  |
+| `expires_at` | `TIMESTAMPTZ` | No | Must be later than `created_at` |
+| `created_at` | `TIMESTAMPTZ` | No | Defaults to current time |
+| `failed_attempt_count` | `SMALLINT` | No | Defaults to zero; bounded from 0 through 5 |
+| `consumed_at` | `TIMESTAMPTZ` | Yes | May not predate `created_at` |
 
 ### `canon_pack_repository` — Infrastructure
 
