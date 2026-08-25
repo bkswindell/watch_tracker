@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — recovery duplicate-submit guard
+
+- The fragment-only recovery form now ignores a duplicate submit while its first completion request is in flight. This covers an Enter-key/scripted repeat before React can repaint the disabled action and avoids showing a false generic reused-token failure after an accepted first request. It does not change token format, API, password policy, persistence, or server atomicity.
+- Focused recovery coverage passed 9/9; full `npm run check` passed 131 portable tests; deterministic production verification passed 29 artifacts; production and complete high-severity dependency audits, Compose validation, and `git diff --check` passed. The direct PostgreSQL suite failed closed before connecting because `TEST_DATABASE_URL` is not configured. Exact Core PR #4 head `ca69eaad6f8796444b53d1d8b756a09deebd8cc9` passed Validate Core run `32830582953`, including the isolated PostgreSQL/migration and Compose smoke gates.
+- App-only deployment rebuilt `watch-tracker:phase1-ca69eaa` and recreated only `watch-tracker-lan-foundation-app-1`; it is healthy on image `sha256:538d04416e5cf20ac0e50233478e3be46563f7beca0f7568716c7951447bef89` and its in-container `/ready` returned HTTP 200. A cron browser attempt cannot start a supported Chromium-family browser, so no new browser certification is claimed. No migration, credential, recovery token, volume, backup, user, or durable record was changed. Historical Phase 1 audit remains **FAIL** pending the exact-final browser matrix and broader closeout.
+
 ### 2026-08-25 — recovery document no-referrer defense
 
 - Added a document-level `no-referrer` meta policy to the reset shell. The server already sends `Referrer-Policy: no-referrer` and strips the fragment before React renders; this provides a pre-bootstrap defense for any navigation initiated while the fragment-only reset link is first loading. A focused regression protects the markup.
