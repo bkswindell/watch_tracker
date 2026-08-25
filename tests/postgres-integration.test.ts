@@ -207,7 +207,7 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
 
     const expired = await store.issuePasswordResetToken();
     await pool.query(
-      "UPDATE password_reset_token SET expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE token_sha256 = $1",
+      "UPDATE password_reset_token SET created_at = CURRENT_TIMESTAMP - INTERVAL '2 seconds', expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE token_sha256 = $1",
       [createHash("sha256").update(expired.token).digest("hex")],
     );
     assert.equal(
