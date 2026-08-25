@@ -1,5 +1,11 @@
 # Phase 1 progress log
 
+## 2026-08-25 — deferred workspace-table delivery
+
+- Moved the AG Grid runtime behind an explicit lazy `WatchTrackerGrid` boundary. The shell, sign-in/setup route, poster-only Catalog, and Focus Map bootstrap no longer fetch the table renderer. Catalog List, Next Up, and History each show a role=`status`, fixed-height loading state while their shared table chunk loads.
+- Production build evidence: the initial JS payload decreased from 1,367.56 kB (386.74 kB gzip) to 258.62 kB (78.70 kB gzip); `WatchTrackerGrid` is deferred as 1,108.96 kB (308.32 kB gzip). Focus Map remains a separate 190.80 kB (61.86 kB gzip) chunk. This is a user-visible startup improvement, not a fabricated fixture or data change.
+- `npm run check` passed all 127 portable tests; deterministic build passed 29 artifacts and `git diff --check` passed. No PostgreSQL, volume, credential, or live app operation occurred before CI. Historical Phase 1 audit remains **FAIL** pending broader closeout and exact-final browser certification.
+
 ## 2026-08-25 — recovery expiry invariant CI certification
 
 - GitHub Validate Core run `32818274725` passed at exact Core PR #4 head `8b061263e5053bf5ecd4d68b490aaf90769dc6f9`. The CI gate includes isolated PostgreSQL recovery/migration identity alongside locked dependency installation, audits, type/lint/format checks, portable tests, deterministic build, image scan, SBOM, and disposable Compose smoke.

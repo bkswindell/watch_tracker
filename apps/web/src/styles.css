@@ -462,6 +462,16 @@ button.primary {
 .agWrap {
   height: 620px;
 }
+.gridLoading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 180px;
+  color: #b8c5d4;
+  background: #101720;
+  border: 1px solid #263445;
+  border-radius: 12px;
+}
 .catalogPosterResults {
   display: grid;
   gap: 12px;

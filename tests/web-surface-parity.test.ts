@@ -4,14 +4,26 @@ import { test } from "node:test";
 
 const source = () => readFile("apps/web/src/App.tsx", "utf8");
 
-test("Focus Map is loaded on demand with an accessible loading state", async () => {
+test("Focus Map and workspace tables load on demand with accessible states", async () => {
   const app = await source();
+  const grid = await readFile("apps/web/src/WatchTrackerGrid.tsx", "utf8");
+  const styles = await readFile("apps/web/src/styles.css", "utf8");
   assert.match(
     app,
     /const FocusGraph = lazy\(\(\) => import\("\.\/FocusGraph"\)\)/,
   );
   assert.match(app, /<Suspense[\s\S]*Loading Focus Map…[\s\S]*<FocusGraph/);
+  assert.match(
+    app,
+    /const WatchTrackerGrid = lazy\(\(\) => import\("\.\/WatchTrackerGrid"\)\)/,
+  );
+  assert.match(app, /Loading Catalog table…/);
+  assert.match(app, /Loading Next Up table…/);
+  assert.match(app, /Loading History table…/);
   assert.match(app, /role="status"/);
+  assert.match(grid, /from "ag-grid-react"/);
+  assert.match(grid, /ModuleRegistry\.registerModules/);
+  assert.match(styles, /\.gridLoading/);
 });
 
 test("workspace navigation has shareable routes and restores browser history", async () => {

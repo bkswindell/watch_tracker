@@ -1,11 +1,5 @@
 // @ts-nocheck
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { AgGridReact } from "ag-grid-react";
-import {
-  AllCommunityModule,
-  ModuleRegistry,
-  themeQuartz,
-} from "ag-grid-community";
 import CatalogDialog from "./CatalogDialog";
 import WatchableActionMenu from "./WatchableActions";
 import { WatchableDetailModal, WatchableSidecar } from "./WatchableDetails";
@@ -20,8 +14,9 @@ import { passwordResetTokenFromFragment } from "./passwordResetToken";
 // it out of the authentication/bootstrap payload and load it only when the
 // default map surface is actually rendered.
 const FocusGraph = lazy(() => import("./FocusGraph"));
-
-ModuleRegistry.registerModules([AllCommunityModule]);
+// Grids are similarly deferred: the sign-in/setup shell and poster-only Catalog
+// presentation do not need to download the substantial table renderer.
+const WatchTrackerGrid = lazy(() => import("./WatchTrackerGrid"));
 export function csvSafeValue(value) {
   if (typeof value !== "string") return value;
   return /^[\t\r ]*[=+\-@]/.test(value) ? `'${value}` : value;
@@ -40,18 +35,7 @@ export function graphRelationship(selectedTitle, relationship) {
       : `${source} requires ${destination}`,
   };
 }
-const appTheme = themeQuartz.withParams({
-  accentColor: "#72e0b5",
-  backgroundColor: "#101720",
-  browserColorScheme: "dark",
-  foregroundColor: "#edf3f9",
-  headerBackgroundColor: "#151e29",
-  headerTextColor: "#b8c5d4",
-  oddRowBackgroundColor: "#121b25",
-  rowHoverColor: "#1c2a38",
-  borderColor: "#263445",
-  wrapperBorderRadius: "12px",
-});
+
 const nav = [
   ["map", "⌘", "Focus Map"],
   ["catalog", "▦", "Catalog"],
@@ -885,27 +869,34 @@ function App() {
               </div>
               {catalogDisplay === "list" ? (
                 <div className="agWrap">
-                  <AgGridReact
-                    theme={appTheme}
-                    rowModelType="infinite"
-                    datasource={catalogDatasource}
-                    cacheBlockSize={50}
-                    maxBlocksInCache={4}
-                    columnDefs={columns}
-                    defaultColDef={{
-                      sortable: true,
-                      filter: true,
-                      resizable: true,
-                    }}
-                    rowSelection="single"
-                    onGridReady={(event) => setGridApi(event.api)}
-                    onRowClicked={(e) => openDetails(e.data)}
-                    preventDefaultOnContextMenu
-                    onCellContextMenu={(params) =>
-                      openGridMenu(params, "catalog")
+                  <Suspense
+                    fallback={
+                      <div className="gridLoading" role="status">
+                        Loading Catalog table…
+                      </div>
                     }
-                    getRowId={(p) => p.data.id}
-                  />
+                  >
+                    <WatchTrackerGrid
+                      rowModelType="infinite"
+                      datasource={catalogDatasource}
+                      cacheBlockSize={50}
+                      maxBlocksInCache={4}
+                      columnDefs={columns}
+                      defaultColDef={{
+                        sortable: true,
+                        filter: true,
+                        resizable: true,
+                      }}
+                      rowSelection="single"
+                      onGridReady={(event) => setGridApi(event.api)}
+                      onRowClicked={(e) => openDetails(e.data)}
+                      preventDefaultOnContextMenu
+                      onCellContextMenu={(params) =>
+                        openGridMenu(params, "catalog")
+                      }
+                      getRowId={(p) => p.data.id}
+                    />
+                  </Suspense>
                 </div>
               ) : (
                 <CatalogPosterGrid
@@ -1311,59 +1302,66 @@ function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
         </span>
       </div>
       <div className="agWrap queueGrid">
-        <AgGridReact
-          theme={appTheme}
-          rowModelType="infinite"
-          datasource={queueDatasource}
-          cacheBlockSize={50}
-          maxBlocksInCache={4}
-          columnDefs={[
-            {
-              checkboxSelection: true,
-              headerCheckboxSelection: true,
-              width: 52,
-            },
-            { field: "position", headerName: "#", width: 70 },
-            {
-              field: "title",
-              headerName: "Queue to target",
-              flex: 1,
-              minWidth: 220,
-            },
-            {
-              field: "identity",
-              headerName: "Series / episode",
-              minWidth: 190,
-            },
-            { field: "type", width: 110 },
-            { field: "runtime", headerName: "Minutes", width: 105 },
-            {
-              field: "state",
-              headerName: "Viewing",
-              width: 140,
-              cellRenderer: (p) => <StateBadge value={p.value} />,
-            },
-            { field: "queueStatus", headerName: "Queue status", width: 125 },
-            {
-              field: "reason",
-              headerName: "Why / prerequisite",
-              minWidth: 240,
-            },
-          ]}
-          defaultColDef={{ sortable: false, filter: true, resizable: true }}
-          rowSelection="multiple"
-          onRowClicked={(event) => onPick(event.data)}
-          preventDefaultOnContextMenu
-          onCellContextMenu={(params) => {
-            params.event?.preventDefault();
-            if (params.data && params.event)
-              setContext({
-                item: params.data,
-                x: params.event.clientX,
-                y: params.event.clientY,
-              });
-          }}
-        />
+        <Suspense
+          fallback={
+            <div className="gridLoading" role="status">
+              Loading Next Up table…
+            </div>
+          }
+        >
+          <WatchTrackerGrid
+            rowModelType="infinite"
+            datasource={queueDatasource}
+            cacheBlockSize={50}
+            maxBlocksInCache={4}
+            columnDefs={[
+              {
+                checkboxSelection: true,
+                headerCheckboxSelection: true,
+                width: 52,
+              },
+              { field: "position", headerName: "#", width: 70 },
+              {
+                field: "title",
+                headerName: "Queue to target",
+                flex: 1,
+                minWidth: 220,
+              },
+              {
+                field: "identity",
+                headerName: "Series / episode",
+                minWidth: 190,
+              },
+              { field: "type", width: 110 },
+              { field: "runtime", headerName: "Minutes", width: 105 },
+              {
+                field: "state",
+                headerName: "Viewing",
+                width: 140,
+                cellRenderer: (p) => <StateBadge value={p.value} />,
+              },
+              { field: "queueStatus", headerName: "Queue status", width: 125 },
+              {
+                field: "reason",
+                headerName: "Why / prerequisite",
+                minWidth: 240,
+              },
+            ]}
+            defaultColDef={{ sortable: false, filter: true, resizable: true }}
+            rowSelection="multiple"
+            onRowClicked={(event) => onPick(event.data)}
+            preventDefaultOnContextMenu
+            onCellContextMenu={(params) => {
+              params.event?.preventDefault();
+              if (params.data && params.event)
+                setContext({
+                  item: params.data,
+                  x: params.event.clientX,
+                  y: params.event.clientY,
+                });
+            }}
+          />
+        </Suspense>
       </div>
       {context && (
         <WatchableActionMenu
@@ -1435,45 +1433,52 @@ function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
         </div>
       </div>
       <div className="agWrap historyGrid">
-        <AgGridReact
-          theme={appTheme}
-          rowModelType="infinite"
-          datasource={historyDatasource}
-          cacheBlockSize={50}
-          maxBlocksInCache={4}
-          columnDefs={[
-            { field: "date", minWidth: 180 },
-            { field: "title", flex: 1, minWidth: 240 },
-            { field: "action" },
-            { field: "duration", headerName: "Minutes" },
-            { field: "rating" },
-          ]}
-          defaultColDef={{ sortable: true, filter: true, resizable: true }}
-          onRowClicked={(event) =>
-            onPick(
-              items.find(
-                (item) =>
-                  item.title === event.data.title ||
-                  item.id === event.data.slug,
-              ),
-            )
+        <Suspense
+          fallback={
+            <div className="gridLoading" role="status">
+              Loading History table…
+            </div>
           }
-          preventDefaultOnContextMenu
-          onCellContextMenu={(params) => {
-            params.event?.preventDefault();
-            const item = items.find(
-              (candidate) =>
-                candidate.title === params.data?.title ||
-                candidate.id === params.data?.slug,
-            );
-            if (item && params.event)
-              setContext({
-                item,
-                x: params.event.clientX,
-                y: params.event.clientY,
-              });
-          }}
-        />
+        >
+          <WatchTrackerGrid
+            rowModelType="infinite"
+            datasource={historyDatasource}
+            cacheBlockSize={50}
+            maxBlocksInCache={4}
+            columnDefs={[
+              { field: "date", minWidth: 180 },
+              { field: "title", flex: 1, minWidth: 240 },
+              { field: "action" },
+              { field: "duration", headerName: "Minutes" },
+              { field: "rating" },
+            ]}
+            defaultColDef={{ sortable: true, filter: true, resizable: true }}
+            onRowClicked={(event) =>
+              onPick(
+                items.find(
+                  (item) =>
+                    item.title === event.data.title ||
+                    item.id === event.data.slug,
+                ),
+              )
+            }
+            preventDefaultOnContextMenu
+            onCellContextMenu={(params) => {
+              params.event?.preventDefault();
+              const item = items.find(
+                (candidate) =>
+                  candidate.title === params.data?.title ||
+                  candidate.id === params.data?.slug,
+              );
+              if (item && params.event)
+                setContext({
+                  item,
+                  x: params.event.clientX,
+                  y: params.event.clientY,
+                });
+            }}
+          />
+        </Suspense>
       </div>
       {context && (
         <WatchableActionMenu
