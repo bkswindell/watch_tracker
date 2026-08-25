@@ -658,6 +658,10 @@ export default function FocusGraph({
   const [flowNodes, setFlowNodes] = useNodesState(graph.nodes);
   const previousGraphKey = useRef(graph.key);
   const flowInstance = useRef(null);
+  // Keep deliberate drag positions outside the filtered graph projection. A
+  // temporary local filter can remove a node (and its Series frame), but must
+  // not turn clearing that filter into an implicit layout reset.
+  const savedNodePositions = useRef(new Map());
   const fitGraph = useCallback(() => {
     const instance = flowInstance.current;
     if (!instance) return;
@@ -677,7 +681,12 @@ export default function FocusGraph({
     setFlowNodes((current) => {
       if (previousGraphKey.current !== graph.key) {
         previousGraphKey.current = graph.key;
-        return graph.nodes;
+        return graph.nodes.map((node) => {
+          const saved = savedNodePositions.current.get(node.id);
+          return saved && saved.parentId === node.parentId
+            ? { ...node, position: saved.position }
+            : node;
+        });
       }
       const currentById = new Map(current.map((node) => [node.id, node]));
       return graph.nodes.map((node) => {
@@ -694,11 +703,31 @@ export default function FocusGraph({
     });
   }, [graph.key, graph.nodes, setFlowNodes]);
   const onFlowNodesChange = useCallback(
-    (changes) => setFlowNodes((nodes) => applyNodeChanges(changes, nodes)),
+    (changes) =>
+      setFlowNodes((nodes) => {
+        const next = applyNodeChanges(changes, nodes);
+        next.forEach((node) =>
+          savedNodePositions.current.set(node.id, {
+            parentId: node.parentId,
+            position: { ...node.position },
+          }),
+        );
+        return next;
+      }),
     [setFlowNodes],
   );
   const tightenGroups = useCallback(
-    () => setFlowNodes((nodes) => tightenSeriesGroups(nodes)),
+    () =>
+      setFlowNodes((nodes) => {
+        const next = tightenSeriesGroups(nodes);
+        next.forEach((node) =>
+          savedNodePositions.current.set(node.id, {
+            parentId: node.parentId,
+            position: { ...node.position },
+          }),
+        );
+        return next;
+      }),
     [setFlowNodes],
   );
   useEffect(() => {
@@ -739,6 +768,10 @@ export default function FocusGraph({
     setShowAfter(false);
     setEnabledEdges(new Set(Object.keys(edgeMeta)));
     setCollapsed(new Set());
+  }
+  function resetLayout() {
+    savedNodePositions.current.clear();
+    setFlowNodes(graph.nodes);
   }
   const series = [...new Set(items.map((x) => x.series))];
   const menuItem = contextMenu && items.find((x) => x.id === contextMenu.id);
@@ -869,10 +902,7 @@ export default function FocusGraph({
         >
           Center map
         </button>
-        <button
-          className="resetLayout"
-          onClick={() => setFlowNodes(graph.nodes)}
-        >
+        <button className="resetLayout" onClick={resetLayout}>
           Reset layout
         </button>
         <span className="visibleCount" role="status" aria-live="polite">

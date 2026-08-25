@@ -84,6 +84,21 @@ test("Focus Map resets every local filter without changing the chosen target", a
   assert.match(graph, /Reset map filters/);
 });
 
+test("Focus Map keeps deliberate drag layout while local filters change", async () => {
+  const graph = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
+  assert.match(graph, /const savedNodePositions = useRef\(new Map\(\)\)/);
+  assert.match(
+    graph,
+    /savedNodePositions\.current\.get\(node\.id\)[\s\S]*saved\.parentId === node\.parentId/,
+  );
+  assert.match(graph, /savedNodePositions\.current\.set\(node\.id,/);
+  assert.match(
+    graph,
+    /function resetLayout\(\)[\s\S]*savedNodePositions\.current\.clear\(\)/,
+  );
+  assert.match(graph, /onClick=\{resetLayout\}/);
+});
+
 test("Focus Map keeps its viewport recoverable and announces visible graph scope", async () => {
   const graph = await readFile("apps/web/src/FocusGraph.tsx", "utf8");
   assert.match(graph, /const fitGraph = useCallback/);

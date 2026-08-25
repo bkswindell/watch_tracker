@@ -36,6 +36,11 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — Focus Map layout continuity through local filters
+
+- Corrected a user-visible Focus Map mismatch: local query/type/state/relationship/collapse changes can temporarily alter the rendered graph without discarding deliberate card and Series-frame arrangement. Matching node positions are retained only when the node returns beneath the same Series parent; the explicit **Reset layout** command clears the in-memory cache and restores the deterministic dependency layout.
+- Focused surface coverage passed **19/19** and full `npm run check` passed **137 portable tests**. Deterministic production verification passed **29 artifacts**; `npm audit --omit=dev --audit-level=high`, Compose validation, and `git diff --check` passed. The existing deferred-table bundle-size advisory remains non-failing. No migration, PostgreSQL, credential, recovery token, volume, backup, user, or durable record was accessed or changed. A fresh cron browser-harness launch remains blocked because no supported Chromium-family browser is running; no browser certification is claimed. Historical Phase 1 audit remains **FAIL** pending exact-final browser certification and broader closeout.
+
 ### 2026-08-25 — Focus Map viewport recovery and filter status
 
 - Added a visible **Center map** command that invokes the existing measured top-level-Series `fitBounds` routine after manual panning or drag layout. The Focus Map’s visible-item count now uses a polite status region and states that it is the visible graph total, so local query/type/state, relationship, collapse, watched, and beyond-target changes have an accessible outcome without altering server state.

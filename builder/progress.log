@@ -1,5 +1,10 @@
 # Phase 1 progress log
 
+## 2026-08-25 — Focus Map layout continuity
+
+- Corrected local filter behavior so a deliberate Focus Map card/Series arrangement survives a temporary query, type/state, relationship, or collapse projection change. The in-memory cache restores only nodes returning under the same Series parent; **Reset layout** explicitly clears the cache and restores deterministic layout.
+- Validation: focused web-surface suite passed 19/19; full `npm run check` passed 137 portable tests; deterministic production verification passed 29 artifacts; production high-severity audit, Compose validation, and diff validation passed. No PostgreSQL, migration, credential, recovery token, volume, backup, user, or durable record was accessed or changed. Browser certification remains unavailable because the cron harness cannot start a supported Chromium-family browser. Historical audit remains **FAIL** pending exact-final browser certification and closeout.
+
 ## 2026-08-25 — Focus Map viewport recovery
 
 - Added the visible **Center map** command to re-fit the current dependency map after panning or card arrangement, using only measured top-level Series bounds. The visible count is now a polite live status and explicitly identifies its filtered graph scope. No API, persistence, migration, credential, recovery, or durable user data changed.

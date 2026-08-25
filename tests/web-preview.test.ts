@@ -72,7 +72,11 @@ test("Focus Map keeps Core imports extensionless and preserves graph interaction
   assert.match(source, /onNodeDragStop=\{tightenGroups\}/);
   assert.match(source, /onNodeContextMenu=/);
   assert.match(source, /<MiniMap[\s\S]*pannable[\s\S]*zoomable/);
-  assert.match(source, /onClick=\{\(\) => setFlowNodes\(graph\.nodes\)\}/);
+  assert.match(source, /onClick=\{resetLayout\}/);
+  assert.match(
+    source,
+    /function resetLayout\(\)[\s\S]*setFlowNodes\(graph\.nodes\)/,
+  );
 });
 
 test("approved workspace grids use bounded Infinite Row Model datasources", async () => {
