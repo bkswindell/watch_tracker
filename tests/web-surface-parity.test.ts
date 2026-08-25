@@ -36,6 +36,16 @@ test("App restores server-ordered Next Up presentation and truthful summaries", 
   assert.match(app, /Ready to watch/);
 });
 
+test("Next Up exports its visible deterministic queue rather than a placeholder", async () => {
+  const app = await source();
+  assert.match(app, /export function queueViewSnapshot/);
+  assert.match(app, /filters,/);
+  assert.match(app, /remainingMinutes: queue\.remainingMinutes/);
+  assert.match(app, /queueViewSnapshot\(\s*filtered,/);
+  assert.match(app, /link\.download = "watch-tracker-next-up\.json"/);
+  assert.doesNotMatch(app, /onNotImplemented\("Save queue view"\)/);
+});
+
 test("App derives History cards from returned lifecycle records", async () => {
   const app = await source();
   assert.match(app, /function historySummary\(history\)/);

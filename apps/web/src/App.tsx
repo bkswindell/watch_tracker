@@ -134,6 +134,19 @@ export function queuePresentation(nextUp) {
     .reduce((total, item) => total + (Number(item.runtime) || 0), 0);
   return rows;
 }
+export function queueViewSnapshot(queue, filters, targetTitle) {
+  return {
+    exportedAt: new Date().toISOString(),
+    target: targetTitle || null,
+    filters,
+    summary: {
+      total: queue.length,
+      remaining: queue.remainingCount,
+      remainingMinutes: queue.remainingMinutes,
+    },
+    items: queue,
+  };
+}
 export function historySummary(history) {
   const completed = history.filter((item) => item.action === "completed");
   const ratings = completed
@@ -745,7 +758,6 @@ function App() {
               onTarget={markTarget}
               onPick={openDetails}
               onAction={actItem}
-              onNotImplemented={notImplemented}
             />
           )}
           {view === "history" && (
@@ -903,15 +915,7 @@ function RelationshipSummary({ selected }) {
     </section>
   );
 }
-function NextPage({
-  items,
-  nextUp,
-  target,
-  onTarget,
-  onPick,
-  onAction,
-  onNotImplemented,
-}) {
+function NextPage({ items, nextUp, target, onTarget, onPick, onAction }) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("All");
   const [state, setState] = useState("All");
@@ -943,6 +947,27 @@ function NextPage({
   const next = recommendedNext(items, nextUp);
   const targetItem = items.find((item) => item.id === target);
   const types = [...new Set(queue.map((item) => item.type))];
+  const saveView = () => {
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          queueViewSnapshot(
+            filtered,
+            { query, type, viewingState: state, queueState, hideWatched },
+            targetItem?.title,
+          ),
+          null,
+          2,
+        ),
+      ],
+      { type: "application/json" },
+    );
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "watch-tracker-next-up.json";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
   return (
     <>
       <div className="pageTitle">
@@ -1094,9 +1119,7 @@ function NextPage({
         >
           Clear filters
         </button>
-        <button onClick={() => onNotImplemented("Save queue view")}>
-          Save view
-        </button>
+        <button onClick={saveView}>Save view</button>
         <span>
           {filtered.length} of {queue.length}
         </span>
