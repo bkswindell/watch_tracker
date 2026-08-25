@@ -1,5 +1,10 @@
 # Phase 1 progress log
 
+## 2026-08-25 — exact-head recovery evidence reconciled
+
+- Reconciled the builder record with the completed exact-head CI result for the reset document's pre-bootstrap no-referrer defense. Core PR #4 remains open at `d4066a67551f7ecb2a3f64db48874ab2efd1f809`, exactly matching `origin/automation/phase1`; Validate Core run `32829773816` is green, including the isolated PostgreSQL/migration identity gate. Template PR #10 remains open and green at `ec5bcc16517809acce74a1b876dc105c50f3f431`.
+- Re-ran the portable source suite locally: 131 tests passed. A fresh browser-harness attempt remains blocked because no supported Chromium-family browser is running; this does not claim a new valid, expired, or reused-token browser certification. Historical Phase 1 audit remains **FAIL** pending that exact-final matrix and broader closeout.
+
 ## 2026-08-25 — History command-filtered view
 
 - Delivered accessible all-column History search and an Activity selector. The command-filtered records now consistently drive the bounded Infinite Row Model datasource, summary cards, visible count, and downloaded `watch-tracker-history.json` envelope, which records the applied filters and matching summary rather than implying an unfiltered export.
