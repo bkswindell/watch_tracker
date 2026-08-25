@@ -131,6 +131,13 @@ function sameOrigin(request: FastifyRequest): boolean {
   }
 }
 
+// Recovery completion does not have an established session/CSRF token to
+// validate. Unlike authenticated API paths, it is browser-only: require the
+// browser Origin header in addition to an exact origin match.
+function sameBrowserOrigin(request: FastifyRequest): boolean {
+  return typeof request.headers.origin === "string" && sameOrigin(request);
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -396,7 +403,7 @@ export async function buildApp(
             "password-reset.invalid",
             "Password reset could not be completed",
           );
-        if (!sameOrigin(request)) {
+        if (!sameBrowserOrigin(request)) {
           genericFailure();
           return;
         }

@@ -86,6 +86,11 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
     headers: { origin: "https://attacker.example" },
     payload: { token: reset.token, password: NEW_PASSWORD },
   });
+  const originless = await app.inject({
+    method: "POST",
+    url: "/api/password-reset/complete",
+    payload: { token: reset.token, password: NEW_PASSWORD },
+  });
   const invalid = await app.inject({
     method: "POST",
     url: "/api/password-reset/complete",
@@ -93,8 +98,10 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
     payload: { token: "not-a-token", password: NEW_PASSWORD },
   });
   assert.equal(hostile.statusCode, 400);
+  assert.equal(originless.statusCode, 400);
   assert.equal(invalid.statusCode, 400);
   assert.deepEqual(hostile.json().error, invalid.json().error);
+  assert.deepEqual(originless.json().error, invalid.json().error);
   assert.equal(invalid.headers["cache-control"], "no-store");
   assert.equal(invalid.headers["referrer-policy"], "no-referrer");
 
