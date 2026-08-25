@@ -1,5 +1,11 @@
 # Phase 1 progress log
 
+## 2026-08-25 — Catalog Series command filter
+
+- Delivered `b9a9936b1b7c04b8df966de53e74b726271e80f0`: an accessible Series selector now composes with the existing search, Type, and Viewing state controls. It applies before both the bounded Infinite Row Model datasource and Catalog Poster Grid, names its active constraint in the poster summary, and is reset by both clear-filter controls.
+- Validation: focused surface parity test passed; `npm run check` passed all 127 portable tests; deterministic build passed 29 artifacts; `git diff --check` passed. Validate Core run `32820318384` is queued for exact PR #4 head `b9a9936b1b7c04b8df966de53e74b726271e80f0`.
+- The live database remains intentionally schema `0.10`; this branch requires additive `0.11`, so no app-only deployment was attempted. No PostgreSQL, migration, credential, volume, or durable-data operation occurred. Browser certification remains unavailable and the historical Phase 1 audit remains **FAIL**.
+
 ## 2026-08-25 — deferred workspace-table delivery
 
 - Moved the AG Grid runtime behind an explicit lazy `WatchTrackerGrid` boundary. The shell, sign-in/setup route, poster-only Catalog, and Focus Map bootstrap no longer fetch the table renderer. Catalog List, Next Up, and History each show a role=`status`, fixed-height loading state while their shared table chunk loads.
