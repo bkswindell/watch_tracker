@@ -211,6 +211,26 @@ function StateBadge({ value }) {
     </span>
   ) : null;
 }
+function CatalogPosterArtwork({ item }) {
+  const [imageAvailable, setImageAvailable] = useState(Boolean(item.posterUrl));
+  useEffect(() => setImageAvailable(Boolean(item.posterUrl)), [item.posterUrl]);
+  const label = item.type?.slice(0, 1).toLocaleUpperCase() || "W";
+  return (
+    <div className="catalogPosterArtwork" aria-hidden="true">
+      {imageAvailable ? (
+        <img
+          src={artworkUrl(item.posterUrl)}
+          alt=""
+          onError={() => setImageAvailable(false)}
+        />
+      ) : (
+        <span title={`${item.type || "Watchable"} artwork unavailable`}>
+          {label}
+        </span>
+      )}
+    </div>
+  );
+}
 function CatalogPosterGrid({ items, query, onPick }) {
   const needle = query.trim().toLocaleLowerCase();
   const visible = items
@@ -239,13 +259,7 @@ function CatalogPosterGrid({ items, query, onPick }) {
           onClick={() => onPick(item)}
           aria-label={`View details for ${item.title}`}
         >
-          <div className="catalogPosterArtwork" aria-hidden="true">
-            {item.posterUrl ? (
-              <img src={artworkUrl(item.posterUrl)} alt="" />
-            ) : (
-              <span>{item.type?.slice(0, 1) || "W"}</span>
-            )}
-          </div>
+          <CatalogPosterArtwork item={item} />
           <span className="catalogPosterTitle">{item.title}</span>
           <span className="catalogPosterMeta">
             {item.type} · {item.release || "Release unavailable"}

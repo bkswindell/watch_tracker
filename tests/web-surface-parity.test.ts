@@ -99,7 +99,10 @@ test("Catalog provides a searchable poster grid without replacing the bounded li
   assert.match(app, /setCatalogDisplay\("posters"\)/);
   assert.match(app, /items=\{items\}/);
   assert.match(app, /rowModelType="infinite"/);
-  assert.match(app, /artworkUrl\(item\.posterUrl\)/);
+  assert.match(app, /function CatalogPosterArtwork\(\{ item \}\)/);
+  assert.match(app, /onError=\{\(\) => setImageAvailable\(false\)\}/);
+  assert.match(app, /artwork unavailable/);
+  assert.match(app, /<CatalogPosterArtwork item=\{item\} \/>/);
   assert.match(styles, /\.catalogPosterGrid/);
   assert.match(styles, /aspect-ratio: 2 \/ 3/);
 });
