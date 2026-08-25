@@ -193,6 +193,10 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
   assert.equal(success.statusCode, 204);
   assert.equal(success.headers["cache-control"], "no-store");
   assert.equal(success.headers["referrer-policy"], "no-referrer");
+  assert.equal(
+    success.headers["set-cookie"],
+    "watch_tracker_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+  );
   assert.equal(await store.getSession(session.token), undefined);
 
   const reused = await app.inject({

@@ -492,9 +492,16 @@ export async function buildApp(
           genericFailure();
           return;
         }
+        // A stale session cookie can accompany recovery from a browser that was
+        // previously signed in. Server-side revocation is authoritative, and
+        // clearing the browser copy prevents it from lingering after success.
         void reply
           .header("cache-control", "no-store")
           .header("referrer-policy", "no-referrer")
+          .header(
+            "set-cookie",
+            "watch_tracker_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+          )
           .status(204)
           .send();
       },
