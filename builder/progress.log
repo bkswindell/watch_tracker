@@ -1,5 +1,12 @@
 # Phase 1 progress log
 
+## 2026-08-25 — Catalog command filters
+
+- Delivered `7ad6143c0a59bfab10fce04b995124824a6819ba`: compact Type and Viewing state controls now constrain both the bounded Infinite Row Model list and the searchable poster grid. The poster view reports active constraints and can reset the full filter set from its empty state.
+- Validation: focused surface parity test passed; `npm run check` passed 125 portable tests; deterministic build passed (28 artifacts); complete and production-only high-severity audits reported zero vulnerabilities; Compose and diff validation passed.
+- App-only deployment rebuilt `watch-tracker:verify` (`sha256:c91672946b73cf02abdf54418763685b56b1c0bc4e84f0e297c315b00b1c4efa`) and recreated only `watch-tracker-lan-foundation-app-1`. It is healthy and its in-container `/ready` returned HTTP 200. Database container `9167a92718aa2107daa710f998156cc6b4ed47d9e513828bbc70a13d172955d5` remains healthy with unchanged creation time; no migration, credential, volume, or durable database operation occurred.
+- PR #4 head was verified at the implementation SHA; Validate Core run `32816988540` is queued. Browser certification remains blocked because the cron harness cannot start a supported Chromium-family browser. Historical Phase 1 audit remains **FAIL**.
+
 ## 2026-08-24 — authentication/session hardening slice 1
 
 - Confirmed Validate Core run `32784974478` for `89555034495238e5b9b0206bc56228a648238b58` completed successfully.
