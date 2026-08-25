@@ -36,6 +36,12 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 
 ## Progress log
 
+### 2026-08-25 — recovery acceptance verification checkpoint
+
+- Re-reviewed the approved host-admin recovery gate at exact Core PR #4 head `8960d68d1420ea87a8653d9b8e724f813410f71d`: fragment-only 256-bit links, digest-only instance-bound persistence, 15-minute expiry invariant, atomic single-use/supersession, generic failures, Argon2id policy enforcement, and session revocation remain covered by the focused recovery suite.
+- `npm run check` passed 130 portable tests; deterministic production verification passed 29 artifacts; high-severity dependency audit, Compose validation, and `git diff --check` passed. GitHub API verified this exact source SHA is the open PR #4 head and its Validate Core run `32825616570` is green, including the isolated PostgreSQL migration/recovery gate.
+- A new browser-harness launch still cannot start a supported Chromium-family browser in this cron environment. Therefore no new authenticated, expired, reused, or invalid-token browser certification is claimed, and the historical Phase 1 audit remains **FAIL** pending that exact-final browser matrix and broader closeout. No credential, migration, database, volume, backup, user, or durable-record operation occurred.
+
 ### 2026-08-25 — deferred table runtime narrowed to used modules
 
 - Replaced the broad AG Grid community-module registration with the three modules actually used by the Phase 1 Catalog, Next Up, and History tables: infinite rows, text filtering, and row selection. The table runtime remains deferred behind its existing accessible loading states, while unused editors, CSV, pagination, grouping, and client-side row-model code no longer ships with a table visit.
