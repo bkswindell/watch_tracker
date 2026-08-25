@@ -216,7 +216,7 @@ TABLES: list[dict[str, Any]] = [
     table("password_reset_token", "operations", "Infrastructure", "Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.", [
         c("token_sha256", "CHAR", size=64, pk=True, comment="SHA-256 digest of a host-generated reset token; plaintext is never stored"),
         fk("tracker_instance_id", "tracker_instance"),
-        c("expires_at", "TIMESTAMPTZ", check="expires_at > created_at"),
+        c("expires_at", "TIMESTAMPTZ", check="expires_at > created_at; expires_at <= created_at + INTERVAL '15 minutes'"),
         c("consumed_at", "TIMESTAMPTZ", nn=False, check="consumed_at IS NULL OR consumed_at >= created_at"),
         c("created_at", "TIMESTAMPTZ", comment="Defaults to current time"),
         c("failed_attempt_count", "SMALLINT", check="failed_attempt_count BETWEEN 0 AND 5", comment="Defaults to zero")]),

@@ -4984,7 +4984,7 @@
           "unique": false
         },
         {
-          "check": "expires_at > created_at",
+          "check": "expires_at > created_at; expires_at <= created_at + INTERVAL '15 minutes'",
           "comment": "",
           "default": "",
           "id": "f41_3",

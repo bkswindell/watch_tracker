@@ -56,7 +56,9 @@ function migration(
                       ? "session-lifetimes"
                       : version === "0.09"
                         ? "password-recovery"
-                        : "recovery-failure-limit",
+                        : version === "0.10"
+                          ? "recovery-failure-limit"
+                          : "password-recovery-expiry-bound",
     sha256,
     sql: "SELECT 1",
   };
@@ -64,7 +66,7 @@ function migration(
 
 test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 10);
+  assert.equal(migrations.length, 11);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
@@ -95,7 +97,10 @@ test("loads the ordered foundation and Core slice migrations with deterministic 
   assert.equal(migrations[9]?.version, "0.10");
   assert.equal(migrations[9]?.name, "recovery-failure-limit");
   assert.match(migrations[9]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.10");
+  assert.equal(migrations[10]?.version, "0.11");
+  assert.equal(migrations[10]?.name, "password-recovery-expiry-bound");
+  assert.match(migrations[10]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.11");
 });
 
 test("0.10 consumes recovery tokens after five failed attempts", async () => {
@@ -105,6 +110,16 @@ test("0.10 consumes recovery tokens after five failed attempts", async () => {
   );
   assert.match(sql, /failed_attempt_count smallint NOT NULL DEFAULT 0/);
   assert.match(sql, /failed_attempt_count BETWEEN 0 AND 5/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("0.11 makes the short recovery lifetime a database invariant", async () => {
+  const sql = await readFile(
+    "db/migrations/0.11_password-recovery-expiry-bound.sql",
+    "utf8",
+  );
+  assert.match(sql, /ALTER TABLE password_reset_token/);
+  assert.match(sql, /expires_at <= created_at \+ INTERVAL '15 minutes'/);
   assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
 });
 
@@ -309,7 +324,7 @@ test("migration discovery rejects a terminal version that differs from the appli
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.05 does not match expected schema version 0\.10/,
+    /Migration terminal version 0\.05 does not match expected schema version 0\.11/,
   );
 });
 
@@ -367,8 +382,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.10",
-          migration_name: "recovery-failure-limit",
+          migration_version: "0.11",
+          migration_name: "password-recovery-expiry-bound",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -386,8 +401,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.10",
-          migration_name: "renamed-recovery-failure-limit",
+          migration_version: "0.11",
+          migration_name: "renamed-password-recovery-expiry-bound",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -518,8 +533,8 @@ test("schema verification fails closed when the migration ledger and foundation 
         return {
           rows: [
             {
-              migration_version: "0.10",
-              migration_name: "recovery-failure-limit",
+              migration_version: "0.11",
+              migration_name: "password-recovery-expiry-bound",
               migration_sha256: "a".repeat(64),
             },
           ],
@@ -553,7 +568,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.11",
+              migration_version: "0.12",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },

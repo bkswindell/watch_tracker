@@ -1,5 +1,11 @@
 # Phase 1 progress log
 
+## 2026-08-25 — recovery expiry database invariant
+
+- Added additive migration `0.11_password-recovery-expiry-bound.sql`: `password_reset_token.expires_at` must not exceed `created_at + INTERVAL '15 minutes'`. This turns the accepted short-lived recovery policy into a database-enforced ceiling without changing credentials, sessions, Pack data, or existing token values.
+- Runtime migration identity now expects `0.11` and verifies the named expiry-bound constraint; regenerated Phase 1 model artifacts document the identical constraint. Focused recovery/migration tests passed 30/30; `npm run check` passed 127 portable tests; deterministic build passed with 28 artifacts; `npm audit --omit=dev --audit-level=high`, data-model drift check, Compose config, and diff validation passed.
+- Local `npm run test:postgres` failed closed before connection because `TEST_DATABASE_URL` is intentionally absent. The migration is not applied and no app deployment is claimed until isolated PostgreSQL migration identity CI passes. Historical Phase 1 audit remains **FAIL**.
+
 ## 2026-08-25 — Next Up artwork resilience
 
 - Delivered `9b3b73a92cb605dd2ab6a58b436129fd7b311f6e`: when the recommended Next Up item has an approved artwork URL that fails to load, the hero now replaces the broken image with an accessible, type-initial fallback. It resets correctly when the recommendation changes, and it does not invent artwork or alter queue ordering, targets, or viewing data.

@@ -602,7 +602,7 @@ Stores digest-only, short-lived host-admin reset tokens bound to the Tracker ins
 |---|---|---:|---|
 | `token_sha256` | `CHAR(64)` | No | PK |
 | `tracker_instance_id` | `UUID` | No | FK → `tracker_instance.tracker_instance_id` |
-| `expires_at` | `TIMESTAMPTZ` | No | CHECK `expires_at > created_at` |
+| `expires_at` | `TIMESTAMPTZ` | No | CHECK `expires_at > created_at; expires_at <= created_at + INTERVAL '15 minutes'` |
 | `consumed_at` | `TIMESTAMPTZ` | Yes | CHECK `consumed_at IS NULL OR consumed_at >= created_at` |
 | `created_at` | `TIMESTAMPTZ` | No |  |
 | `failed_attempt_count` | `SMALLINT` | No | CHECK `failed_attempt_count BETWEEN 0 AND 5` |
