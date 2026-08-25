@@ -44,6 +44,11 @@ export function ResetPassword({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Disabling the button is not sufficient for an Enter-key or scripted
+    // duplicate submit before React has painted the busy state. Keep one
+    // completion attempt in flight so the user does not receive a misleading
+    // generic reuse failure after their first request succeeds.
+    if (busy || complete) return;
     setError("");
     // Match the server policy before sending an attempt. This avoids consuming
     // one of the token's bounded failed-submission attempts for a value the UI
