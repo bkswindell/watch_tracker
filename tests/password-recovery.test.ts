@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
+import { promisify } from "node:util";
 
 import { buildApp } from "../apps/api/src/app.js";
 import { MemorySliceStore } from "../apps/api/src/slice.js";
@@ -12,6 +14,7 @@ import { passwordResetTokenFromFragment } from "../apps/web/src/passwordResetTok
 
 const OLD_PASSWORD = "correct-password";
 const NEW_PASSWORD = "a-new-password-long-enough";
+const execFileAsync = promisify(execFile);
 
 async function configuredStore(now?: () => number) {
   const store = new MemorySliceStore({
@@ -36,14 +39,20 @@ test("password reset tokens are high-entropy, expiring, one-use, and superseded"
     false,
   );
 
-  const session = await store.createSession();
-  assert.ok(await store.getSession(session.token));
+  const sessions = await Promise.all([
+    store.createSession(),
+    store.createSession(),
+    store.createSession(),
+  ]);
+  for (const session of sessions)
+    assert.ok(await store.getSession(session.token));
   const concurrent = await Promise.all([
     store.completePasswordReset(second.token, NEW_PASSWORD),
     store.completePasswordReset(second.token, NEW_PASSWORD),
   ]);
   assert.deepEqual(concurrent.sort(), [false, true]);
-  assert.equal(await store.getSession(session.token), undefined);
+  for (const session of sessions)
+    assert.equal(await store.getSession(session.token), undefined);
   assert.equal(await store.authenticate(OLD_PASSWORD), false);
   assert.equal(await store.authenticate(NEW_PASSWORD), true);
 
@@ -196,6 +205,34 @@ test("password reset API is same-origin, generic, no-store, and revokes sessions
   assert.deepEqual(reused.json().error, invalid.json().error);
 });
 
+test("expired reset API failures are indistinguishable from invalid tokens", async (t) => {
+  let now = Date.parse("2026-08-25T00:00:00Z");
+  const store = await configuredStore(() => now);
+  const app = await buildApp({
+    readinessProbe: async () => ({ ready: true }),
+    sliceStore: store,
+  });
+  t.after(() => app.close());
+  const reset = await store.issuePasswordResetToken();
+  now += 15 * 60_000;
+  const request = (token: string) =>
+    app.inject({
+      method: "POST",
+      url: "/api/password-reset/complete",
+      headers: { host: "localhost", origin: "http://localhost" },
+      payload: { token, password: NEW_PASSWORD },
+    });
+  const [expired, invalid] = await Promise.all([
+    request(reset.token),
+    request("A".repeat(43)),
+  ]);
+  assert.equal(expired.statusCode, 400);
+  assert.equal(expired.statusCode, invalid.statusCode);
+  assert.deepEqual(expired.json().error, invalid.json().error);
+  assert.equal(expired.headers["cache-control"], "no-store");
+  assert.equal(expired.headers["referrer-policy"], "no-referrer");
+});
+
 test("host-admin CLI creates a fragment-only reset link and validates its base URL", () => {
   const token = "secret-token-value";
   const link = passwordResetLink("https://tracker.example/", token);
@@ -221,6 +258,24 @@ test("host-admin CLI creates a fragment-only reset link and validates its base U
   assert.throws(() => resetLinkBase("https://user:pass@tracker.example"));
   assert.throws(() => resetLinkBase("https://tracker.example/?token=bad"));
   assert.throws(() => resetLinkBase("https://tracker.example/base/"));
+});
+
+test("host-admin CLI failure emits no token or detailed error", async () => {
+  await assert.rejects(
+    execFileAsync("npm", ["run", "--silent", "password-recovery"], {
+      env: {
+        ...process.env,
+        DATABASE_URL: "postgresql://unused.invalid/watch_tracker",
+        WATCH_TRACKER_BASE_URL: "http://tracker.example/",
+      },
+    }),
+    (error: unknown) => {
+      const failure = error as { stdout?: string; stderr?: string };
+      assert.equal(failure.stdout, "");
+      assert.equal(failure.stderr, "password recovery failed\n");
+      return true;
+    },
+  );
 });
 
 test("reset UI accepts only one well-formed fragment token", () => {

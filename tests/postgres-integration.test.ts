@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { promisify } from "node:util";
 
 import { Pool } from "pg";
 
@@ -14,6 +16,7 @@ import {
 import { SqlSliceStore } from "../apps/api/src/slice.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+const execFileAsync = promisify(execFile);
 
 test("foundation migration is usable against PostgreSQL", async () => {
   assert.ok(
@@ -150,6 +153,26 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
     trackerInstanceId = setup.rows[0]?.tracker_instance_id;
     assert.ok(trackerInstanceId);
 
+    const cli = await execFileAsync(
+      "npm",
+      ["run", "--silent", "password-recovery"],
+      {
+        env: {
+          ...process.env,
+          DATABASE_URL: testDatabaseUrl,
+          WATCH_TRACKER_BASE_URL: "https://tracker.example/",
+        },
+      },
+    );
+    assert.equal(cli.stderr, "");
+    assert.match(
+      cli.stdout,
+      /^https:\/\/tracker\.example\/reset-password#token=[A-Za-z0-9_-]{43}\n$/,
+    );
+    assert.equal(cli.stdout.trim().split("\n").length, 1);
+    const cliToken = new URL(cli.stdout.trim()).hash.slice("#token=".length);
+    const cliDigest = createHash("sha256").update(cliToken).digest("hex");
+
     const first = await store.issuePasswordResetToken();
     const second = await store.issuePasswordResetToken();
     const firstDigest = createHash("sha256").update(first.token).digest("hex");
@@ -165,10 +188,12 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
     );
     assert.deepEqual(
       persisted.rows.map((row) => row.token_sha256.trim()),
-      [firstDigest, secondDigest],
+      [cliDigest, firstDigest, secondDigest],
     );
     assert.ok(persisted.rows[0]?.consumed_at);
-    assert.equal(persisted.rows[1]?.consumed_at, null);
+    assert.ok(persisted.rows[1]?.consumed_at);
+    assert.equal(persisted.rows[2]?.consumed_at, null);
+    assert.equal(JSON.stringify(persisted.rows).includes(cliToken), false);
     assert.equal(JSON.stringify(persisted.rows).includes(first.token), false);
     assert.equal(JSON.stringify(persisted.rows).includes(second.token), false);
 
@@ -212,15 +237,28 @@ test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revo
     );
 
     const successful = await store.issuePasswordResetToken();
-    const session = await store.createSession();
+    const sessions = await Promise.all([
+      store.createSession(),
+      store.createSession(),
+      store.createSession(),
+    ]);
     const attempts = await Promise.all([
       store.completePasswordReset(successful.token, newPassword),
       store.completePasswordReset(successful.token, newPassword),
     ]);
     assert.deepEqual(attempts.sort(), [false, true]);
-    assert.equal(await store.getSession(session.token), undefined);
+    for (const session of sessions)
+      assert.equal(await store.getSession(session.token), undefined);
     assert.equal(await store.authenticate(oldPassword), false);
     assert.equal(await store.authenticate(newPassword), true);
+    const credential = await pool.query<{ credential_hash: string }>(
+      "SELECT credential_hash FROM tracker_instance WHERE tracker_instance_id = $1",
+      [trackerInstanceId],
+    );
+    assert.match(
+      credential.rows[0]?.credential_hash ?? "",
+      /^\$argon2id\$v=19\$m=65536,p=1,t=3\$/,
+    );
     const alienSession = await pool.query(
       "SELECT 1 FROM app_session WHERE token_sha256 = $1 AND tracker_instance_id = $2",
       [alienSessionDigest, otherOwner],
