@@ -1,5 +1,11 @@
 # Phase 1 progress log
 
+## 2026-08-25 — Catalog portable filtered view
+
+- Delivered `893a3136c27261bb5e814fa07301abe7b678c54f`: the List and Posters now use one all-column-search, Type/Series/viewing-state-filtered, release-ordered Catalog projection. `Save view` exports that exact projection as `watch-tracker-catalog.json` with generation time, applied filters, a truthful total, and displayed records; it does not claim server-side persistence.
+- The CSV command is disabled in Posters mode because it requires the table renderer; the portable JSON remains available in both displays. Focused web-surface coverage and `npm run check` passed all 128 portable tests; deterministic build passed 29 artifacts. High-severity audit and Compose configuration validation passed.
+- PR #4 head and `origin/automation/phase1` are verified at `893a3136c27261bb5e814fa07301abe7b678c54f`; Validate Core run `32820856417` is queued. The live database remains deliberately schema `0.10` while this head requires additive `0.11`, so no app-only deployment was attempted. Browser certification remains unavailable; historical Phase 1 audit remains **FAIL**.
+
 ## 2026-08-25 — Catalog Series command filter
 
 - Delivered `b9a9936b1b7c04b8df966de53e74b726271e80f0`: an accessible Series selector now composes with the existing search, Type, and Viewing state controls. It applies before both the bounded Infinite Row Model datasource and Catalog Poster Grid, names its active constraint in the poster summary, and is reset by both clear-filter controls.
