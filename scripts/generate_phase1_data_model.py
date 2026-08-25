@@ -10,7 +10,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "data-model"
-GENERIC_TYPES = {"UUID", "VARCHAR", "TEXT", "INT", "BOOLEAN", "DATE", "TIMESTAMP", "JSON", "DECIMAL"}
+GENERIC_TYPES = {"UUID", "CHAR", "VARCHAR", "TEXT", "INT", "SMALLINT", "BOOLEAN", "DATE", "TIMESTAMP", "TIMESTAMPTZ", "JSON", "DECIMAL"}
 COLORS = {
     "canon": "#3B82F6",
     "core": "#10B981",
@@ -213,9 +213,13 @@ TABLES: list[dict[str, Any]] = [
         pk("deployment_session"), fk("tracker_instance_id", "tracker_instance"), c("token_hash", "VARCHAR", size=128, uq=True),
         c("csrf_hash", "VARCHAR", size=128), ts("created_at"), ts("last_seen_at"), ts("idle_expires_at"),
         ts("absolute_expires_at"), ts("revoked_at", nn=False)]),
-    table("password_recovery_credential", "operations", "Infrastructure", "Stores short-lived host-generated recovery credentials.", [
-        pk("password_recovery_credential"), fk("tracker_instance_id", "tracker_instance"), c("code_hash", "VARCHAR", size=128, uq=True),
-        ts("created_at"), ts("expires_at"), c("failed_attempt_count", "INT"), ts("consumed_at", nn=False)]),
+    table("password_reset_token", "operations", "Infrastructure", "Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.", [
+        c("token_sha256", "CHAR", size=64, pk=True, comment="SHA-256 digest of a host-generated reset token; plaintext is never stored"),
+        fk("tracker_instance_id", "tracker_instance"),
+        c("expires_at", "TIMESTAMPTZ", check="expires_at > created_at; expires_at <= created_at + INTERVAL '15 minutes'"),
+        c("consumed_at", "TIMESTAMPTZ", nn=False, check="consumed_at IS NULL OR consumed_at >= created_at"),
+        c("created_at", "TIMESTAMPTZ", comment="Defaults to current time"),
+        c("failed_attempt_count", "SMALLINT", check="failed_attempt_count BETWEEN 0 AND 5", comment="Defaults to zero")]),
     table("canon_pack_repository", "operations", "Infrastructure", "Configures the Phase 1 Canon Pack release source.", [
         pk("canon_pack_repository"), fk("tracker_instance_id", "tracker_instance"), c("repository_url", "VARCHAR", size=2048),
         c("release_channel", "VARCHAR", size=32), c("trust_policy", "JSON"), ts("created_at")]),
@@ -270,7 +274,9 @@ def validate() -> list[tuple[str, str, str, str]]:
         col_names = [x["name"] for x in cols]
         if len(col_names) != len(set(col_names)): errors.append(f"{t['name']}: duplicate columns")
         pks = [x for x in cols if x["primary"]]
-        if len(pks) != 1 or pks[0]["name"] != f"{t['name']}_id": errors.append(f"{t['name']}: PK must be {t['name']}_id")
+        expected_pk = "token_sha256" if t["name"] == "password_reset_token" else f"{t['name']}_id"
+        if len(pks) != 1 or pks[0]["name"] != expected_pk:
+            errors.append(f"{t['name']}: PK must be {expected_pk}")
         for col in cols:
             if col["type"] not in GENERIC_TYPES: errors.append(f"{t['name']}.{col['name']}: unsupported type {col['type']}")
             target = col["ref"]

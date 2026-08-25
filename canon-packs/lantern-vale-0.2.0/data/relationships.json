@@ -1,0 +1,54 @@
+[
+  {
+    "id": "01954123-0000-7000-8000-000000000401",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000202",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Quiet Beacon precedes The Echo Line in the episode sequence.",
+    "type": "sequence",
+    "watchableId": "01954123-0000-7000-8000-000000000203"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000402",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000201",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "First Light establishes the restored beacon network used by the Special.",
+    "type": "required",
+    "watchableId": "01954123-0000-7000-8000-000000000204"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000403",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000205",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "The Short introduces the lantern exchanged in the Episode.",
+    "type": "recommended",
+    "watchableId": "01954123-0000-7000-8000-000000000202"
+  },
+  {
+    "id": "01954123-0000-7000-8000-000000000404",
+    "prerequisiteId": "01954123-0000-7000-8000-000000000204",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "summary": "A background signal in the Short echoes the Special's relay pattern.",
+    "type": "optional-connection",
+    "watchableId": "01954123-0000-7000-8000-000000000205"
+  }
+]

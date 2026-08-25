@@ -1,0 +1,66 @@
+/* Unified scrollbar system for every current and future scroll owner. */
+:root {
+  --scrollbar-size: 11px;
+  --scrollbar-track: #0a1118;
+  --scrollbar-track-edge: #1b2a38;
+  --scrollbar-thumb: #3b5268;
+  --scrollbar-thumb-hover: #52728a;
+  --scrollbar-thumb-active: #65cba7;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Chromium, Edge, Safari */
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-left: 1px solid var(--scrollbar-track-edge);
+  border-top: 1px solid var(--scrollbar-track-edge);
+}
+*::-webkit-scrollbar-thumb {
+  min-width: 36px;
+  min-height: 36px;
+  background: var(--scrollbar-thumb);
+  border: 3px solid var(--scrollbar-track);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+*::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* AG Grid owns dedicated scrollbar shells; keep their chrome in-theme. */
+.ag-body-vertical-scroll,
+.ag-body-horizontal-scroll {
+  background: var(--scrollbar-track) !important;
+  border-color: var(--scrollbar-track-edge) !important;
+}
+.ag-body-vertical-scroll {
+  border-left: 1px solid var(--scrollbar-track-edge) !important;
+}
+.ag-body-horizontal-scroll {
+  border-top: 1px solid var(--scrollbar-track-edge) !important;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --scrollbar-size: 13px;
+  }
+}

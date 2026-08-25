@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { promisify } from "node:util";
 
 import { Pool } from "pg";
 
@@ -11,8 +13,10 @@ import {
   runMigrations,
   verifySchema,
 } from "../apps/api/src/migrations.js";
+import { SqlSliceStore } from "../apps/api/src/slice.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+const execFileAsync = promisify(execFile);
 
 test("foundation migration is usable against PostgreSQL", async () => {
   assert.ok(
@@ -123,6 +127,194 @@ test("foundation migration is usable against PostgreSQL", async () => {
         trackerInstanceId,
       ])
       .catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("PostgreSQL password recovery is digest-only, owner-bound, atomic, and revokes sessions", async () => {
+  assert.ok(
+    testDatabaseUrl,
+    "TEST_DATABASE_URL is required for PostgreSQL integration tests",
+  );
+  const pool = new Pool({ connectionString: testDatabaseUrl });
+  const oldPassword = "postgres-old-password";
+  const newPassword = "postgres-new-password";
+  let trackerInstanceId: string | undefined;
+  try {
+    const migrationsDirectory = fileURLToPath(
+      new URL("../db/migrations/", import.meta.url),
+    );
+    await runMigrations(pool, await loadMigrations(migrationsDirectory));
+    const store = new SqlSliceStore(pool, oldPassword);
+    assert.equal(await store.setup(), true);
+    const setup = await pool.query<{ tracker_instance_id: string }>(
+      "SELECT tracker_instance_id FROM installation_setup WHERE singleton = true",
+    );
+    trackerInstanceId = setup.rows[0]?.tracker_instance_id;
+    assert.ok(trackerInstanceId);
+
+    const cli = await execFileAsync(
+      "npm",
+      ["run", "--silent", "password-recovery"],
+      {
+        env: {
+          ...process.env,
+          DATABASE_URL: testDatabaseUrl,
+          WATCH_TRACKER_BASE_URL: "https://tracker.example/",
+        },
+      },
+    );
+    assert.equal(cli.stderr, "");
+    assert.match(
+      cli.stdout,
+      /^https:\/\/tracker\.example\/reset-password#token=[A-Za-z0-9_-]{43}\n$/,
+    );
+    assert.equal(cli.stdout.trim().split("\n").length, 1);
+    const cliToken = new URL(cli.stdout.trim()).hash.slice("#token=".length);
+    const cliDigest = createHash("sha256").update(cliToken).digest("hex");
+
+    const first = await store.issuePasswordResetToken();
+    const second = await store.issuePasswordResetToken();
+    const firstDigest = createHash("sha256").update(first.token).digest("hex");
+    const secondDigest = createHash("sha256")
+      .update(second.token)
+      .digest("hex");
+    const persisted = await pool.query<{
+      token_sha256: string;
+      consumed_at: Date | null;
+    }>(
+      "SELECT token_sha256, consumed_at FROM password_reset_token WHERE tracker_instance_id = $1 ORDER BY created_at",
+      [trackerInstanceId],
+    );
+    assert.deepEqual(
+      persisted.rows.map((row) => row.token_sha256.trim()),
+      [cliDigest, firstDigest, secondDigest],
+    );
+    assert.ok(persisted.rows[0]?.consumed_at);
+    assert.ok(persisted.rows[1]?.consumed_at);
+    assert.equal(persisted.rows[2]?.consumed_at, null);
+    assert.equal(JSON.stringify(persisted.rows).includes(cliToken), false);
+    assert.equal(JSON.stringify(persisted.rows).includes(first.token), false);
+    assert.equal(JSON.stringify(persisted.rows).includes(second.token), false);
+
+    assert.deepEqual(
+      await Promise.all(
+        Array.from({ length: 5 }, () =>
+          store.completePasswordReset(second.token, "too-short"),
+        ),
+      ),
+      [false, false, false, false, false],
+    );
+    const exhausted = await pool.query<{
+      consumed_at: Date | null;
+      failed_attempt_count: number;
+    }>(
+      "SELECT consumed_at, failed_attempt_count FROM password_reset_token WHERE token_sha256 = $1",
+      [secondDigest],
+    );
+    assert.equal(exhausted.rows[0]?.failed_attempt_count, 5);
+    assert.ok(exhausted.rows[0]?.consumed_at);
+    assert.equal(
+      await store.completePasswordReset(second.token, newPassword),
+      false,
+    );
+
+    const otherOwner = randomUUID();
+    await pool.query(
+      "INSERT INTO tracker_instance (tracker_instance_id, display_name) VALUES ($1, 'Other owner')",
+      [otherOwner],
+    );
+    const alienSessionDigest = createHash("sha256")
+      .update("alien-owner-session")
+      .digest("hex");
+    await pool.query(
+      `INSERT INTO app_session
+        (token_sha256, csrf_token, csrf_sha256, expires_at, tracker_instance_id,
+         last_seen_at, absolute_expires_at)
+       VALUES ($1, $2, $3, CURRENT_TIMESTAMP + INTERVAL '1 day', $4,
+         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '2 days')`,
+      [alienSessionDigest, "a".repeat(64), "b".repeat(64), otherOwner],
+    );
+
+    const successful = await store.issuePasswordResetToken();
+    const sessions = await Promise.all([
+      store.createSession(),
+      store.createSession(),
+      store.createSession(),
+    ]);
+    const attempts = await Promise.all([
+      store.completePasswordReset(successful.token, newPassword),
+      store.completePasswordReset(successful.token, newPassword),
+    ]);
+    assert.deepEqual(attempts.sort(), [false, true]);
+    for (const session of sessions)
+      assert.equal(await store.getSession(session.token), undefined);
+    assert.equal(await store.authenticate(oldPassword), false);
+    assert.equal(await store.authenticate(newPassword), true);
+    const credential = await pool.query<{ credential_hash: string }>(
+      "SELECT credential_hash FROM tracker_instance WHERE tracker_instance_id = $1",
+      [trackerInstanceId],
+    );
+    assert.match(
+      credential.rows[0]?.credential_hash ?? "",
+      /^\$argon2id\$v=19\$m=65536,p=1,t=3\$/,
+    );
+    const alienSession = await pool.query(
+      "SELECT 1 FROM app_session WHERE token_sha256 = $1 AND tracker_instance_id = $2",
+      [alienSessionDigest, otherOwner],
+    );
+    assert.equal(alienSession.rowCount, 1);
+
+    const alienToken = "alien-owner-password-reset-token";
+    await pool.query(
+      "INSERT INTO password_reset_token (token_sha256, tracker_instance_id, expires_at) VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '15 minutes')",
+      [createHash("sha256").update(alienToken).digest("hex"), otherOwner],
+    );
+    assert.equal(
+      await store.completePasswordReset(alienToken, newPassword),
+      false,
+    );
+    await pool.query(
+      "DELETE FROM password_reset_token WHERE tracker_instance_id = $1",
+      [otherOwner],
+    );
+    await pool.query("DELETE FROM app_session WHERE tracker_instance_id = $1", [
+      otherOwner,
+    ]);
+    await pool.query(
+      "DELETE FROM tracker_instance WHERE tracker_instance_id = $1",
+      [otherOwner],
+    );
+
+    const expired = await store.issuePasswordResetToken();
+    await pool.query(
+      "UPDATE password_reset_token SET created_at = CURRENT_TIMESTAMP - INTERVAL '2 seconds', expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE token_sha256 = $1",
+      [createHash("sha256").update(expired.token).digest("hex")],
+    );
+    assert.equal(
+      await store.completePasswordReset(expired.token, newPassword),
+      false,
+    );
+  } finally {
+    await pool.query("DELETE FROM installation_setup").catch(() => undefined);
+    if (trackerInstanceId) {
+      await pool
+        .query(
+          "DELETE FROM password_reset_token WHERE tracker_instance_id = $1",
+          [trackerInstanceId],
+        )
+        .catch(() => undefined);
+      await pool
+        .query("DELETE FROM app_session WHERE tracker_instance_id = $1", [
+          trackerInstanceId,
+        ])
+        .catch(() => undefined);
+      await pool
+        .query("DELETE FROM tracker_instance WHERE tracker_instance_id = $1", [
+          trackerInstanceId,
+        ])
+        .catch(() => undefined);
+    }
     await pool.end();
   }
 });

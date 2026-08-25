@@ -68,11 +68,59 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
-      - name: Test with isolated PostgreSQL
+      - name: Run portable tests
         run: npm test
+
+      - name: Run PostgreSQL integration gate
+        run: npm run test:postgres
+
+      - name: Verify PostgreSQL readiness and current migration identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_isready --host 127.0.0.1 --port 5432 --username watch_tracker --dbname watch_tracker_ci
+
+          migration_paths=(db/migrations/*.sql)
+          test "${#migration_paths[@]}" -gt 0
+          migration_path="$(printf '%s\n' "${migration_paths[@]}" | LC_ALL=C sort | tail -n 1)"
+          migration_file="${migration_path##*/}"
+          if [[ ! "$migration_file" =~ ^(0\.[0-9]{2})_([a-z0-9][a-z0-9-]*)\.sql$ ]]; then
+            printf 'Invalid terminal migration filename: %s\n' "$migration_file" >&2
+            exit 1
+          fi
+          expected_version="${BASH_REMATCH[1]}"
+          expected_name="${BASH_REMATCH[2]}"
+          expected_checksum="$(sha256sum "$migration_path" | cut -d ' ' -f 1)"
+          expected_migration="$expected_version:$expected_name:$expected_checksum"
+          actual_migration="$(PGPASSWORD="$POSTGRES_PASSWORD" psql \
+            --host 127.0.0.1 --port 5432 --username watch_tracker --dbname watch_tracker_ci --tuples-only --no-align \
+            --command "SELECT migration_version || ':' || migration_name || ':' || migration_sha256 FROM schema_migration ORDER BY migration_version DESC LIMIT 1")"
+          test "$actual_migration" = "$expected_migration"
+          printf 'PASS migration=%s\n' "$actual_migration"
 
       - name: Build production application
         run: npm run build:deterministic
+
+      - name: Generate disposable Compose secrets
+        run: |
+          COMPOSE_ENV_FILE="$RUNNER_TEMP/watch-tracker-compose.env"
+          COMPOSE_SECRET_FILE="$RUNNER_TEMP/watch-tracker-initial-admin-password"
+          compose_password="$(openssl rand -hex 32)"
+          admin_password="$(openssl rand -hex 32)"
+          app_user_id="$(id -u)"
+          umask 077
+          printf '%s\n' "$admin_password" > "$COMPOSE_SECRET_FILE"
+          test "$(stat -c '%a' "$COMPOSE_SECRET_FILE")" = 600
+          {
+            printf 'POSTGRES_PASSWORD=%s\n' "$compose_password"
+            printf 'INITIAL_ADMIN_PASSWORD_FILE=%s\n' "$COMPOSE_SECRET_FILE"
+            printf 'APP_USER_ID=%s\n' "$app_user_id"
+            printf 'APP_BIND_ADDRESS=127.0.0.1\nAPP_PORT=3100\n'
+            printf 'WATCH_TRACKER_IMAGE=%s\n' "$WATCH_TRACKER_IMAGE"
+            printf 'WATCH_TRACKER_DATABASE_IMAGE=%s\n' "$WATCH_TRACKER_DATABASE_IMAGE"
+          } > "$COMPOSE_ENV_FILE"
+          printf 'COMPOSE_ENV_FILE=%s\nCOMPOSE_SECRET_FILE=%s\n' \
+            "$COMPOSE_ENV_FILE" "$COMPOSE_SECRET_FILE" >> "$GITHUB_ENV"
 
       - name: Check Dockerfile
         run: docker build --check .
@@ -114,44 +162,36 @@ jobs:
 
       - name: Smoke built Compose runtime
         run: |
-          docker compose up --detach --no-build --wait --wait-timeout 120
-          docker compose ps --all
+          docker compose --env-file "$COMPOSE_ENV_FILE" config --quiet
+          docker compose --env-file "$COMPOSE_ENV_FILE" up --detach --no-build --wait --wait-timeout 120
+          docker compose --env-file "$COMPOSE_ENV_FILE" ps --all
 
-          node --input-type=module <<'NODE'
-          const base = `http://127.0.0.1:${process.env.APP_PORT}`;
-          for (const endpoint of ['/', '/health', '/ready']) {
-            const response = await fetch(`${base}${endpoint}`);
-            if (!response.ok) {
-              throw new Error(`${endpoint} returned ${response.status}`);
-            }
-          }
+          container_id="$(docker compose --env-file "$COMPOSE_ENV_FILE" ps -q app)"
+          expected_image_id="$(docker image inspect "$WATCH_TRACKER_IMAGE" --format '{{.Id}}')"
+          running_image_id="$(docker inspect "$container_id" --format '{{.Image}}')"
+          test -n "$container_id"
+          test "$running_image_id" = "$expected_image_id"
+          effective_app_uid="$(docker exec "$container_id" node -p 'process.getuid()')"
+          source_secret_uid="$(stat -c '%u' "$COMPOSE_SECRET_FILE")"
+          mounted_secret_uid="$(docker exec "$container_id" stat -c '%u' /run/secrets/initial_admin_password)"
+          test "$effective_app_uid" -ne 0
+          test "$effective_app_uid" = "$source_secret_uid"
+          test "$mounted_secret_uid" = "$source_secret_uid"
 
-          const html = await (await fetch(`${base}/`)).text();
-          const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
-          const hashedAssets = assets.filter((asset) =>
-            /^\/assets\/.+-[A-Za-z0-9_-]+\.(?:js|css)$/.test(asset),
-          );
-          if (hashedAssets.length === 0) throw new Error('No hashed production assets found');
-          for (const asset of hashedAssets) {
-            const response = await fetch(new URL(asset, base));
-            if (!response.ok) throw new Error(`${asset} returned ${response.status}`);
-          }
-          console.log(`PASS runtime endpoints=3 hashed-assets=${hashedAssets.length}`);
-          NODE
+          base="http://127.0.0.1:${APP_PORT}"
+          for endpoint in / /health /ready; do
+            curl --fail --silent --show-error --max-time 10 "$base$endpoint" >/dev/null
+          done
+          printf 'PASS runtime uid=%s endpoints=3\\n' "$effective_app_uid"
 
-          expected_checksum="$(sha256sum db/migrations/0.01_foundation.sql | cut -d ' ' -f 1)"
-          actual_migration="$(docker compose exec -T database env PGPASSWORD="$POSTGRES_PASSWORD" \
-            psql -h 127.0.0.1 -U watch_tracker -d watch_tracker -Atc \
-            "SELECT migration_version || ':' || migration_sha256 FROM schema_migration ORDER BY migration_version")"
-          test "$actual_migration" = "0.01:$expected_checksum"
-          printf 'PASS migration=%s\n' "$actual_migration"
-
-      - name: Show Compose diagnostics
-        if: failure()
+      - name: Compose runtime diagnostics
+        if: ${{ failure() }}
         run: |
-          docker compose ps --all || true
-          docker compose logs --no-color || true
+          docker compose --env-file "$COMPOSE_ENV_FILE" ps --all || true
+          docker compose --env-file "$COMPOSE_ENV_FILE" logs --no-color || true
 
       - name: Clean up Compose runtime
-        if: always()
-        run: docker compose down --volumes --remove-orphans
+        if: ${{ always() }}
+        run: |
+          docker compose --env-file "$COMPOSE_ENV_FILE" down --volumes --remove-orphans || true
+          rm -f "$COMPOSE_ENV_FILE" "$COMPOSE_SECRET_FILE"

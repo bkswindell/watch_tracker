@@ -1,0 +1,45 @@
+{
+  "algorithm": "sha256",
+  "files": [
+    {
+      "path": "compatibility.json",
+      "sha256": "3624a05f4a1206b0c046c21c0ee068a1aedac77de4896e24ff0a689c45aeb117"
+    },
+    {
+      "path": "data/containers.json",
+      "sha256": "1183e3e203978669d295bee811a254c171070da41a97fc272415e3cd1207da40"
+    },
+    {
+      "path": "data/memberships.json",
+      "sha256": "cc779c517f7fcf3fe4b31e5ced87027be946b1f403d1a45c51bb003b8fd145ad"
+    },
+    {
+      "path": "data/pack.json",
+      "sha256": "57701b23aa78bf71173a6ba85227c6da24ffc7dd628ab5f4a352f35b9d9f2f11"
+    },
+    {
+      "path": "data/relationships.json",
+      "sha256": "891eba9915eba13c5ac0df846b4a81a58b87e85cc787d6a2e2b1103b600b82f9"
+    },
+    {
+      "path": "data/sources.json",
+      "sha256": "2cd874af1de27a4bbc417e87bd4c837c3c3e3419c5bbbede9d1b0ea3b9b55f1f"
+    },
+    {
+      "path": "data/watchable-types.json",
+      "sha256": "b6f0bbae86b79f7c435a73738c73d8fb27906df7e45e4ae6c32aaef8aea44751"
+    },
+    {
+      "path": "data/watchables.json",
+      "sha256": "b89855d6ed1b2bbb5dedfa3ec873eac0305e4dbaedba104f07bd0b209a1bed38"
+    },
+    {
+      "path": "inventory.json",
+      "sha256": "84d847a094e33696abdd0b3b39624797e547e618003e173cb823023c10d89e1a"
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "feaf10ac4aea93cfa98644c65f238469383ed3cb2d40a05cd7ca6edf51ebb369"
+    }
+  ]
+}

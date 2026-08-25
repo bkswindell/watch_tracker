@@ -1,0 +1,28 @@
+[
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000100",
+    "id": "01954123-0000-7000-8000-000000000100",
+    "kind": "series",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "slug": "signals-from-lantern-vale",
+    "title": "Signals from Lantern Vale"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000101",
+    "id": "01954123-0000-7000-8000-000000000101",
+    "kind": "season",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "slug": "signals-season-one",
+    "title": "Signals from Lantern Vale — Season One"
+  }
+]

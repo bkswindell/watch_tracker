@@ -1,0 +1,34 @@
+{
+  "compatibility": {
+    "coreSchema": ">=0.2.0 <0.3.0"
+  },
+  "id": "01954123-0000-7000-8000-000000000001",
+  "license": {
+    "id": "Apache-2.0",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0"
+  },
+  "owner": {
+    "copyrightContact": "maintainers@example.invalid",
+    "governanceUrl": "https://example.invalid/lantern-vale/governance",
+    "maintainers": [
+      "Lantern Vale Maintainers"
+    ],
+    "name": "Lantern Vale Community",
+    "provenancePolicyUrl": "https://example.invalid/lantern-vale/provenance-policy",
+    "repository": "https://example.invalid/lantern-vale",
+    "securityContact": "security@example.invalid",
+    "takedownPolicyUrl": "https://example.invalid/lantern-vale/copyright-policy"
+  },
+  "projectRelationship": {
+    "endorsedByWatchTracker": false,
+    "independentlyMaintained": true
+  },
+  "scope": "Fictional stories about beacon keepers and travelers in Lantern Vale.",
+  "slug": "lantern-vale",
+  "sourcePolicy": {
+    "expressiveContent": "prohibited-by-default",
+    "summary": "Use fictional first-party notes and original contributor-defined facts with explicit provenance."
+  },
+  "title": "Lantern Vale Stories",
+  "version": "0.2.0"
+}

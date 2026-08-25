@@ -1,0 +1,41 @@
+[
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000100",
+    "id": "01954123-0000-7000-8000-000000000100",
+    "kind": "series",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "slug": "lantern-vale",
+    "title": "Lantern Vale"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000101",
+    "id": "01954123-0000-7000-8000-000000000101",
+    "kind": "series",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "slug": "lantern-vale-movies",
+    "title": "Lantern Vale Movies"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000102",
+    "id": "01954123-0000-7000-8000-000000000102",
+    "kind": "series",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "slug": "greymoor-files",
+    "title": "Greymoor Files"
+  }
+]

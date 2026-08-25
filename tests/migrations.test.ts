@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -31,17 +31,251 @@ async function migrationDirectory(
   return directory;
 }
 
-function migration(version = "0.01", sha256 = "a".repeat(64)): Migration {
-  return { version, name: "foundation", sha256, sql: "SELECT 1" };
+function migration(
+  version = EXPECTED_SCHEMA_VERSION,
+  sha256 = "a".repeat(64),
+): Migration {
+  return {
+    version,
+    name:
+      version === "0.01"
+        ? "foundation"
+        : version === "0.02"
+          ? "core-slice"
+          : version === "0.03"
+            ? "canon-pack-registry"
+            : version === "0.04"
+              ? "workspace-metadata"
+              : version === "0.05"
+                ? "truthful-canon-metadata"
+                : version === "0.06"
+                  ? "personal-catalog-additions"
+                  : version === "0.07"
+                    ? "watchable-feedback"
+                    : version === "0.08"
+                      ? "session-lifetimes"
+                      : version === "0.09"
+                        ? "password-recovery"
+                        : version === "0.10"
+                          ? "recovery-failure-limit"
+                          : "password-recovery-expiry-bound",
+    sha256,
+    sql: "SELECT 1",
+  };
 }
 
-test("loads the ordered foundation migration with a deterministic SHA-256 identity", async () => {
+test("loads the ordered foundation and Core slice migrations with deterministic SHA-256 identities", async () => {
   const migrations = await loadMigrations("db/migrations");
-  assert.equal(migrations.length, 1);
+  assert.equal(migrations.length, 11);
   assert.equal(migrations[0]?.version, "0.01");
   assert.equal(migrations[0]?.name, "foundation");
   assert.match(migrations[0]?.sha256 ?? "", /^[0-9a-f]{64}$/);
-  assert.equal(EXPECTED_SCHEMA_VERSION, "0.01");
+  assert.equal(migrations[1]?.version, "0.02");
+  assert.equal(migrations[1]?.name, "core-slice");
+  assert.match(migrations[1]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[2]?.version, "0.03");
+  assert.equal(migrations[2]?.name, "canon-pack-registry");
+  assert.match(migrations[2]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[3]?.version, "0.04");
+  assert.equal(migrations[3]?.name, "workspace-metadata");
+  assert.match(migrations[3]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[4]?.version, "0.05");
+  assert.equal(migrations[4]?.name, "truthful-canon-metadata");
+  assert.match(migrations[4]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[5]?.version, "0.06");
+  assert.equal(migrations[5]?.name, "personal-catalog-additions");
+  assert.match(migrations[5]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[6]?.version, "0.07");
+  assert.equal(migrations[6]?.name, "watchable-feedback");
+  assert.match(migrations[6]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[7]?.version, "0.08");
+  assert.equal(migrations[7]?.name, "session-lifetimes");
+  assert.match(migrations[7]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[8]?.version, "0.09");
+  assert.equal(migrations[8]?.name, "password-recovery");
+  assert.match(migrations[8]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[9]?.version, "0.10");
+  assert.equal(migrations[9]?.name, "recovery-failure-limit");
+  assert.match(migrations[9]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(migrations[10]?.version, "0.11");
+  assert.equal(migrations[10]?.name, "password-recovery-expiry-bound");
+  assert.match(migrations[10]?.sha256 ?? "", /^[0-9a-f]{64}$/);
+  assert.equal(EXPECTED_SCHEMA_VERSION, "0.11");
+});
+
+test("0.10 consumes recovery tokens after five failed attempts", async () => {
+  const sql = await readFile(
+    "db/migrations/0.10_recovery-failure-limit.sql",
+    "utf8",
+  );
+  assert.match(sql, /failed_attempt_count smallint NOT NULL DEFAULT 0/);
+  assert.match(sql, /failed_attempt_count BETWEEN 0 AND 5/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("0.11 makes the short recovery lifetime a database invariant", async () => {
+  const sql = await readFile(
+    "db/migrations/0.11_password-recovery-expiry-bound.sql",
+    "utf8",
+  );
+  assert.match(sql, /ALTER TABLE password_reset_token/);
+  assert.match(sql, /expires_at <= created_at \+ INTERVAL '15 minutes'/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("0.09 stores expiring password reset token digests by owner", async () => {
+  const sql = await readFile(
+    "db/migrations/0.09_password-recovery.sql",
+    "utf8",
+  );
+  assert.match(sql, /token_sha256 char\(64\) PRIMARY KEY/);
+  assert.match(
+    sql,
+    /tracker_instance_id uuid NOT NULL REFERENCES tracker_instance/,
+  );
+  assert.match(sql, /expires_at timestamptz NOT NULL/);
+  assert.match(sql, /consumed_at timestamptz/);
+  assert.match(sql, /token_sha256 ~ '\^\[0-9a-f\]\{64\}\$'/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("recovery data-model artifacts match the digest-only migration schema", async () => {
+  const [logicalText, drawDbText] = await Promise.all([
+    readFile("docs/data-model/phase-1-logical-model.json", "utf8"),
+    readFile("docs/data-model/phase-1.drawdb.json", "utf8"),
+  ]);
+  const logical = JSON.parse(logicalText) as {
+    relationships: Array<{ fromTable: string }>;
+    tables: Array<{
+      name: string;
+      columns: Array<{ name: string; type: string }>;
+    }>;
+  };
+  const drawDb = JSON.parse(drawDbText) as {
+    relationships: Array<{ name: string; startTableId: string }>;
+    tables: Array<{
+      id: string;
+      fields: Array<{ name: string; type: string }>;
+    }>;
+  };
+  const expectedFields = [
+    ["token_sha256", "CHAR"],
+    ["tracker_instance_id", "UUID"],
+    ["expires_at", "TIMESTAMPTZ"],
+    ["consumed_at", "TIMESTAMPTZ"],
+    ["created_at", "TIMESTAMPTZ"],
+    ["failed_attempt_count", "SMALLINT"],
+  ];
+
+  const logicalToken = logical.tables.find(
+    ({ name }) => name === "password_reset_token",
+  );
+  assert.deepEqual(
+    logicalToken?.columns.map(({ name, type }) => [name, type]),
+    expectedFields,
+  );
+  assert.ok(
+    logical.relationships.some(
+      ({ fromTable }) => fromTable === "password_reset_token",
+    ),
+  );
+
+  const drawDbToken = drawDb.tables.find(
+    ({ id }) => id === "password_reset_token",
+  );
+  assert.deepEqual(
+    drawDbToken?.fields.map(({ name, type }) => [name, type]),
+    expectedFields,
+  );
+  assert.ok(
+    drawDb.relationships.some(
+      ({ name, startTableId }) =>
+        name === "fk_password_reset_token_tracker_instance_id" &&
+        startTableId === "password_reset_token",
+    ),
+  );
+});
+
+test("0.08 adds bounded idle and absolute session lifetimes", async () => {
+  const sql = await readFile(
+    "db/migrations/0.08_session-lifetimes.sql",
+    "utf8",
+  );
+  assert.match(sql, /last_seen_at timestamptz/);
+  assert.match(sql, /absolute_expires_at timestamptz/);
+  assert.match(sql, /created_at \+ INTERVAL '90 days'/);
+  assert.match(sql, /expires_at <= absolute_expires_at/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("0.07 stores owner feedback separately from immutable Pack rows", async () => {
+  const sql = await readFile(
+    "db/migrations/0.07_watchable-feedback.sql",
+    "utf8",
+  );
+  assert.match(sql, /CREATE TABLE watchable_feedback/);
+  assert.match(sql, /watchable_feedback_id uuid PRIMARY KEY/);
+  assert.match(
+    sql,
+    /UNIQUE \(tracker_instance_id, canon_pack_release_id, watchable_id\)/,
+  );
+  assert.match(sql, /rating >= 0\.5 AND rating <= 5\.0/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("0.06 keeps user-owned Catalog additions separate from immutable Pack rows", async () => {
+  const sql = await readFile(
+    "db/migrations/0.06_personal-catalog-additions.sql",
+    "utf8",
+  );
+  assert.match(sql, /CREATE TABLE catalog_addition/);
+  assert.match(
+    sql,
+    /tracker_instance_id uuid NOT NULL REFERENCES tracker_instance/,
+  );
+  assert.match(
+    sql,
+    /CREATE UNIQUE INDEX catalog_addition_owner_slug_active_key/,
+  );
+  assert.match(sql, /deleted_at timestamptz/);
+  assert.doesNotMatch(sql, /(?:UPDATE|DELETE FROM|ALTER TABLE) canon_pack_/);
+});
+
+test("0.05 backfills completed attempts before enforcing completion timestamps", async () => {
+  const sql = await readFile(
+    "db/migrations/0.05_truthful-canon-metadata.sql",
+    "utf8",
+  );
+  const backfill = sql.indexOf("UPDATE canon_pack_viewing_attempt");
+  const constraint = sql.indexOf(
+    "canon_pack_viewing_attempt_completed_at_consistent",
+  );
+  assert.ok(backfill >= 0, "completed attempt backfill is required");
+  assert.ok(constraint > backfill, "backfill must precede the constraint");
+});
+
+test("0.03 deterministically backfills a 0.02 active catalog, focus, and viewing history into the registry", async () => {
+  const sql = await readFile(
+    "db/migrations/0.03_canon-pack-registry.sql",
+    "utf8",
+  );
+  assert.match(
+    sql,
+    /INSERT INTO canon_pack_release[\s\S]*FROM active_canon_pack/,
+  );
+  assert.match(sql, /INSERT INTO canon_pack_watchable[\s\S]*FROM catalog_item/);
+  assert.match(
+    sql,
+    /INSERT INTO active_canon_pack_registry[\s\S]*SELECT true, legacy_release\.canon_pack_release_id, active\.imported_at[\s\S]*FROM active_canon_pack AS active[\s\S]*JOIN canon_pack_release AS legacy_release/,
+  );
+  assert.match(
+    sql,
+    /INSERT INTO canon_pack_watch_focus[\s\S]*FROM watch_focus/,
+  );
+  assert.match(
+    sql,
+    /INSERT INTO canon_pack_viewing_attempt[\s\S]*FROM viewing_attempt/,
+  );
 });
 
 test("migration discovery rejects an empty inventory", async (t) => {
@@ -86,11 +320,11 @@ test("migration discovery rejects duplicate versions", async (t) => {
 test("migration discovery rejects a terminal version that differs from the application contract", async (t) => {
   const directory = await migrationDirectory(t, {
     "0.01_foundation.sql": "SELECT 1;",
-    "0.02_next.sql": "SELECT 2;",
+    "0.05_next.sql": "SELECT 2;",
   });
   await assert.rejects(
     loadMigrations(directory),
-    /Migration terminal version 0\.02 does not match expected schema version 0\.01/,
+    /Migration terminal version 0\.05 does not match expected schema version 0\.11/,
   );
 });
 
@@ -148,8 +382,8 @@ test("schema verification fails closed when a recorded checksum differs", async 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.01",
-          migration_name: "foundation",
+          migration_version: "0.11",
+          migration_name: "password-recovery-expiry-bound",
           migration_sha256: "b".repeat(64),
         },
       ],
@@ -167,8 +401,8 @@ test("schema verification fails closed when a recorded migration name differs", 
     query: async () => ({
       rows: [
         {
-          migration_version: "0.01",
-          migration_name: "renamed-foundation",
+          migration_version: "0.11",
+          migration_name: "renamed-password-recovery-expiry-bound",
           migration_sha256: "a".repeat(64),
         },
       ],
@@ -181,21 +415,136 @@ test("schema verification fails closed when a recorded migration name differs", 
   });
 });
 
-test("schema verification fails closed when the migration ledger is current but a required table is missing", async () => {
+test("schema verification fails closed when the migration ledger and foundation are current but a Core slice table is missing", async () => {
+  const foundationColumns = [
+    [
+      "schema_migration",
+      "schema_migration_id",
+      "uuid",
+      "NO",
+      "gen_random_uuid()",
+    ],
+    ["schema_migration", "migration_version", "varchar", "NO", "<none>"],
+    ["schema_migration", "migration_name", "varchar", "NO", "<none>"],
+    ["schema_migration", "migration_sha256", "bpchar", "NO", "<none>"],
+    [
+      "schema_migration",
+      "applied_at",
+      "timestamptz",
+      "NO",
+      "CURRENT_TIMESTAMP",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_id",
+      "uuid",
+      "NO",
+      "gen_random_uuid()",
+    ],
+    ["tracker_instance", "display_name", "text", "NO", "<none>"],
+    ["tracker_instance", "credential_hash", "text", "YES", "<none>"],
+    ["tracker_instance", "setup_completed_at", "timestamptz", "YES", "<none>"],
+    [
+      "tracker_instance",
+      "created_at",
+      "timestamptz",
+      "NO",
+      "CURRENT_TIMESTAMP",
+    ],
+    [
+      "tracker_instance",
+      "updated_at",
+      "timestamptz",
+      "NO",
+      "CURRENT_TIMESTAMP",
+    ],
+  ].map(([table_name, column_name, udt_name, is_nullable, column_default]) => ({
+    table_name,
+    column_name,
+    udt_name,
+    is_nullable,
+    column_default,
+  }));
+  const foundationConstraints = [
+    [
+      "schema_migration",
+      "schema_migration_migration_version_key",
+      "u",
+      "UNIQUE (migration_version)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_name_not_blank",
+      "c",
+      "CHECK (btrim(migration_name::text) <> ''::text)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_pkey",
+      "p",
+      "PRIMARY KEY (schema_migration_id)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_sha256_format",
+      "c",
+      "CHECK (migration_sha256 ~ '^[0-9a-f]{64}$'::text)",
+    ],
+    [
+      "schema_migration",
+      "schema_migration_version_not_blank",
+      "c",
+      "CHECK (btrim(migration_version::text) <> ''::text)",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_display_name_not_blank",
+      "c",
+      "CHECK (btrim(display_name) <> ''::text)",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_pkey",
+      "p",
+      "PRIMARY KEY (tracker_instance_id)",
+    ],
+    [
+      "tracker_instance",
+      "tracker_instance_updated_after_created",
+      "c",
+      "CHECK (updated_at >= created_at)",
+    ],
+  ].map(
+    ([
+      table_name,
+      constraint_name,
+      constraint_type,
+      constraint_definition,
+    ]) => ({
+      table_name,
+      constraint_name,
+      constraint_type,
+      constraint_definition,
+    }),
+  );
   const database: Queryable = {
     query: async (text) => {
       if (text.includes("ORDER BY migration_version")) {
         return {
           rows: [
             {
-              migration_version: "0.01",
-              migration_name: "foundation",
+              migration_version: "0.11",
+              migration_name: "password-recovery-expiry-bound",
               migration_sha256: "a".repeat(64),
             },
           ],
         };
       }
-      return { rows: [] };
+      if (text.includes("information_schema.columns"))
+        return { rows: foundationColumns };
+      if (text.includes("pg_constraint"))
+        return { rows: foundationConstraints };
+      throw new Error(`Unexpected query: ${text}`);
     },
   };
 
@@ -219,7 +568,7 @@ test("migration runner rejects a newer ledger before applying pending SQL", asyn
         return {
           rows: [
             {
-              migration_version: "0.02",
+              migration_version: "0.12",
               migration_name: "future",
               migration_sha256: "b".repeat(64),
             },

@@ -1,0 +1,13 @@
+{
+  "checksumAlgorithm": "sha256",
+  "contractVersion": "0.2.0",
+  "controlFiles": {
+    "checksums": "checksums.json",
+    "compatibility": "compatibility.json",
+    "inventory": "inventory.json"
+  },
+  "packId": "01954123-0000-7000-8000-000000000001",
+  "packSlug": "lantern-vale",
+  "packTitle": "Lantern Vale Stories",
+  "packVersion": "0.2.1"
+}

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -10,6 +10,7 @@ import {
   type ReadinessProbe,
 } from "../apps/api/src/app.js";
 import {
+  assertNonRootRuntime,
   closeApiResources,
   parseServerEnvironment,
   SHUTDOWN_DEADLINE_MS,
@@ -18,6 +19,18 @@ import {
 const unavailable: ReadinessProbe = async () => ({
   ready: false,
   reason: "database unavailable",
+});
+
+test("public architecture documents state the current recovery migration contract", async () => {
+  const [readme, architecture] = await Promise.all([
+    readFile("README.md", "utf8"),
+    readFile("docs/architecture.md", "utf8"),
+  ]);
+
+  assert.match(readme, /PostgreSQL migrations through `0\.11`/);
+  assert.match(readme, /expires after 15 minutes/);
+  assert.match(readme, /stored only as a SHA-256 digest/);
+  assert.match(architecture, /strict ordered migrations through `0\.11`/);
 });
 
 test("health is live while readiness reports an unavailable database", async (t) => {
@@ -104,20 +117,39 @@ test("server environment validation fails closed for missing or malformed values
       }),
     /MIGRATIONS_DIR is invalid/,
   );
+  assert.throws(
+    () =>
+      parseServerEnvironment({
+        DATABASE_URL: "postgresql://user:password@database:5432/watch_tracker",
+        INITIAL_ADMIN_PASSWORD_FILE: " ",
+      }),
+    /INITIAL_ADMIN_PASSWORD_FILE is invalid/,
+  );
   assert.deepEqual(
     parseServerEnvironment({
       DATABASE_URL: "postgresql://user:password@database:5432/watch_tracker",
       HOST: "0.0.0.0",
       PORT: "3100",
       MIGRATIONS_DIR: "db/migrations",
+      INITIAL_ADMIN_PASSWORD_FILE: "/run/secrets/initial_admin_password",
     }),
     {
       databaseUrl: "postgresql://user:password@database:5432/watch_tracker",
       host: "0.0.0.0",
       port: 3100,
       migrationsDirectory: "db/migrations",
+      initialAdminPasswordFile: "/run/secrets/initial_admin_password",
     },
   );
+});
+
+test("API startup refuses effective UID zero before loading configuration or secrets", () => {
+  assert.throws(() => assertNonRootRuntime(0), /refuses to start API as root/);
+  assert.throws(
+    () => assertNonRootRuntime(1000, 0),
+    /refuses to start API as root/,
+  );
+  assert.doesNotThrow(() => assertNonRootRuntime(1000, 1000));
 });
 
 test("shutdown always ends the database pool when app close fails", async () => {
@@ -224,4 +256,10 @@ test("serves the built Watch Tracker shell when a web root is configured", async
   assert.equal(response.statusCode, 200);
   assert.match(response.headers["content-type"] ?? "", /^text\/html/);
   assert.match(response.body, /<title>Watch Tracker<\/title>/);
+
+  const reset = await app.inject({ method: "GET", url: "/reset-password" });
+  assert.equal(reset.statusCode, 200);
+  assert.equal(reset.headers["cache-control"], "no-store");
+  assert.equal(reset.headers["referrer-policy"], "no-referrer");
+  assert.match(reset.body, /<title>Watch Tracker<\/title>/);
 });

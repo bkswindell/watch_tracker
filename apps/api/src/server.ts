@@ -1,20 +1,36 @@
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { isIP } from "node:net";
-import { resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { Pool } from "pg";
 
 import { buildApp, type ReadinessProbe } from "./app.js";
 import { loadMigrations, verifySchema } from "./migrations.js";
+import { passwordPolicyError, SqlSliceStore } from "./slice.js";
 
 export const SHUTDOWN_DEADLINE_MS = 10_000;
+
+/**
+ * Refuse to run the API with root privileges, even if Compose is misconfigured.
+ */
+export function assertNonRootRuntime(
+  realUid = process.getuid?.(),
+  effectiveUid = process.geteuid?.() ?? realUid,
+): void {
+  if (realUid === 0 || effectiveUid === 0) {
+    throw new Error("refuses to start API as root");
+  }
+}
 
 export interface ServerEnvironment {
   databaseUrl: string;
   host: string;
   port: number;
   migrationsDirectory: string;
+  initialAdminPasswordFile?: string;
+  canonPackPath?: string;
 }
 
 const HOSTNAME =
@@ -63,7 +79,29 @@ export function parseServerEnvironment(
       ? "db/migrations"
       : environment.MIGRATIONS_DIR.trim();
   if (!migrationsDirectory) throw new Error("MIGRATIONS_DIR is invalid");
-  return { databaseUrl, host, port, migrationsDirectory };
+  const initialAdminPasswordFile =
+    environment.INITIAL_ADMIN_PASSWORD_FILE?.trim();
+  const canonPackPath = environment.CANON_PACK_PATH?.trim();
+  if (
+    environment.INITIAL_ADMIN_PASSWORD_FILE !== undefined &&
+    !initialAdminPasswordFile
+  ) {
+    throw new Error("INITIAL_ADMIN_PASSWORD_FILE is invalid");
+  }
+  if (
+    environment.CANON_PACK_PATH !== undefined &&
+    (!canonPackPath || !isAbsolute(canonPackPath))
+  ) {
+    throw new Error("CANON_PACK_PATH must be an absolute local path");
+  }
+  return {
+    databaseUrl,
+    host,
+    port,
+    migrationsDirectory,
+    ...(initialAdminPasswordFile ? { initialAdminPasswordFile } : {}),
+    ...(canonPackPath ? { canonPackPath } : {}),
+  };
 }
 
 export interface ShutdownApp {
@@ -135,6 +173,7 @@ export async function closeApiResources(
 }
 
 export async function startServer(): Promise<void> {
+  assertNonRootRuntime();
   const environment = parseServerEnvironment(process.env);
   const pool = new Pool({
     connectionString: environment.databaseUrl,
@@ -146,6 +185,19 @@ export async function startServer(): Promise<void> {
 
   try {
     const migrations = await loadMigrations(environment.migrationsDirectory);
+    const initialAdminPassword = environment.initialAdminPasswordFile
+      ? (await readFile(environment.initialAdminPasswordFile, "utf8")).trim()
+      : undefined;
+    if (environment.initialAdminPasswordFile && !initialAdminPassword) {
+      throw new Error("INITIAL_ADMIN_PASSWORD_FILE is empty");
+    }
+    if (initialAdminPassword) {
+      const policyError = passwordPolicyError(initialAdminPassword);
+      if (policyError)
+        throw new Error(
+          `INITIAL_ADMIN_PASSWORD_FILE violates password policy: ${policyError}`,
+        );
+    }
     const databaseReadinessProbe: ReadinessProbe = async () => {
       try {
         await pool.query("SELECT 1");
@@ -160,6 +212,11 @@ export async function startServer(): Promise<void> {
     );
     app = await buildApp({
       readinessProbe: databaseReadinessProbe,
+      sliceStore: new SqlSliceStore(pool, initialAdminPassword, {
+        ...(environment.canonPackPath
+          ? { packPath: environment.canonPackPath }
+          : {}),
+      }),
       ...(existsSync(builtWebRoot) ? { webRoot: builtWebRoot } : {}),
     });
     await app.listen({ host: environment.host, port: environment.port });

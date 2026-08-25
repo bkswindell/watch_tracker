@@ -4,7 +4,7 @@ Watch Tracker is an open-source, self-hosted application for tracking progress t
 
 ## TL;DR
 
-The first runnable Core foundation is available for local development: a React shell, Fastify API, PostgreSQL migration `0.01`, one-shot migrator, and hardened Docker Compose deployment. Pack import, setup/authentication, catalog, and viewing workflows are still under development.
+The current Core vertical slice is available for local development: a React shell, Fastify API, PostgreSQL migrations through `0.11`, one-shot migrator, hardened Docker Compose deployment, validated Canon Pack import, setup/authentication, catalog, dependency inspection, and viewing workflows. Host-admin password recovery is also implemented; Phase 1 remains in active development and is not a release.
 
 ## Why Watch Tracker
 
@@ -17,7 +17,7 @@ Most media trackers answer whether something was watched. Watch Tracker is desig
 
 The Core Tracker is franchise-independent. Franchise-specific catalogs, relationships, provenance, and presentation metadata belong to separately maintained Canon Packs.
 
-## Planned Phase 1 experience
+## Phase 1 experience
 
 The proposed MVP proves one complete personal-use loop:
 
@@ -53,15 +53,72 @@ This deployment path is for local development and verification only. It does not
 
 1. Copy `.env.example` to `.env`.
 2. Replace the password placeholder with a long random local PostgreSQL password.
-3. Start the stack:
+3. Prepare the initial local admin password without displaying it:
 
    ```bash
-   docker compose up --build -d
+   ./scripts/prepare-initial-admin-password.sh
    ```
 
-4. Open <http://127.0.0.1:3100/>. API liveness and readiness are available at `/health` and `/ready`.
+   The script writes `.secrets/initial_admin_password` (or the path in
+   `INITIAL_ADMIN_PASSWORD_FILE`) only when the file is absent or empty. It
+   creates and checks a private parent directory, writes a strong random
+   password with mode `0600`, never prints the password, and is safe to run
+   repeatedly. Compose mounts this ignored file read-only and preserves its
+   source UID, so the non-root application UID must match the local user that
+   owns the file.
 
-PostgreSQL is not published to the host. The application is loopback-only by default. Compose builds a digest-pinned PostgreSQL derivative that runs directly as `postgres`, while the application and migrator run as non-root with read-only filesystems, dropped capabilities, and `no-new-privileges`. To validate the source independently, run:
+4. Start the stack:
+
+   ```bash
+   APP_USER_ID="$(id -u)" docker compose up --build -d
+   ```
+
+   `APP_USER_ID` defaults to `1000` for the image's normal non-root user. Set
+   it to the owner UID of a mode-`0600` `INITIAL_ADMIN_PASSWORD_FILE` whenever
+   that file is owned by a different local user; do not make the secret
+   world-readable. `APP_USER_ID=0` is refused at application startup.
+
+5. With the supplied `.env` file, open <http://127.0.0.1:3100/>. API liveness
+   and readiness are available at `/health` and `/ready`.
+
+PostgreSQL is not published to the host. Compose defaults to the approved
+trusted-LAN publication `10.18.0.201:3100` when `APP_BIND_ADDRESS` and
+`APP_PORT` are unset. `.env.example` deliberately overrides that default with
+`APP_BIND_ADDRESS=127.0.0.1`, which is why the local-development steps above use
+the loopback URL. To use the trusted-LAN default, remove that override (or set
+`APP_BIND_ADDRESS=10.18.0.201`) and use that address in the URL; do not use
+`0.0.0.0` unless exposure on every host interface is intentional. This changes
+the deployment's access boundary, so use authentication before treating LAN
+exposure as an MVP deployment.
+
+### Host-admin password recovery
+
+Password recovery does not use email or an external provider. An administrator
+with direct database access can issue a short-lived link from the application
+host:
+
+```bash
+DATABASE_URL='postgresql://…' \
+WATCH_TRACKER_BASE_URL='https://tracker.example/' \
+npm run password-recovery
+```
+
+The command writes the reset link exactly once to standard output. Deliver it
+directly to the owner and do not paste it into tickets, chat logs, shell history,
+analytics, or monitoring systems. The 256-bit token is carried in the URL
+fragment, is stored only as a SHA-256 digest, expires after 15 minutes, and is
+invalidated when another link is issued. Opening the link removes the fragment
+from the address bar immediately. A successful reset consumes the token,
+applies the normal Argon2id password policy, and revokes every existing session.
+A valid link is also consumed after five policy-invalid submissions. Invalid,
+expired, superseded, exhausted, and reused links return the same generic failure.
+
+Run this command only from a trusted host-admin shell. Prefer a base URL using
+HTTPS; HTTP is supported for loopback/local development only. The command does
+not modify a password. Credentials change only when the owner explicitly
+submits a valid token and policy-compliant new password through the reset page.
+
+Compose builds a digest-pinned PostgreSQL derivative that runs directly as `postgres`, while the application and migrator run as non-root with read-only filesystems, dropped capabilities, and `no-new-privileges`. To validate the source independently, run:
 
 ```bash
 npm ci
@@ -79,7 +136,7 @@ Watch Tracker does not endorse or certify the legality or accuracy of an indepen
 
 ## Project status
 
-Watch Tracker is in active Phase 1 implementation. Historical Canon Pack contract `0.1.0` remains preserved, the first declarative Watchable Type slice of contract `0.2.0` is merged, and the Core foundation now runs locally. There is no production or hosted deployment, and no Core release has been published yet.
+Watch Tracker is in active Phase 1 implementation. Historical Canon Pack contract `0.1.0` remains preserved, the declarative Watchable Type contract `0.2.0` is implemented, and the Core vertical slice is verified in a trusted-LAN app-only deployment. This is not a production release or public hosted service; no Core release has been published yet.
 
 ## Contributing
 

@@ -1,0 +1,870 @@
+[
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000201",
+    "firstPublicRelease": {
+      "date": "2026-01-09",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000201",
+    "packOrder": 1,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 48,
+    "series": "Lantern Vale",
+    "slug": "lamp",
+    "summary": "The Lantern Vale journey begins.",
+    "title": "The Cartographer’s Lamp",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000202",
+    "firstPublicRelease": {
+      "date": "2026-01-16",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000202",
+    "packOrder": 2,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 42,
+    "series": "Lantern Vale",
+    "slug": "rain",
+    "summary": "Continues the opening expedition.",
+    "title": "A Map Made of Rain",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000203",
+    "firstPublicRelease": {
+      "date": "2026-01-23",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000203",
+    "packOrder": 3,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 46,
+    "series": "Lantern Vale",
+    "slug": "orchard",
+    "summary": "Opens the route to the first film.",
+    "title": "The Orchard Door",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000204",
+    "firstPublicRelease": {
+      "date": "2026-01-30",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000204",
+    "packOrder": 4,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 106,
+    "series": "Lantern Vale Movies",
+    "slug": "lowwater-film",
+    "summary": "Mid-season film leading into the Green Lantern crossover.",
+    "title": "The Lowwater Pact",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000205",
+    "firstPublicRelease": {
+      "date": "2011-06-17",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000205",
+    "packOrder": 5,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 114,
+    "series": "Lantern Vale Movies",
+    "slug": "green-lantern-2011",
+    "summary": "For centuries, the Green Lantern Corps has kept intergalactic order. When Parallax threatens the balance of power, Earth’s fate rests with the first human ever recruited.",
+    "title": "Green Lantern",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000206",
+    "firstPublicRelease": {
+      "date": "2026-02-06",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000206",
+    "packOrder": 6,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 44,
+    "series": "Lantern Vale",
+    "slug": "bell",
+    "summary": "In the flooded lower wards, Mara follows the Bell’s final echo through abandoned locks while the expedition confronts the cost of the Lowwater Pact.",
+    "title": "The Bell at Lowwater",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000207",
+    "firstPublicRelease": {
+      "date": "2026-02-13",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000207",
+    "packOrder": 7,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 51,
+    "series": "Lantern Vale",
+    "slug": "ember",
+    "summary": "Reveals the archive beneath the Vale.",
+    "title": "The Ember Archive",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000208",
+    "firstPublicRelease": {
+      "date": "2026-02-20",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000208",
+    "packOrder": 8,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 54,
+    "series": "Lantern Vale",
+    "slug": "lv-s1e6",
+    "summary": "Season one finale.",
+    "title": "The Road Under Starlight",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000209",
+    "firstPublicRelease": {
+      "date": "2026-03-13",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000209",
+    "packOrder": 9,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 118,
+    "series": "Lantern Vale Movies",
+    "slug": "winter-film",
+    "summary": "Feature film bridging Lantern Vale seasons one and two.",
+    "title": "Winter Meridian",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000210",
+    "firstPublicRelease": {
+      "date": "2026-03-20",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000210",
+    "packOrder": 10,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 43,
+    "series": "Greymoor Files",
+    "slug": "gf-s1e1",
+    "summary": "Begins the Greymoor investigation after Winter Meridian.",
+    "title": "A Letter Without Ink",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000211",
+    "firstPublicRelease": {
+      "date": "2026-03-27",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000211",
+    "packOrder": 11,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 45,
+    "series": "Greymoor Files",
+    "slug": "gf-s1e2",
+    "summary": "The investigation approaches Lantern Vale.",
+    "title": "The Hollow Postmark",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000212",
+    "firstPublicRelease": {
+      "date": "2026-03-27",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000212",
+    "packOrder": 12,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 49,
+    "series": "Lantern Vale",
+    "slug": "lv-s2e1",
+    "summary": "Season two begins after Winter Meridian.",
+    "title": "Ash on the Compass",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000213",
+    "firstPublicRelease": {
+      "date": "2026-04-03",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000213",
+    "packOrder": 13,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 47,
+    "series": "Greymoor Files",
+    "slug": "gf-s1e3",
+    "summary": "Provides required evidence for the crossover.",
+    "title": "The Witness at Mile Nine",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000214",
+    "firstPublicRelease": {
+      "date": "2026-04-03",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000214",
+    "packOrder": 14,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 50,
+    "series": "Lantern Vale",
+    "slug": "lv-s2e2",
+    "summary": "Moves the main expedition toward Greymoor.",
+    "title": "A Crown of Cinders",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000215",
+    "firstPublicRelease": {
+      "date": "2026-04-10",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000215",
+    "packOrder": 15,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 57,
+    "series": "Lantern Vale",
+    "slug": "lv-s2e3",
+    "summary": "Mid-season crossover requiring both shows.",
+    "title": "When the Lanterns Cross",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000216",
+    "firstPublicRelease": {
+      "date": "2026-04-17",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000216",
+    "packOrder": 16,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 52,
+    "series": "Greymoor Files",
+    "slug": "gf-s1e4",
+    "summary": "Greymoor Files continuation of the crossover.",
+    "title": "The Vale Case",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000217",
+    "firstPublicRelease": {
+      "date": "2026-04-17",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000217",
+    "packOrder": 17,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 48,
+    "series": "Lantern Vale",
+    "slug": "lv-s2e4",
+    "summary": "Lantern Vale continuation after the crossover.",
+    "title": "The House of Returning",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000218",
+    "firstPublicRelease": {
+      "date": "2026-04-24",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000218",
+    "packOrder": 18,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 44,
+    "series": "Greymoor Files",
+    "slug": "gf-s1e5",
+    "summary": "Builds toward the Greymoor finale.",
+    "title": "Names in the Fog",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000219",
+    "firstPublicRelease": {
+      "date": "2026-04-24",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000219",
+    "packOrder": 19,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 112,
+    "series": "Lantern Vale Movies",
+    "slug": "roads",
+    "summary": "Mid-season film between Lantern Vale S02:E04 and S02:E05.",
+    "title": "Roads Beyond the Vale",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000220",
+    "firstPublicRelease": {
+      "date": "2026-05-01",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000220",
+    "packOrder": 20,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 55,
+    "series": "Greymoor Files",
+    "slug": "gf-s1e6",
+    "summary": "Greymoor Files season finale and movie prerequisite.",
+    "title": "The Last File in Greymoor",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000221",
+    "firstPublicRelease": {
+      "date": "2026-05-01",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000221",
+    "packOrder": 21,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 46,
+    "series": "Lantern Vale",
+    "slug": "lv-s2e5",
+    "summary": "Returns from Roads Beyond the Vale.",
+    "title": "Beyond the Milestone",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000222",
+    "firstPublicRelease": {
+      "date": "2026-05-08",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000222",
+    "packOrder": 22,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 59,
+    "series": "Lantern Vale",
+    "slug": "lv-s2e6",
+    "summary": "Season two finale.",
+    "title": "The Two Horizons",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000223",
+    "firstPublicRelease": {
+      "date": "2026-05-22",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000223",
+    "packOrder": 23,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 126,
+    "series": "Lantern Vale Movies",
+    "slug": "convergence-film",
+    "summary": "Requires both the Lantern Vale and Greymoor Files finales.",
+    "title": "Convergence at Lowwater",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000224",
+    "firstPublicRelease": {
+      "date": "2026-06-05",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000224",
+    "packOrder": 24,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 52,
+    "series": "Lantern Vale",
+    "slug": "lv-s3e1",
+    "summary": "Season three begins after Convergence at Lowwater.",
+    "title": "Dawn at the Broken Gate",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000225",
+    "firstPublicRelease": {
+      "date": "2026-06-12",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000225",
+    "packOrder": 25,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 47,
+    "series": "Lantern Vale",
+    "slug": "lv-s3e2",
+    "summary": "Continues the final season.",
+    "title": "The River Remembers",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000226",
+    "firstPublicRelease": {
+      "date": "2026-06-19",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000226",
+    "packOrder": 26,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 53,
+    "series": "Lantern Vale",
+    "slug": "lv-s3e3",
+    "summary": "Leads into the final mid-season film.",
+    "title": "Six Lanterns Burning",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000227",
+    "firstPublicRelease": {
+      "date": "2026-06-26",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000227",
+    "packOrder": 27,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 121,
+    "series": "Lantern Vale Movies",
+    "slug": "glass-film",
+    "summary": "Mid-season film between Lantern Vale S03:E03 and S03:E04.",
+    "title": "The Glass Horizon",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000228",
+    "firstPublicRelease": {
+      "date": "2026-07-03",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000228",
+    "packOrder": 28,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 50,
+    "series": "Lantern Vale",
+    "slug": "lv-s3e4",
+    "summary": "Returns from The Glass Horizon.",
+    "title": "A Door Made of Morning",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000229",
+    "firstPublicRelease": {
+      "date": "2026-07-10",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000229",
+    "packOrder": 29,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 56,
+    "series": "Lantern Vale",
+    "slug": "lv-s3e5",
+    "summary": "Penultimate series episode.",
+    "title": "The Archive Unbound",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000230",
+    "firstPublicRelease": {
+      "date": "2026-07-17",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000230",
+    "packOrder": 30,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 64,
+    "series": "Lantern Vale",
+    "slug": "lv-s3e6",
+    "summary": "Lantern Vale series finale.",
+    "title": "All Roads Home",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000231",
+    "firstPublicRelease": {
+      "date": "2026-08-07",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000231",
+    "packOrder": 31,
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 132,
+    "series": "Lantern Vale Movies",
+    "slug": "final-film",
+    "summary": "Years after the lantern roads converge, the final cartographer returns to the Vale to redraw a world that no longer agrees where its borders belong.",
+    "title": "The Last Cartographer",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  }
+]

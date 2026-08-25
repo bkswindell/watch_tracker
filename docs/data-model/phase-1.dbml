@@ -444,15 +444,14 @@ Table deployment_session {
   Note: 'Infrastructure: Stores hashed deployment authentication sessions and expiration state.'
 }
 
-Table password_recovery_credential {
-  password_recovery_credential_id uuid [pk, not null]
+Table password_reset_token {
+  token_sha256 char(64) [pk, not null]
   tracker_instance_id uuid [not null]
-  code_hash varchar(128) [not null, unique]
-  created_at timestamp [not null]
-  expires_at timestamp [not null]
-  failed_attempt_count int [not null]
-  consumed_at timestamp
-  Note: 'Infrastructure: Stores short-lived host-generated recovery credentials.'
+  expires_at timestamptz [not null]
+  consumed_at timestamptz
+  created_at timestamptz [not null]
+  failed_attempt_count smallint [not null]
+  Note: 'Infrastructure: Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.'
 }
 
 Table canon_pack_repository {
@@ -616,7 +615,7 @@ Ref: focus_change_set.to_canon_pack_release_id > canon_pack_release.canon_pack_r
 Ref: watch_focus_projection.watch_focus_id - watch_focus.watch_focus_id
 Ref: watch_focus_projection.canon_pack_release_id > canon_pack_release.canon_pack_release_id
 Ref: deployment_session.tracker_instance_id > tracker_instance.tracker_instance_id
-Ref: password_recovery_credential.tracker_instance_id > tracker_instance.tracker_instance_id
+Ref: password_reset_token.tracker_instance_id > tracker_instance.tracker_instance_id
 Ref: canon_pack_repository.tracker_instance_id > tracker_instance.tracker_instance_id
 Ref: canon_pack_import.canon_pack_repository_id > canon_pack_repository.canon_pack_repository_id
 Ref: canon_pack_import.canon_pack_release_id > canon_pack_release.canon_pack_release_id

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted direction; the first runnable Core foundation slice is implemented and undergoing final review. It includes a Fastify API, schema-aware health/readiness, strict one-shot migration `0.01`, hardened local Compose deployment, image scanning/SBOM gates, and a responsive React shell. Authentication, Pack import, catalog behavior, and viewing workflows are not implemented yet.
+Accepted direction; the current Core vertical slice is implemented and undergoing continuing Phase 1 review. It includes a Fastify API, schema-aware health/readiness, strict ordered migrations through `0.11`, hardened local Compose deployment, image scanning/SBOM gates, a responsive React shell, setup/authentication, host-admin password recovery, validated Pack import, catalog behavior, dependency inspection, and viewing workflows. This remains an active development branch, not a release.
 
 ## Core and Canon Pack seam
 
@@ -14,7 +14,7 @@ Watch Tracker separates behavior from franchise content:
 
 Phase 1 supports exactly one active Canon Pack per deployment. Pack records are imported as immutable upstream content. Viewing activity, preferences, and later local overrides remain separate so Pack replacement does not rewrite personal history.
 
-## Planned application shape
+## Application shape
 
 ```text
 Browser
@@ -49,6 +49,6 @@ The planned Core preserves:
 - Movies, Episodes, Specials, and Shorts; and
 - accessible dependency lists alongside graph presentation.
 
-## Next implementation seam
+## Current implementation seam
 
-The next vertical slice consumes the pre-production Canon Pack `0.2.x` contract, transactionally imports the fictional Lantern Vale release into PostgreSQL, activates it only after complete validation, and adds deployment setup/authentication without weakening the Core/Pack trust boundary.
+The current vertical slice consumes the Canon Pack `0.2.x` contract, transactionally imports the fictional Lantern Vale release into PostgreSQL, activates it only after complete validation, and preserves the Core/Pack trust boundary. Remaining Phase 1 work continues from this verified baseline.

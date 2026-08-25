@@ -646,7 +646,7 @@
     {
       "cardinality": "many_to_one",
       "fromColumn": "tracker_instance_id",
-      "fromTable": "password_recovery_credential",
+      "fromTable": "password_reset_token",
       "toColumn": "tracker_instance_id",
       "toTable": "tracker_instance"
     },
@@ -4079,13 +4079,13 @@
       "columns": [
         {
           "check": "",
-          "comment": "Stable password_recovery_credential identity",
-          "name": "password_recovery_credential_id",
+          "comment": "SHA-256 digest of a host-generated reset token; plaintext is never stored",
+          "name": "token_sha256",
           "not_null": true,
           "primary": true,
           "ref": null,
-          "size": null,
-          "type": "UUID",
+          "size": 64,
+          "type": "CHAR",
           "unique": false
         },
         {
@@ -4100,63 +4100,52 @@
           "unique": false
         },
         {
-          "check": "",
-          "comment": "",
-          "name": "code_hash",
-          "not_null": true,
-          "primary": false,
-          "ref": null,
-          "size": 128,
-          "type": "VARCHAR",
-          "unique": true
-        },
-        {
-          "check": "",
-          "comment": "",
-          "name": "created_at",
-          "not_null": true,
-          "primary": false,
-          "ref": null,
-          "size": null,
-          "type": "TIMESTAMP",
-          "unique": false
-        },
-        {
-          "check": "",
+          "check": "expires_at > created_at; expires_at <= created_at + INTERVAL '15 minutes'",
           "comment": "",
           "name": "expires_at",
           "not_null": true,
           "primary": false,
           "ref": null,
           "size": null,
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
           "unique": false
         },
         {
-          "check": "",
-          "comment": "",
-          "name": "failed_attempt_count",
-          "not_null": true,
-          "primary": false,
-          "ref": null,
-          "size": null,
-          "type": "INT",
-          "unique": false
-        },
-        {
-          "check": "",
+          "check": "consumed_at IS NULL OR consumed_at >= created_at",
           "comment": "",
           "name": "consumed_at",
           "not_null": false,
           "primary": false,
           "ref": null,
           "size": null,
-          "type": "TIMESTAMP",
+          "type": "TIMESTAMPTZ",
+          "unique": false
+        },
+        {
+          "check": "",
+          "comment": "Defaults to current time",
+          "name": "created_at",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "TIMESTAMPTZ",
+          "unique": false
+        },
+        {
+          "check": "failed_attempt_count BETWEEN 0 AND 5",
+          "comment": "Defaults to zero",
+          "name": "failed_attempt_count",
+          "not_null": true,
+          "primary": false,
+          "ref": null,
+          "size": null,
+          "type": "SMALLINT",
           "unique": false
         }
       ],
-      "name": "password_recovery_credential",
-      "responsibility": "Stores short-lived host-generated recovery credentials.",
+      "name": "password_reset_token",
+      "responsibility": "Stores digest-only, short-lived host-admin reset tokens bound to the Tracker instance; successful or exhausted tokens are consumed.",
       "uniques": []
     },
     {

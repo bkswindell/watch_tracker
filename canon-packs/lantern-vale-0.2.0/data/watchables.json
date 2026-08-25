@@ -1,0 +1,144 @@
+[
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000201",
+    "externalIdentifiers": [
+      {
+        "namespace": "example-catalog",
+        "provenance": [
+          {
+            "method": "contributor-defined",
+            "sourceId": "01954123-0000-7000-8000-000000000002"
+          }
+        ],
+        "value": "LV-MOV-001"
+      }
+    ],
+    "firstPublicRelease": {
+      "date": "2024-01-12",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000201",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 104,
+    "slug": "lantern-vale-first-light",
+    "summary": "A survey team restores an old beacon before the valley's longest night.",
+    "title": "Lantern Vale: First Light",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000500"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000202",
+    "firstPublicRelease": {
+      "date": "2024-02-02",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000202",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 44,
+    "slug": "the-quiet-beacon",
+    "summary": "A junior keeper discovers that a silent tower is still sending a signal.",
+    "title": "The Quiet Beacon",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000501"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000203",
+    "firstPublicRelease": {
+      "date": "2024-02-09",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000203",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 46,
+    "slug": "the-echo-line",
+    "summary": "The keepers follow the returning signal beyond the mapped ridge.",
+    "title": "The Echo Line",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000504"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000204",
+    "firstPublicRelease": {
+      "date": "2024-12-20",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000204",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 58,
+    "slug": "midwinter-signal",
+    "summary": "The valley gathers for a one-night relay across every restored beacon.",
+    "title": "Midwinter Signal",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000502"
+  },
+  {
+    "canonicalUrn": "urn:watch-tracker:canon-pack:01954123-0000-7000-8000-000000000001:entity:01954123-0000-7000-8000-000000000205",
+    "firstPublicRelease": {
+      "date": "2024-01-26",
+      "precision": "day",
+      "provenance": [
+        {
+          "method": "contributor-defined",
+          "sourceId": "01954123-0000-7000-8000-000000000002"
+        }
+      ],
+      "status": "released"
+    },
+    "id": "01954123-0000-7000-8000-000000000205",
+    "provenance": [
+      {
+        "method": "contributor-defined",
+        "sourceId": "01954123-0000-7000-8000-000000000002"
+      }
+    ],
+    "runtimeMinutes": 8,
+    "slug": "a-light-between",
+    "summary": "Two travelers trade a pocket lantern while waiting for dawn.",
+    "title": "A Light Between",
+    "watchableTypeId": "01954123-0000-7000-8000-000000000503"
+  }
+]
