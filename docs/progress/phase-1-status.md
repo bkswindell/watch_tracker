@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migration `0.01`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, authentication, Pack import, catalog behavior, viewing workflows, and authenticated prerequisite inspection are implemented in the current vertical slice.
+Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 remains in progress and is the next dependency-ready lane; its Canon Pack hostile-input, security, and determinism foundation is complete in the Template. The Core API, PostgreSQL migrations through `0.10`, one-shot migration, health/readiness, hardened Compose, responsive React shell, CI, image scanning, SBOM generation, and persistence verification are implemented. Setup, hardened authentication and host-admin recovery, Pack import, catalog behavior, viewing workflows, and authenticated prerequisite inspection are implemented in the current vertical slice.
 
 ## Authorization boundary
 
@@ -19,9 +19,9 @@ Autonomous execution is authorized. Milestones M0, M1, and M3 are complete. M2 r
 | M1 Reduced complete Phase 1 ERD | Complete | Reproducible 48-table/95-relationship/9-view model; DrawDB, DDB, and DBML validation; independent review passed | None |
 | M2 Canon Pack contract 0.2.x | In progress | Declarative Watchable Types slice merged in Template PR #6 at `2df3818`; hostile-input foundation merged in PRs #7/#9 at `99a885e`/`f3212a8`; 61 tests and final CI passed | Accepted `0.2.1` structures, normalized 26-table release projection, independent verifier, full Lantern Vale fixture, and contract ERD/docs/gates |
 | M3 Core/PostgreSQL/Docker foundation | Complete | Core PR #1 merged as `c4a6a07`; PR CI `32658514890` and post-merge CI `32658626306` passed; 25/25 tests; deterministic build; hardened Compose; zero high/critical final-image findings; SBOM; persistence | None |
-| M4 Setup/auth/import/activation | Pending | Design requirements only | M2 Canon contract completion |
-| M5 MVP UX and viewing loop | Pending | Design requirements only | M4 |
-| M6 MVP deployed verification/release | Pending | Docker access preflight passed | M5 |
+| M4 Setup/auth/import/activation | Complete (current slice) | Setup, Argon2id authentication/session protections, host-admin one-use recovery, validated Pack import, and activation are implemented and covered by the Core gate | Broader M2 contract closeout remains separate |
+| M5 MVP UX and viewing loop | Complete (current slice) | Responsive workspace, Catalog, Focus Map, dependency inspection, viewing lifecycle, feedback, and persisted personal records are implemented and covered by the Core gate | M6 final browser matrix/closeout |
+| M6 MVP deployed verification/release | In progress | Trusted-LAN app-only deployment is healthy; recovery invalid-token behavior and authenticated workspace were previously certified | Exact final browser matrix and overall Phase 1 audit |
 | M7 Remaining accepted Phase 1 | Pending | ADR/requirements corpus exists | M6 |
 | M8 Final Phase 1 closeout | Pending | — | M7 |
 
