@@ -227,7 +227,8 @@ function App() {
     [gridApi, setGridApi] = useState(),
     [colsOpen, setColsOpen] = useState(false),
     [gridContextMenu, setGridContextMenu] = useState(),
-    [catalogDialog, setCatalogDialog] = useState();
+    [catalogDialog, setCatalogDialog] = useState(),
+    [verificationOpen, setVerificationOpen] = useState(false);
   const navigate = (nextView) => {
     if (!viewIds.has(nextView)) return;
     if (nextView !== view) {
@@ -761,7 +762,7 @@ function App() {
             <PackPage
               pack={pack}
               onImport={importPack}
-              onNotImplemented={notImplemented}
+              onViewVerification={() => setVerificationOpen(true)}
             />
           )}
         </div>
@@ -813,6 +814,12 @@ function App() {
           onSubmit={saveCatalog}
           busy={busy}
           error={error}
+        />
+      )}
+      {verificationOpen && (
+        <PackVerificationModal
+          pack={pack}
+          onClose={() => setVerificationOpen(false)}
         />
       )}
       {gridContextMenu && (
@@ -1273,7 +1280,7 @@ function HistoryPage({ history, items, target, onTarget, onPick, onAction }) {
     </>
   );
 }
-function PackPage({ pack, onImport, onNotImplemented }) {
+function PackPage({ pack, onImport, onViewVerification }) {
   const evidence = packEvidence(pack);
   return (
     <>
@@ -1315,9 +1322,7 @@ function PackPage({ pack, onImport, onNotImplemented }) {
           <button className="primary" onClick={() => void onImport()}>
             Import release
           </button>
-          <button onClick={() => onNotImplemented("Verification viewer")}>
-            View verification
-          </button>
+          <button onClick={onViewVerification}>View verification</button>
         </section>
         <section className="panel drop">
           <span className="eyebrow">Transactional import</span>
@@ -1353,6 +1358,67 @@ function PackPage({ pack, onImport, onNotImplemented }) {
         ))}
       </div>
     </>
+  );
+}
+function PackVerificationModal({ pack, onClose }) {
+  const evidence = packEvidence(pack);
+  const downloadReport = () => {
+    const report = [
+      "Watch Tracker Canon Pack verification summary",
+      "",
+      ...evidence.map((entry) => `${entry.label}: ${entry.value}`),
+      "",
+      "This summary reports active workspace API evidence; it does not re-run Pack validation.",
+    ].join("\n");
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([report], { type: "text/plain" }));
+    link.download = "watch-tracker-pack-verification.txt";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+  return (
+    <div className="modalBackdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="catalogModal verificationModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="verification-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="modalHeader">
+          <div>
+            <span className="eyebrow">Workspace evidence</span>
+            <h2 id="verification-title">Pack verification</h2>
+          </div>
+          <button
+            className="iconButton"
+            aria-label="Close verification"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </header>
+        <p className="verificationIntro">
+          This is the evidence returned for the active release. It is a
+          read-only summary and does not claim that validation was re-run in
+          this browser.
+        </p>
+        <dl className="verificationEvidence">
+          {evidence.map((entry) => (
+            <div key={entry.label}>
+              <dt>{entry.label}</dt>
+              <dd className={entry.status}>{entry.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="modalActions">
+          <button onClick={downloadReport}>Download summary</button>
+          <button className="primary" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 export default App;

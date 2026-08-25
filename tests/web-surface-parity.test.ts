@@ -49,6 +49,14 @@ test("Canon Pack presents unavailable evidence honestly", async () => {
   const app = await source();
   assert.match(app, /function packEvidence\(pack\)/);
   assert.match(app, /Unavailable from workspace API/);
+  assert.match(app, /function PackVerificationModal/);
+  assert.match(
+    app,
+    /onViewVerification=\{\(\) => setVerificationOpen\(true\)\}/,
+  );
+  assert.match(app, /Download summary/);
+  assert.match(app, /does not re-run Pack validation/);
+  assert.doesNotMatch(app, /onNotImplemented\("Verification viewer"\)/);
   assert.doesNotMatch(app, /<small>Loaded<\/small>/);
 });
 
