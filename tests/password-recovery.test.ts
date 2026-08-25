@@ -320,6 +320,16 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
   assert.match(app, /history\.replaceState\(null, "", "\/reset-password"\)/);
   assert.match(app, /passwordResetTokenFromFragment\(location\.hash\)/);
   assert.match(resetUi, /autoComplete="new-password"/);
+  assert.match(resetUi, /if \(!token\)[\s\S]*Password reset unavailable/);
+  assert.match(
+    resetUi,
+    /Password reset unavailable[\s\S]*Request a new link from[\s\S]*host administrator/,
+  );
+  assert.ok(
+    resetUi.indexOf("if (!token)") <
+      resetUi.indexOf("await api.completePasswordReset(token, password)"),
+    "an absent or malformed fragment must not render a submit path",
+  );
   assert.match(
     resetUi,
     /password\.length < 15[\s\S]*password\.length > 1024[\s\S]*password\.includes\("\\0"\)/,

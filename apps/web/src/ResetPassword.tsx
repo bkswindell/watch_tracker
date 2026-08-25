@@ -20,6 +20,27 @@ export function ResetPassword({
   const [error, setError] = useState("");
   const [complete, setComplete] = useState(false);
 
+  // A fragment is intentionally never sent to the server, but a direct visit
+  // without the exact one-time token should not render a form that can make a
+  // pointless request. Keep this message generic so it reveals no token state.
+  if (!token)
+    return (
+      <div className="authShell">
+        <div className="authCard">
+          <div className="logo">WT</div>
+          <span className="eyebrow">Password recovery</span>
+          <h1>Password reset unavailable</h1>
+          <p>
+            This password reset link cannot be used. Request a new link from the
+            host administrator.
+          </p>
+          <button className="primary" onClick={onCompleted}>
+            Return to sign in
+          </button>
+        </div>
+      </div>
+    );
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
