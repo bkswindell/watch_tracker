@@ -367,3 +367,11 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
     "SQL must claim a valid token before performing Argon2id work",
   );
 });
+
+test("the reset document has a pre-bootstrap no-referrer defense", async () => {
+  const document = await readFile("apps/web/index.html", "utf8");
+  assert.match(
+    document,
+    /<meta\s+name="referrer"\s+content="no-referrer"\s*\/>/,
+  );
+});
