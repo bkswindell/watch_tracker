@@ -301,6 +301,11 @@ export async function buildApp(
       string,
       { count: number; startedAt: number }
     >();
+    // Argon2id verification is deliberately expensive. A failure counter that
+    // is incremented only after verification lets a concurrent burst start
+    // many expensive hashes before any request reaches the configured limit.
+    // Serialize each remote address while retaining independent clients.
+    const loginInFlight = new Set<string>();
     function loginKey(request: FastifyRequest): string {
       return request.ip;
     }
@@ -531,11 +536,28 @@ export async function buildApp(
             "Too many sign-in attempts. Try again later.",
           );
         }
+        const key = loginKey(request);
+        if (loginInFlight.has(key)) {
+          void reply.header("retry-after", 1);
+          return sendError(
+            reply,
+            request,
+            429,
+            "auth.throttled",
+            "Too many sign-in attempts. Try again later.",
+          );
+        }
         const password = request.body?.password;
-        const created =
-          typeof password === "string" && password.length <= 1024
-            ? await store.authenticateAndCreateSession(password)
-            : undefined;
+        loginInFlight.add(key);
+        let created;
+        try {
+          created =
+            typeof password === "string" && password.length <= 1024
+              ? await store.authenticateAndCreateSession(password)
+              : undefined;
+        } finally {
+          loginInFlight.delete(key);
+        }
         if (!created) {
           recordLoginFailure(request);
           sendError(

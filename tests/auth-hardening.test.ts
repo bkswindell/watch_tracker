@@ -145,6 +145,64 @@ test("login failures are rate limited and a successful login resets the limit", 
   assert.match(String(throttled.headers["retry-after"]), /^\d+$/);
 });
 
+test("login throttle permits only one expensive verification per client at once", async (t) => {
+  let authenticateCalls = 0;
+  let verificationStarted!: () => void;
+  let releaseVerification!: () => void;
+  const started = new Promise<void>((resolve) => {
+    verificationStarted = resolve;
+  });
+  const release = new Promise<void>((resolve) => {
+    releaseVerification = resolve;
+  });
+  class DelayedAuthenticationStore extends MemorySliceStore {
+    override async authenticateAndCreateSession(password: string) {
+      authenticateCalls += 1;
+      verificationStarted();
+      await release;
+      return super.authenticateAndCreateSession(password);
+    }
+  }
+  const store = new DelayedAuthenticationStore({
+    initialPassword: "correct-password",
+  });
+  const app = await buildApp({
+    readinessProbe: async () => ({ ready: true }),
+    sliceStore: store,
+  });
+  t.after(() => app.close());
+  const bootstrap = await app.inject({ method: "GET", url: "/api/bootstrap" });
+  const csrf = bootstrap.json().csrfToken as string;
+  assert.equal(
+    (
+      await app.inject({
+        method: "POST",
+        url: "/api/setup",
+        headers: { "x-csrf-token": csrf },
+      })
+    ).statusCode,
+    204,
+  );
+  const login = () =>
+    app.inject({
+      method: "POST",
+      url: "/api/login",
+      payload: { password: "wrong" },
+      headers: { "x-csrf-token": csrf },
+    });
+
+  const first = login();
+  await started;
+  const concurrent = await login();
+  assert.equal(concurrent.statusCode, 429);
+  assert.equal(concurrent.json().error.code, "auth.throttled");
+  assert.equal(concurrent.headers["retry-after"], "1");
+  assert.equal(authenticateCalls, 1);
+  releaseVerification();
+  assert.equal((await first).statusCode, 401);
+  assert.equal(authenticateCalls, 1);
+});
+
 test("the default login throttle is ten failures per 15-minute window", async (t) => {
   const { app, csrf } = await configuredApp();
   t.after(() => app.close());
