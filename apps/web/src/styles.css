@@ -462,6 +462,70 @@ button.primary {
 .agWrap {
   height: 620px;
 }
+.catalogPosterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 14px;
+  padding: 4px 0 18px;
+}
+.catalogPosterCard {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.catalogPosterCard:hover,
+.catalogPosterCard:focus-visible {
+  border-color: var(--mint);
+}
+.catalogPosterArtwork {
+  aspect-ratio: 2 / 3;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(145deg, #31566d, #281b2c);
+  color: var(--mint);
+  font-size: 42px;
+  font-weight: 900;
+}
+.catalogPosterArtwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.catalogPosterTitle,
+.catalogPosterMeta,
+.catalogPosterCard .state {
+  margin-left: 11px;
+  margin-right: 11px;
+}
+.catalogPosterTitle {
+  display: block;
+  margin-top: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catalogPosterMeta {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catalogPosterCard .state {
+  display: inline-flex;
+  margin-top: 10px;
+  margin-bottom: 11px;
+}
+.catalogEmpty {
+  color: var(--muted);
+  padding: 28px 0;
+}
 .historyGrid {
   height: 430px;
 }

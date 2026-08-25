@@ -211,6 +211,51 @@ function StateBadge({ value }) {
     </span>
   ) : null;
 }
+function CatalogPosterGrid({ items, query, onPick }) {
+  const needle = query.trim().toLocaleLowerCase();
+  const visible = items
+    .filter((item) => {
+      if (!needle) return true;
+      return [item.title, item.type, item.series, item.state, item.summary]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase()
+        .includes(needle);
+    })
+    .sort(
+      (left, right) =>
+        (left.releaseOrder ?? Number.MAX_SAFE_INTEGER) -
+        (right.releaseOrder ?? Number.MAX_SAFE_INTEGER),
+    );
+  if (!visible.length) {
+    return <p className="catalogEmpty">No watchables match this search.</p>;
+  }
+  return (
+    <div className="catalogPosterGrid" aria-label="Catalog poster grid">
+      {visible.map((item) => (
+        <button
+          className="catalogPosterCard"
+          key={item.id}
+          onClick={() => onPick(item)}
+          aria-label={`View details for ${item.title}`}
+        >
+          <div className="catalogPosterArtwork" aria-hidden="true">
+            {item.posterUrl ? (
+              <img src={artworkUrl(item.posterUrl)} alt="" />
+            ) : (
+              <span>{item.type?.slice(0, 1) || "W"}</span>
+            )}
+          </div>
+          <span className="catalogPosterTitle">{item.title}</span>
+          <span className="catalogPosterMeta">
+            {item.type} · {item.release || "Release unavailable"}
+          </span>
+          <StateBadge value={item.state} />
+        </button>
+      ))}
+    </div>
+  );
+}
 function App() {
   const [passwordResetToken, setPasswordResetToken] = useState(() => {
     if (location.pathname !== "/reset-password") return undefined;
@@ -237,6 +282,7 @@ function App() {
     [sidecarWidth, setSidecarWidth] = useState(390),
     [query, setQuery] = useState(""),
     [mode, setMode] = useState("Release Timeline"),
+    [catalogDisplay, setCatalogDisplay] = useState("list"),
     [gridApi, setGridApi] = useState(),
     [colsOpen, setColsOpen] = useState(false),
     [gridContextMenu, setGridContextMenu] = useState(),
@@ -654,6 +700,25 @@ function App() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search all columns…"
                 />
+                <div
+                  className="seg catalogDisplay"
+                  aria-label="Catalog display"
+                >
+                  <button
+                    className={catalogDisplay === "list" ? "on" : ""}
+                    onClick={() => setCatalogDisplay("list")}
+                    aria-pressed={catalogDisplay === "list"}
+                  >
+                    List
+                  </button>
+                  <button
+                    className={catalogDisplay === "posters" ? "on" : ""}
+                    onClick={() => setCatalogDisplay("posters")}
+                    aria-pressed={catalogDisplay === "posters"}
+                  >
+                    Posters
+                  </button>
+                </div>
                 <button
                   disabled={!selected}
                   onClick={() => openDetails(selected)}
@@ -683,7 +748,10 @@ function App() {
                 >
                   Delete personal record
                 </button>
-                <button onClick={() => setColsOpen(!colsOpen)}>
+                <button
+                  onClick={() => setColsOpen(!colsOpen)}
+                  disabled={catalogDisplay !== "list"}
+                >
                   ⚙ Columns
                 </button>
                 <button
@@ -725,29 +793,37 @@ function App() {
                   </div>
                 )}
               </div>
-              <div className="agWrap">
-                <AgGridReact
-                  theme={appTheme}
-                  rowModelType="infinite"
-                  datasource={catalogDatasource}
-                  cacheBlockSize={50}
-                  maxBlocksInCache={4}
-                  columnDefs={columns}
-                  defaultColDef={{
-                    sortable: true,
-                    filter: true,
-                    resizable: true,
-                  }}
-                  rowSelection="single"
-                  onGridReady={(event) => setGridApi(event.api)}
-                  onRowClicked={(e) => openDetails(e.data)}
-                  preventDefaultOnContextMenu
-                  onCellContextMenu={(params) =>
-                    openGridMenu(params, "catalog")
-                  }
-                  getRowId={(p) => p.data.id}
+              {catalogDisplay === "list" ? (
+                <div className="agWrap">
+                  <AgGridReact
+                    theme={appTheme}
+                    rowModelType="infinite"
+                    datasource={catalogDatasource}
+                    cacheBlockSize={50}
+                    maxBlocksInCache={4}
+                    columnDefs={columns}
+                    defaultColDef={{
+                      sortable: true,
+                      filter: true,
+                      resizable: true,
+                    }}
+                    rowSelection="single"
+                    onGridReady={(event) => setGridApi(event.api)}
+                    onRowClicked={(e) => openDetails(e.data)}
+                    preventDefaultOnContextMenu
+                    onCellContextMenu={(params) =>
+                      openGridMenu(params, "catalog")
+                    }
+                    getRowId={(p) => p.data.id}
+                  />
+                </div>
+              ) : (
+                <CatalogPosterGrid
+                  items={items}
+                  query={query}
+                  onPick={openDetails}
                 />
-              </div>
+              )}
             </>
           )}
           {view === "next" && (
