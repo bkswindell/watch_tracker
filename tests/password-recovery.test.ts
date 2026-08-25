@@ -130,6 +130,15 @@ test("host-admin CLI creates a fragment-only reset link and validates its base U
     resetLinkBase("http://localhost:3100").toString(),
     "http://localhost:3100/",
   );
+  assert.equal(
+    resetLinkBase("http://127.0.0.2:3100").toString(),
+    "http://127.0.0.2:3100/",
+  );
+  assert.equal(
+    resetLinkBase("http://[::1]:3100").toString(),
+    "http://[::1]:3100/",
+  );
+  assert.throws(() => resetLinkBase("http://tracker.example"));
   assert.throws(() => resetLinkBase("file:///tmp/watch-tracker"));
   assert.throws(() => resetLinkBase("https://user:pass@tracker.example"));
   assert.throws(() => resetLinkBase("https://tracker.example/?token=bad"));
@@ -146,6 +155,11 @@ test("recovery surfaces do not persist or log reset tokens", async () => {
   ]);
   assert.equal((cli.match(/process\.stdout\.write/g) ?? []).length, 1);
   assert.match(cli, /url\.hash = `token=/);
+  assert.ok(
+    cli.indexOf("const validatedBaseUrl = resetLinkBase(baseUrl).toString()") <
+      cli.indexOf("const pool = new Pool"),
+    "the delivery URL must be valid before token issuance can mutate state",
+  );
   assert.doesNotMatch(
     `${app}\n${resetUi}`,
     /localStorage|sessionStorage|indexedDB|console\./,
